@@ -26,6 +26,79 @@ export const cacheAllMasterData = async () => {
 
     // ========== ALL MASTER CACHE ==========
 
+    try {
+      const siteResp = await axios.get(`${API_BASE_URL.mop}/getSite`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      await AsyncStorage.setItem(
+        'mentoring_master_site',
+        JSON.stringify(siteResp.data?.data || []),
+      );
+    } catch (e) {
+      console.log('Error caching master mentoring site:', e?.message || e);
+    }
+
+    try {
+      const unitResp = await axios.get(`${API_BASE_URL.mop}/getMasterUnit`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      const allUnit = Array.isArray(unitResp.data)
+        ? unitResp.data
+        : unitResp.data.data || [];
+      await AsyncStorage.setItem('cached_unit_list', JSON.stringify(allUnit));
+    } catch (err) {
+      console.log('Gagal cache UNIT LIST:', err?.message || err);
+    }
+
+    // --- MASTER P2H DARI API BARU YANG DITAMBAHKAN ---
+    try {
+      const resp = await axios.get(`${API_BASE_URL.p2h}/MasterQuestion`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      await AsyncStorage.setItem(
+        'master_questions',
+        JSON.stringify(resp.data?.data || resp.data || []),
+      );
+    } catch (e) {
+      console.log('Gagal cache MASTER QUESTION:', e?.message || e);
+    }
+
+    try {
+      const resp = await axios.get(`${API_BASE_URL.p2h}/GetSite`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      await AsyncStorage.setItem(
+        'master_sites',
+        JSON.stringify(resp.data?.data || resp.data || []),
+      );
+    } catch (e) {
+      console.log('Gagal cache MASTER SITE:', e?.message || e);
+    }
+
+    try {
+      const resp = await axios.get(`${API_BASE_URL.p2h}/GetDept`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      await AsyncStorage.setItem(
+        'master_dept',
+        JSON.stringify(resp.data?.data || resp.data || []),
+      );
+    } catch (e) {
+      console.log('Gagal cache MASTER DEPT:', e?.message || e);
+    }
+
+    try {
+      const resp = await axios.get(`${API_BASE_URL.p2h}/GetModel`, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      await AsyncStorage.setItem(
+        'master_model',
+        JSON.stringify(resp.data?.data || resp.data || []),
+      );
+    } catch (e) {
+      console.log('Gagal cache MASTER MODEL:', e?.message || e);
+    }
+
     // --- Cache indikator mentoring
     await Promise.all(
       unitTypes.map(async type => {
@@ -120,79 +193,6 @@ export const cacheAllMasterData = async () => {
       await AsyncStorage.setItem('cached_opt_list', JSON.stringify(allOpt));
     } catch (err) {
       console.log('Gagal cache OPT LIST:', err?.message || err);
-    }
-
-    try {
-      const siteResp = await axios.get(`${API_BASE_URL.mop}/getSite`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      await AsyncStorage.setItem(
-        'mentoring_master_site',
-        JSON.stringify(siteResp.data?.data || []),
-      );
-    } catch (e) {
-      console.log('Error caching master mentoring site:', e?.message || e);
-    }
-
-    try {
-      const unitResp = await axios.get(`${API_BASE_URL.mop}/getMasterUnit`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      const allUnit = Array.isArray(unitResp.data)
-        ? unitResp.data
-        : unitResp.data.data || [];
-      await AsyncStorage.setItem('cached_unit_list', JSON.stringify(allUnit));
-    } catch (err) {
-      console.log('Gagal cache UNIT LIST:', err?.message || err);
-    }
-
-    // --- MASTER P2H DARI API BARU YANG DITAMBAHKAN ---
-    try {
-      const resp = await axios.get(`${API_BASE_URL.p2h}/MasterQuestion`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      await AsyncStorage.setItem(
-        'master_questions',
-        JSON.stringify(resp.data?.data || resp.data || []),
-      );
-    } catch (e) {
-      console.log('Gagal cache MASTER QUESTION:', e?.message || e);
-    }
-
-    try {
-      const resp = await axios.get(`${API_BASE_URL.p2h}/GetSite`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      await AsyncStorage.setItem(
-        'master_sites',
-        JSON.stringify(resp.data?.data || resp.data || []),
-      );
-    } catch (e) {
-      console.log('Gagal cache MASTER SITE:', e?.message || e);
-    }
-
-    try {
-      const resp = await axios.get(`${API_BASE_URL.p2h}/GetDept`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      await AsyncStorage.setItem(
-        'master_dept',
-        JSON.stringify(resp.data?.data || resp.data || []),
-      );
-    } catch (e) {
-      console.log('Gagal cache MASTER DEPT:', e?.message || e);
-    }
-
-    try {
-      const resp = await axios.get(`${API_BASE_URL.p2h}/GetModel`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      await AsyncStorage.setItem(
-        'master_model',
-        JSON.stringify(resp.data?.data || resp.data || []),
-      );
-    } catch (e) {
-      console.log('Gagal cache MASTER MODEL:', e?.message || e);
     }
 
     // await AsyncStorage.setItem('cache_master_last', String(now));

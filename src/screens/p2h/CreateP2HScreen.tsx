@@ -23,28 +23,17 @@ import {
   addQueueOffline,
   pushOfflineQueue,
   getOfflineQueueCount,
-  clearOfflineQueue,
 } from '../../utils/offlineQueueHelper';
 
 const checklistOptions = ['Baik', 'Tidak Baik', 'N/A'];
 const DRAFT_KEY = 'draft_p2h_form';
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
-const API_ENDPOINT = '/StoreP2H';
 
 const CreateP2HScreen = ({navigation}) => {
   const insets = useSafeAreaInsets();
   const {user, activeSite} = useSiteContext();
 
-  // Dropdown master state
-  const [modelList, setModelList] = useState([]);
-  const [questionList, setQuestionList] = useState([]);
-  const [loadingMaster, setLoadingMaster] = useState(true);
-  const [deptList, setDeptList] = useState([]);
-  const [jam, setJam] = useState(dayjs().format('HH:mm'));
-  const [showDate, setShowDate] = useState(false);
-  const [showTime, setShowTime] = useState(false);
-
-  // Form state
+  // === State untuk isian form ===
   const [nounit, setNoUnit] = useState('');
   const [model, setModel] = useState('');
   const [KM, setKM] = useState('');
@@ -52,27 +41,29 @@ const CreateP2HScreen = ({navigation}) => {
   const [dept, setDept] = useState('');
   const [site, setSite] = useState('');
   const [tanggal, setTanggal] = useState(dayjs().format('YYYY-MM-DD'));
+  const [jam, setJam] = useState(dayjs().format('HH:mm'));
   const [keterangan, setKeterangan] = useState('');
-  const [loading, setLoading] = useState(false);
-
+  const [inlineRadioOptions, setInlineRadioOptions] = useState({});
   const [stickerCommissioning, setStickerCommissioning] = useState('Berlaku');
   const [stickerFuelPermit, setStickerFuelPermit] = useState('Berlaku');
 
-  // Pertanyaan
-  const stickerCommissioningQ = questionList.find(q => String(q.id) === '27');
-  const stickerFuelPermitQ = questionList.find(q => String(q.id) === '28');
-  const checklistQuestions = questionList.filter(
-    q => String(q.id) !== '27' && String(q.id) !== '28',
-  );
-  const [inlineRadioOptions, setInlineRadioOptions] = useState({});
+  // === Master data ===
+  const [modelList, setModelList] = useState([]);
+  const [questionList, setQuestionList] = useState([]);
+  const [deptList, setDeptList] = useState([]);
+  const [loadingMaster, setLoadingMaster] = useState(true);
+  const [showDate, setShowDate] = useState(false);
+  const [showTime, setShowTime] = useState(false);
 
+  // === Lainnya ===
   const [isConnected, setIsConnected] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // Restore draft saat mount
+  // ==== 1. Restore draft ATAU ambil dari loginCache ====
   useEffect(() => {
-    const restoreDraft = async () => {
+    const restoreDraftOrLogin = async () => {
       const draftStr = await AsyncStorage.getItem(DRAFT_KEY);
       if (draftStr) {
         try {
@@ -88,23 +79,102 @@ const CreateP2HScreen = ({navigation}) => {
           setInlineRadioOptions(data.inlineRadioOptions || {});
           setStickerCommissioning(data.stickerCommissioning || 'Berlaku');
           setStickerFuelPermit(data.stickerFuelPermit || 'Berlaku');
+          return;
         } catch {}
       }
+      // Kalau tidak ada draft, ambil dari loginCache
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      if (loginCache) {
+        const cache = JSON.parse(loginCache);
+        setSite(cache.dataEmp?.site || activeSite || '');
+        setModel(cache.dataEmp?.model || '');
+        // Note: dept di cache bisa nama, nanti user pilih di dropdown
+        setDept('');
+      }
     };
-    restoreDraft();
-  }, []);
+    restoreDraftOrLogin();
+  }, [activeSite]);
 
-  // Load offline queue count
+  // ==== 2. Fetch master data ====
+  useEffect(() => {
+    const fetchMasters = async () => {
+      setLoadingMaster(true);
+      try {
+        const isConnected = (await NetInfo.fetch()).isConnected;
+        let modelData = [],
+          questionData = [],
+          deptData = [];
+        if (isConnected) {
+          try {
+            const modelRes = await fetch(`${API_BASE_URL.p2h}/GetModel`);
+            const modelJson = await modelRes.json();
+            modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
+            if (modelData.length > 0)
+              await AsyncStorage.setItem(
+                'master_model',
+                JSON.stringify(modelData),
+              );
+          } catch {
+            const m = await AsyncStorage.getItem('master_model');
+            modelData = m ? JSON.parse(m) : [];
+          }
+
+          try {
+            const qRes = await fetch(`${API_BASE_URL.p2h}/MasterQuestion`);
+            const qJson = await qRes.json();
+            questionData = Array.isArray(qJson.data) ? qJson.data : [];
+            if (questionData.length > 0)
+              await AsyncStorage.setItem(
+                'master_questions',
+                JSON.stringify(questionData),
+              );
+          } catch {
+            const q = await AsyncStorage.getItem('master_questions');
+            questionData = q ? JSON.parse(q) : [];
+          }
+
+          try {
+            const dRes = await fetch(`${API_BASE_URL.p2h}/GetDept`);
+            const dJson = await dRes.json();
+            deptData = Array.isArray(dJson.data) ? dJson.data : [];
+            if (deptData.length > 0)
+              await AsyncStorage.setItem(
+                'master_dept',
+                JSON.stringify(deptData),
+              );
+          } catch {
+            const d = await AsyncStorage.getItem('master_dept');
+            deptData = d ? JSON.parse(d) : [];
+          }
+        } else {
+          const m = await AsyncStorage.getItem('master_model');
+          modelData = m ? JSON.parse(m) : [];
+          const q = await AsyncStorage.getItem('master_questions');
+          questionData = q ? JSON.parse(q) : [];
+          const d = await AsyncStorage.getItem('master_dept');
+          deptData = d ? JSON.parse(d) : [];
+        }
+        setModelList(modelData);
+        setQuestionList(questionData);
+        setDeptList(deptData);
+      } catch (err) {
+        setModelList([]);
+        setQuestionList([]);
+        setDeptList([]);
+      }
+      setLoadingMaster(false);
+    };
+    fetchMasters();
+  }, [activeSite]);
+
+  // ==== 3. Load offline queue count, push offline queue dsb ====
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
   }, []);
-
   useEffect(() => {
     refreshQueueCount();
   }, [refreshQueueCount]);
-
-  // Auto push queue ketika online
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(state.isConnected === true);
@@ -114,7 +184,7 @@ const CreateP2HScreen = ({navigation}) => {
           OFFLINE_SUBMIT_KEY,
           '/StoreP2H',
           undefined,
-          API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
+          API_BASE_URL.p2h,
         ).then(() => {
           refreshQueueCount();
           setSyncing(false);
@@ -125,56 +195,7 @@ const CreateP2HScreen = ({navigation}) => {
     return () => unsubscribe();
   }, [refreshQueueCount]);
 
-  // Fetch master data
-  useEffect(() => {
-    const fetchMasters = async () => {
-      setLoadingMaster(true);
-      try {
-        const m = await AsyncStorage.getItem('master_model');
-        setModelList(Array.isArray(JSON.parse(m)) ? JSON.parse(m) : []);
-        const q = await AsyncStorage.getItem('master_questions');
-        setQuestionList(Array.isArray(JSON.parse(q)) ? JSON.parse(q) : []);
-        const d = await AsyncStorage.getItem('master_dept');
-        setDeptList(Array.isArray(JSON.parse(d)) ? JSON.parse(d) : []);
-
-        // Auto set dept/model/site dari user login (jika kosong & belum diisi draft)
-        const loginCache = await AsyncStorage.getItem('loginCache');
-        if (loginCache) {
-          const cache = JSON.parse(loginCache);
-          const userDeptName = cache.dataEmp?.dept;
-          if (!site) setSite(cache.dataEmp?.site || activeSite || '');
-          if (!model) setModel(cache.dataEmp?.model || '');
-          if (!dept) {
-            const deptObj = (
-              Array.isArray(JSON.parse(d)) ? JSON.parse(d) : []
-            ).find(
-              item =>
-                item.dept_name === userDeptName ||
-                item.nama === userDeptName ||
-                item.label === userDeptName,
-            );
-            setDept(deptObj?.id || '');
-          }
-        }
-        setInlineRadioOptions(obj =>
-          Object.keys(obj).length
-            ? obj
-            : (Array.isArray(JSON.parse(q)) ? JSON.parse(q) : [])
-                .filter(q => String(q.id) !== '27' && String(q.id) !== '28')
-                .reduce((acc, q) => ({...acc, [q.id]: ''}), {}),
-        );
-      } catch {
-        setModelList([]);
-        setQuestionList([]);
-        setDeptList([]);
-        setDept('');
-      }
-      setLoadingMaster(false);
-    };
-    fetchMasters();
-  }, [activeSite]);
-
-  // Save draft ke cache setiap ada perubahan isian
+  // ==== 4. Save draft setiap perubahan ====
   useEffect(() => {
     const saveDraft = async () => {
       const draft = {
@@ -207,13 +228,26 @@ const CreateP2HScreen = ({navigation}) => {
     stickerFuelPermit,
   ]);
 
+  // ==== 5. Reset form ====
   const resetForm = () => {
     setNoUnit('');
     setModel('');
     setKM('');
     setSection('');
     setDept('');
-    setSite('');
+    // Ambil site dari loginCache setelah reset
+    AsyncStorage.getItem('loginCache').then(loginCache => {
+      if (loginCache) {
+        const cache = JSON.parse(loginCache);
+        setSite(cache.dataEmp?.site || activeSite || '');
+        setModel(cache.dataEmp?.model || '');
+        setDept('');
+      } else {
+        setSite('');
+        setModel('');
+        setDept('');
+      }
+    });
     setTanggal(dayjs().format('YYYY-MM-DD'));
     setJam(dayjs().format('HH:mm'));
     setKeterangan('');
@@ -222,11 +256,12 @@ const CreateP2HScreen = ({navigation}) => {
     setStickerFuelPermit('Berlaku');
   };
 
-  // Hapus draft
+  // ==== 6. Hapus draft ====
   const removeDraft = async () => {
     await AsyncStorage.removeItem(DRAFT_KEY);
   };
 
+  // ==== 7. Validasi form ====
   function isFormValid() {
     if (!nounit) return 'No. Unit wajib diisi!';
     if (!model) return 'Model Unit wajib dipilih!';
@@ -234,6 +269,9 @@ const CreateP2HScreen = ({navigation}) => {
     if (!section) return 'Section wajib diisi!';
     if (!site) return 'Site wajib diisi!';
     if (!dept) return 'Departemen wajib dipilih!';
+    const checklistQuestions = questionList.filter(
+      q => String(q.id) !== '27' && String(q.id) !== '28',
+    );
     if (
       checklistQuestions.length > 0 &&
       checklistQuestions.some(q => !inlineRadioOptions[q.id])
@@ -245,42 +283,12 @@ const CreateP2HScreen = ({navigation}) => {
     return '';
   }
 
-  // Change checklist
+  // ==== 8. Checklist handler ====
   const handleChangeChecklist = useCallback((id, value) => {
     setInlineRadioOptions(prev => ({...prev, [id]: value}));
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected === true);
-      if (state.isConnected) {
-        setSyncing(true);
-        pushOfflineQueue(
-          OFFLINE_SUBMIT_KEY,
-          '/StoreP2H',
-          undefined,
-          API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
-        ).then(sent => {
-          refreshQueueCount();
-          setSyncing(false);
-          if (sent === 0) {
-            getOfflineQueueCount(OFFLINE_SUBMIT_KEY).then(cnt => {
-              if (cnt > 0) {
-                Alert.alert(
-                  'Gagal Sync',
-                  `${cnt} data gagal dikirim, cek koneksi atau hubungi admin. Data akan dicoba otomatis lagi saat online.`,
-                );
-              }
-            });
-          }
-        });
-      }
-    });
-    NetInfo.fetch().then(state => setIsConnected(state.isConnected === true));
-    return () => unsubscribe();
-  }, [refreshQueueCount]);
-
-  // SUBMIT
+  // ==== 9. Submit ====
   const handleSubmit = async () => {
     const errorMsg = isFormValid();
     if (errorMsg) {
@@ -289,6 +297,9 @@ const CreateP2HScreen = ({navigation}) => {
     }
     setLoading(true);
 
+    const checklistQuestions = questionList.filter(
+      q => String(q.id) !== '27' && String(q.id) !== '28',
+    );
     const jawabanChecklist = checklistQuestions.map(
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
@@ -307,9 +318,8 @@ const CreateP2HScreen = ({navigation}) => {
       Sticker: stickerFuelPermit,
       tanggal: `${tanggal} ${jam}`,
       keterangan,
-      // id_local: akan otomatis dibuat di addQueueOffline
     };
-    // Cek koneksi
+
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -329,11 +339,10 @@ const CreateP2HScreen = ({navigation}) => {
       );
       return;
     }
-    // Kirim online seperti biasa
+    // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
-
       const response = await fetch(`${API_BASE_URL.p2h}/StoreP2H`, {
         method: 'POST',
         headers: {
@@ -348,14 +357,13 @@ const CreateP2HScreen = ({navigation}) => {
       if (response.ok && data.status === true) {
         await removeDraft();
         resetForm();
-        // Tambahkan di sini:
         if (isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
-            OFFLINE_SUBMIT_KEY, // Key queue P2H kamu
-            '/StoreP2H', // endpoint service P2H
-            undefined, // progress callback (optional, bisa null/undefined)
-            API_BASE_URL.p2h, // <<< wajib isi baseUrl ini agar ke endpoint P2H
+            OFFLINE_SUBMIT_KEY,
+            '/StoreP2H',
+            undefined,
+            API_BASE_URL.p2h,
           );
           await refreshQueueCount();
           setSyncing(false);
@@ -366,16 +374,6 @@ const CreateP2HScreen = ({navigation}) => {
             onPress: () => navigation.replace('P2HHistory'),
           },
         ]);
-        pushOfflineQueue(
-          OFFLINE_SUBMIT_KEY,
-          '/StoreP2H',
-          undefined,
-          API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
-        ).then(successCount => {
-          console.log('Offline queue synced! Data terkirim:', successCount);
-          refreshQueueCount();
-          setSyncing(false);
-        });
       } else {
         Alert.alert('Gagal', data.message || 'Gagal mengirim data!');
       }
@@ -384,6 +382,13 @@ const CreateP2HScreen = ({navigation}) => {
       Alert.alert('Error', 'Gagal mengirim data. Periksa koneksi atau server!');
     }
   };
+
+  // ==== 10. Render ====
+  const stickerCommissioningQ = questionList.find(q => String(q.id) === '27');
+  const stickerFuelPermitQ = questionList.find(q => String(q.id) === '28');
+  const checklistQuestions = questionList.filter(
+    q => String(q.id) !== '27' && String(q.id) !== '28',
+  );
 
   if (loadingMaster) {
     return (
@@ -409,6 +414,7 @@ const CreateP2HScreen = ({navigation}) => {
       <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
           <Text style={styles.title}>Form Pemeriksaan P2H</Text>
+
           {/* BADGE QUEUE */}
           {queueCount > 0 && (
             <View
@@ -431,7 +437,7 @@ const CreateP2HScreen = ({navigation}) => {
                       OFFLINE_SUBMIT_KEY,
                       '/StoreP2H',
                       undefined,
-                      API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
+                      API_BASE_URL.p2h,
                     );
                     await refreshQueueCount();
                     setSyncing(false);

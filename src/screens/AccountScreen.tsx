@@ -40,8 +40,6 @@ const AccountProfileScreen = ({navigation}) => {
   // Pastikan role pasti array
   let parsedRole = [];
   if (profile) {
-    console.log('Role array:', profile.roles);
-    console.log('Is array?', Array.isArray(profile.roles));
     if (Array.isArray(profile.roles)) parsedRole = profile.roles;
     else if (typeof profile.roles === 'string') {
       try {
