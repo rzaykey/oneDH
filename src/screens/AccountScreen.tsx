@@ -1,23 +1,178 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
+import {accountProfileStyles as styles} from '../styles/accountProfileStyles';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 
-const AccountScreen: React.FC = () => {
+const AccountProfileScreen = ({navigation}) => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const cacheStr = await AsyncStorage.getItem('loginCache');
+        if (cacheStr) setProfile(JSON.parse(cacheStr));
+      } catch (e) {
+        Alert.alert('Error', 'Gagal memuat data profil!');
+      }
+      setLoading(false);
+    };
+    loadProfile();
+  }, []);
+
+  // Helper masking token
+  const maskToken = token => {
+    if (!token) return '-';
+    return token.substring(0, 6) + '...' + token.slice(-6);
+  };
+
+  // Pastikan role pasti array
+  let parsedRole = [];
+  if (profile) {
+    console.log('Role array:', profile.roles);
+    console.log('Is array?', Array.isArray(profile.roles));
+    if (Array.isArray(profile.roles)) parsedRole = profile.roles;
+    else if (typeof profile.roles === 'string') {
+      try {
+        parsedRole = JSON.parse(profile.roles);
+      } catch {
+        parsedRole = [];
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <LinearGradient
+        colors={['#FFD700', '#1E90FF']}
+        style={{flex: 1}}
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 1}}>
+        <SafeAreaView style={{flex: 1, paddingTop: insets.top}}>
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#1E90FF" />
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <LinearGradient
+        colors={['#FFD700', '#1E90FF']}
+        style={{flex: 1}}
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 1}}>
+        <SafeAreaView style={{flex: 1, paddingTop: insets.top}}>
+          <View style={styles.center}>
+            <Text style={{color: 'red'}}>Tidak ada data profil ditemukan.</Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Account</Text>
-      {/* Tambahkan menu edit profil, dsb */}
-    </View>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={{flex: 1, paddingTop: insets.top}}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Header */}
+          <View style={styles.headerCard}>
+            <Icon
+              name="person-circle"
+              size={60}
+              color="#1E90FF"
+              style={{marginBottom: 5}}
+            />
+            <Text style={styles.profileName}>
+              {profile?.dataEmp?.name ?? profile.name}
+            </Text>
+            <Text style={styles.profileEmail}>{profile.email ?? '-'}</Text>
+          </View>
+          {/* Basic Info */}
+          <View style={styles.infoCard}>
+            <Text style={styles.infoRow}>
+              <Text style={styles.infoLabel}>JDE No:</Text>{' '}
+              {profile?.dataEmp?.jdeno}
+            </Text>
+            <Text style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Site:</Text>{' '}
+              {profile?.dataEmp?.site}
+            </Text>
+            <Text style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Dept:</Text>{' '}
+              {profile?.dataEmp?.dept}
+            </Text>
+            <Text style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Position:</Text>{' '}
+              {profile?.dataEmp?.position}
+            </Text>
+            <Text style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Token:</Text>{' '}
+              {maskToken(profile.token)}
+            </Text>
+          </View>
+          {/* Role List */}
+          <View style={styles.rolesCard}>
+            <Text style={styles.rolesTitle}>Roles & Permissions</Text>
+            {parsedRole.length > 0 ? (
+              parsedRole.map((r, idx) => (
+                <View key={idx} style={styles.roleItem}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 2,
+                    }}>
+                    <Icon name="checkmark-circle" color="#1E90FF" size={16} />
+                    <Text style={styles.roleName}>{r.name}</Text>
+                    <Text style={styles.roleSite}>({r.code_site})</Text>
+                  </View>
+                  <Text style={styles.rolePerm}>
+                    {r.module} -{' '}
+                    <Text style={{fontWeight: 'bold'}}>
+                      {(r.permit || '').toUpperCase()}
+                    </Text>
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={{color: 'red'}}>Tidak ada role ditemukan.</Text>
+            )}
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={async () => {
+              await AsyncStorage.clear();
+              navigation.replace('Login');
+            }}>
+            <Icon name="log-out-outline" size={20} color="#fff" />
+            <Text style={{color: '#fff', fontWeight: 'bold', marginLeft: 6}}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f4f7fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {fontSize: 22, fontWeight: 'bold', color: '#1E90FF'},
-});
-
-export default AccountScreen;
+export default AccountProfileScreen;

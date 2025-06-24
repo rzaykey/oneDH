@@ -47,7 +47,6 @@ export const modulStyles = StyleSheet.create({
   },
   safeContainer: {
     flex: 1,
-    backgroundColor: '#F4F7FA',
     paddingHorizontal: 18,
   },
 });

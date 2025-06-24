@@ -16,6 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
 import {isAdminHSE} from '../../utils/role'; // Tambahkan ini
+import LinearGradient from 'react-native-linear-gradient';
 
 const API_URL = `${API_BASE_URL.p2h}/GetDataP2H`;
 
@@ -159,44 +160,65 @@ const P2HHistoryScreen = () => {
     </TouchableOpacity>
   );
 
+  const InfoEmpty = ({message = 'Data kosong/belum ada pemeriksaan P2H.'}) => (
+    <View style={styles.emptyWrap}>
+      <Icon
+        name="file-tray-outline"
+        size={56}
+        color="#c9c9c9"
+        style={{marginBottom: 6}}
+      />
+      <Text style={styles.emptyText}>{message}</Text>
+      <Text style={styles.emptySubText}>
+        Silakan lakukan pemeriksaan P2H dan data akan muncul di sini.
+      </Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
-      <View style={styles.headerWrap}>
-        <Icon
-          name="clipboard-outline"
-          size={22}
-          color="#2563eb"
-          style={{marginRight: 10}}
-        />
-        <Text style={styles.title}>Riwayat Pemeriksaan P2H</Text>
-      </View>
-      {error ? (
-        <Text style={styles.emptyText}>{error}</Text>
-      ) : loading ? (
-        <ActivityIndicator
-          color="#4886E3"
-          style={{marginTop: 32}}
-          size="large"
-        />
-      ) : (
-        <FlatList
-          data={history}
-          keyExtractor={item => String(item.id)}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Belum ada data pemeriksaan.</Text>
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#4886E3']}
-            />
-          }
-        />
-      )}
-    </SafeAreaView>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+        <View style={styles.headerWrap}>
+          <Icon
+            name="clipboard-outline"
+            size={22}
+            color="#2563eb"
+            style={{marginRight: 10}}
+          />
+          <Text style={styles.title}>Riwayat Pemeriksaan P2H</Text>
+        </View>
+        {error ? (
+          <InfoEmpty message={error} />
+        ) : loading ? (
+          <ActivityIndicator
+            color="#4886E3"
+            style={{marginTop: 32}}
+            size="large"
+          />
+        ) : (
+          <FlatList
+            data={history}
+            keyExtractor={item => String(item.id)}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <InfoEmpty message="Data kosong/belum ada pemeriksaan P2H." />
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#4886E3']}
+              />
+            }
+          />
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

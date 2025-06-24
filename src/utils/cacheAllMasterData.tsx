@@ -94,20 +94,20 @@ export const cacheAllMasterData = async () => {
     }
 
     // --- Cache lainnya
-    try {
-      const listResp = await axios.get(`${API_BASE_URL.mop}/apiDayActAll`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      const allDaily = Array.isArray(listResp.data)
-        ? listResp.data
-        : listResp.data.data || [];
-      await AsyncStorage.setItem(
-        'cached_daily_activity_list',
-        JSON.stringify(allDaily),
-      );
-    } catch (err) {
-      console.log('Gagal cache DAILY LIST:', err?.message || err);
-    }
+    // try {
+    //   const listResp = await axios.get(`${API_BASE_URL.mop}/apiDayActAll`, {
+    //     headers: {Authorization: `Bearer ${token}`},
+    //   });
+    //   const allDaily = Array.isArray(listResp.data)
+    //     ? listResp.data
+    //     : listResp.data.data || [];
+    //   await AsyncStorage.setItem(
+    //     'cached_daily_activity_list',
+    //     JSON.stringify(allDaily),
+    //   );
+    // } catch (err) {
+    //   console.log('Gagal cache DAILY LIST:', err?.message || err);
+    // }
 
     try {
       const optResp = await axios.get(

@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import {dashboardStyles as styles} from '../styles/dashboardStyles';
 import {useSiteContext} from '../context/SiteContext';
+import LinearGradient from 'react-native-linear-gradient';
 import {cacheAllMasterData} from '../utils/cacheAllMasterData'; // path ke fungsi kamu
 
 const carouselData = [
@@ -122,176 +123,219 @@ const DashboardScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView
-      style={{flex: 1, backgroundColor: '#fff', paddingTop: insets.top}}>
-      <View style={styles.container}>
-        {/* HEADER */}
-        <View style={styles.headerRow}>
-          <View style={{flex: 1}}>
-            <Text style={styles.title}>Home</Text>
-            <Icon name="person-circle" style={styles.avatarIcon} />
-            <Text style={styles.welcome}>
-              Welcome, {user?.name ?? 'user'}
-              {user?.jdeno ? ` (${user.jdeno})` : ''} !
-            </Text>
-            {/* SITE PILIHAN */}
-            {sites.length > 0 ? (
-              <View style={styles.siteRow}>
-                <Text style={styles.siteLabel}>Site: </Text>
-                <FlatList
-                  data={sites}
-                  keyExtractor={s => s}
-                  renderItem={({item}) => <SiteChip site={item} />}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{alignItems: 'center'}}
-                />
-              </View>
-            ) : (
-              <Text
-                style={{
-                  color: 'red',
-                  marginTop: 12,
-                  fontSize: 13,
-                  fontWeight: 'bold',
-                }}>
-                Tidak ada site yang bisa dipilih.
-              </Text>
-            )}
-            <Text style={styles.notif}>Notification</Text>
-          </View>
-          {/* Dropdown trigger */}
-          <TouchableOpacity
-            style={{padding: 10}}
-            onPress={() => setDropdownVisible(true)}>
-            <Icon name="ellipsis-vertical" size={26} color="#1E90FF" />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          onPress={handleRefreshMaster}
-          style={{
-            backgroundColor: '#1E90FF',
-            padding: 13,
-            borderRadius: 10,
-            alignItems: 'center',
-            marginBottom: 16,
-            flexDirection: 'row',
-            justifyContent: 'center',
-          }}
-          disabled={refreshingMaster}>
-          {refreshingMaster ? (
-            <ActivityIndicator color="#fff" style={{marginRight: 7}} />
-          ) : (
-            <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>
-              Refresh Data Master
-            </Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            padding: 8,
-            backgroundColor: '#22223b',
-            borderRadius: 8,
-            alignSelf: 'flex-end',
-            margin: 8,
-          }}
-          onPress={() => navigation.navigate('MasterCacheScreen')}>
-          <Text style={{color: 'white', fontWeight: 'bold'}}>
-            🔎 Lihat Cache Master
-          </Text>
-        </TouchableOpacity>
-        {/* Dropdown Modal */}
-        <Modal
-          visible={dropdownVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setDropdownVisible(false)}>
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setDropdownVisible(false)}>
-            <View style={styles.dropdownMenu}>
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setDropdownVisible(false);
-                  handleGantiSite();
-                }}>
-                <Icon
-                  name="swap-horizontal-outline"
-                  size={20}
-                  color="#1E90FF"
-                />
-                <Text style={styles.dropdownText}>Ganti Site</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setDropdownVisible(false);
-                  handleLogout();
-                }}>
-                <Icon name="log-out-outline" size={20} color="#e74c3c" />
-                <Text style={styles.dropdownText}>Logout</Text>
-              </TouchableOpacity>
-            </View>
-          </Pressable>
-        </Modal>
-
-        {/* CAROUSEL */}
-        <View style={styles.carouselContainer}>
-          <FlatList
-            ref={carouselRef}
-            data={carouselData}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={item => item.id}
-            renderItem={({item}) => (
-              <View
-                style={[
-                  styles.carouselCard,
-                  {
-                    width: windowWidth * 0.8,
-                    marginHorizontal: (windowWidth * 0.1) / 2,
-                  },
-                ]}>
-                <Text
-                  style={styles.carouselText}
-                  numberOfLines={4}
-                  ellipsizeMode="tail">
-                  {item.text}
-                </Text>
-              </View>
-            )}
-            onMomentumScrollEnd={ev => {
-              const idx = Math.round(
-                ev.nativeEvent.contentOffset.x / (windowWidth * 0.8),
-              );
-              setCurrentIndex(idx);
-            }}
-            contentContainerStyle={{
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.container}>
+          {/* HEADER */}
+          <View
+            style={{
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
-              paddingHorizontal: (windowWidth * 0.1) / 2,
-            }}
-            snapToInterval={windowWidth * 0.8}
-            decelerationRate="fast"
-            extraData={windowWidth}
-          />
-          <View style={styles.dotsContainer}>
-            {carouselData.map((_, i) => (
-              <View
-                key={i}
+              marginBottom: 14,
+            }}>
+            <View style={{flex: 1}}>
+              <Text
                 style={[
-                  styles.dot,
-                  i === currentIndex ? styles.dotActive : undefined,
-                ]}
-              />
-            ))}
+                  styles.title,
+                  {fontSize: 24, fontWeight: 'bold', color: '#183153'},
+                ]}>
+                Home
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{padding: 8}}
+              onPress={() => setDropdownVisible(true)}>
+              <Icon name="ellipsis-vertical" size={28} color="#1E90FF" />
+            </TouchableOpacity>
           </View>
+
+          <View style={styles.profileCard}>
+            <View style={styles.profileAvatar}>
+              <Icon name="person-circle" size={56} color="#1E90FF" />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{user?.name ?? 'User'}</Text>
+              {/* Info Baris 1: JDE No */}
+              {user?.jdeno ? (
+                <View style={styles.profileInfoRow}>
+                  <Text style={styles.profileId}>JDE No: {user.jdeno}</Text>
+                </View>
+              ) : null}
+              {/* Info Baris 2: Dept & Posisi */}
+              <View style={styles.profileInfoRow}>
+                {user?.dept && (
+                  <Text style={styles.profileDept}>{user.dept}</Text>
+                )}
+                {user?.position && (
+                  <Text style={styles.profilePosition}>{user.position}</Text>
+                )}
+              </View>
+              {/* Site */}
+              <View style={styles.siteListRow}>
+                <Text style={styles.siteListLabel}>Site:</Text>
+                {sites.length > 0 ? (
+                  <FlatList
+                    data={sites}
+                    keyExtractor={s => s}
+                    renderItem={({item}) => <SiteChip site={item} />}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{alignItems: 'center'}}
+                  />
+                ) : (
+                  <Text
+                    style={{color: 'red', fontSize: 13, fontWeight: 'bold'}}>
+                    Tidak ada site yang bisa dipilih.
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.notifCard}>
+            <Icon
+              name="notifications"
+              size={20}
+              color="#ff9800"
+              style={{marginRight: 8}}
+            />
+            <Text style={styles.notifText}>Notification</Text>
+          </View>
+
+          {/* <TouchableOpacity
+            style={{
+              padding: 8,
+              backgroundColor: '#22223b',
+              borderRadius: 8,
+              alignSelf: 'flex-end',
+              margin: 8,
+            }}
+            onPress={() => navigation.navigate('MasterCacheScreen')}>
+            <Text style={{color: 'white', fontWeight: 'bold'}}>
+              🔎 Lihat Cache Master
+            </Text>
+          </TouchableOpacity> */}
+          {/* Dropdown Modal */}
+          <Modal
+            visible={dropdownVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setDropdownVisible(false)}>
+            <Pressable
+              style={styles.modalOverlay}
+              onPress={() => {
+                if (!refreshingMaster) setDropdownVisible(false);
+              }}
+              disabled={refreshingMaster} // ini juga bisa
+            >
+              <View style={styles.dropdownMenu}>
+                {refreshingMaster ? (
+                  <View style={{alignItems: 'center', padding: 16}}>
+                    <ActivityIndicator size="large" color="#1E90FF" />
+                    <Text style={{marginTop: 12}}>Memuat master data...</Text>
+                  </View>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={async () => {
+                        // Modal tetap dibuka saat loading
+                        await handleRefreshMaster();
+                        setDropdownVisible(false); // Tutup setelah loading selesai
+                      }}>
+                      <Icon name="refresh-outline" size={20} color="#1E90FF" />
+                      <Text style={styles.dropdownText}>
+                        Refresh Master Data
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setDropdownVisible(false);
+                        handleGantiSite();
+                      }}>
+                      <Icon
+                        name="swap-horizontal-outline"
+                        size={20}
+                        color="#1E90FF"
+                      />
+                      <Text style={styles.dropdownText}>Ganti Site</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setDropdownVisible(false);
+                        handleLogout();
+                      }}>
+                      <Icon name="log-out-outline" size={20} color="#e74c3c" />
+                      <Text style={styles.dropdownText}>Logout</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </Pressable>
+          </Modal>
+          {/* CAROUSEL */}
+          <View style={styles.carouselContainer}>
+            <FlatList
+              ref={carouselRef}
+              data={carouselData}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={item => item.id}
+              renderItem={({item}) => (
+                <View
+                  style={[
+                    styles.carouselCard,
+                    {
+                      width: windowWidth * 0.8,
+                      marginHorizontal: (windowWidth * 0.1) / 2,
+                    },
+                  ]}>
+                  <Text
+                    style={styles.carouselText}
+                    numberOfLines={4}
+                    ellipsizeMode="tail">
+                    {item.text}
+                  </Text>
+                </View>
+              )}
+              onMomentumScrollEnd={ev => {
+                const idx = Math.round(
+                  ev.nativeEvent.contentOffset.x / (windowWidth * 0.8),
+                );
+                setCurrentIndex(idx);
+              }}
+              contentContainerStyle={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: (windowWidth * 0.1) / 2,
+              }}
+              snapToInterval={windowWidth * 0.8}
+              decelerationRate="fast"
+              extraData={windowWidth}
+            />
+            <View style={styles.dotsContainer}>
+              {carouselData.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    i === currentIndex ? styles.dotActive : undefined,
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+          {/* --- Tambah menu dashboard lain di sini --- */}
         </View>
-        {/* --- Tambah menu dashboard lain di sini --- */}
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

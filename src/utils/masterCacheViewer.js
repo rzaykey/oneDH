@@ -11,7 +11,6 @@ export const cacheKeys = [
   'cached_model_list',
   'dropdown_unit',
   'cached_all_activity',
-  'cached_daily_activity_list',
   'cached_opt_list',
   'mentoring_master_site',
   'cached_unit_list',

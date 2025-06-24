@@ -4,6 +4,7 @@ import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {p2hDetailStyles as styles} from '../../styles/p2hDetailStyles';
+import LinearGradient from 'react-native-linear-gradient';
 import API_BASE_URL from '../../config';
 
 const API_DETAIL_URL = `${API_BASE_URL.p2h}/GetDataP2HDetails`;
@@ -117,38 +118,44 @@ const P2HDetailScreen = ({route}) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
-      <FlatList
-        data={detail}
-        keyExtractor={item => String(item.id)}
-        ListHeaderComponent={
-          <>
-            {renderHeader()}
-            <Text style={styles.sectionTitle}>Checklist Pemeriksaan</Text>
-            {error ? (
-              <Text style={styles.errorText}>{error}</Text>
-            ) : loading ? (
-              <ActivityIndicator
-                color="#4f8ef7"
-                style={{marginTop: 20}}
-                size="large"
-              />
-            ) : null}
-          </>
-        }
-        renderItem={renderItem}
-        ListEmptyComponent={
-          !loading && !error ? (
-            <Text style={styles.emptyText}>Tidak ada data checklist.</Text>
-          ) : null
-        }
-        contentContainerStyle={{
-          paddingHorizontal: 15,
-          paddingBottom: 32,
-        }}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+        <FlatList
+          data={detail}
+          keyExtractor={item => String(item.id)}
+          ListHeaderComponent={
+            <>
+              {renderHeader()}
+              <Text style={styles.sectionTitle}>Checklist Pemeriksaan</Text>
+              {error ? (
+                <Text style={styles.errorText}>{error}</Text>
+              ) : loading ? (
+                <ActivityIndicator
+                  color="#4f8ef7"
+                  style={{marginTop: 20}}
+                  size="large"
+                />
+              ) : null}
+            </>
+          }
+          renderItem={renderItem}
+          ListEmptyComponent={
+            !loading && !error ? (
+              <Text style={styles.emptyText}>Tidak ada data checklist.</Text>
+            ) : null
+          }
+          contentContainerStyle={{
+            paddingHorizontal: 15,
+            paddingBottom: 32,
+          }}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

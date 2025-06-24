@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 
 export const createP2HStyles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f7fafd', paddingHorizontal: 12},
+  container: {flex: 1, paddingHorizontal: 12},
   title: {
     fontWeight: 'bold',
     fontSize: 20,

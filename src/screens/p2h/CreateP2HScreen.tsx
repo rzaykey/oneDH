@@ -17,6 +17,7 @@ import {useSiteContext} from '../../context/SiteContext';
 import API_BASE_URL from '../../config';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
+import LinearGradient from 'react-native-linear-gradient';
 
 import {
   addQueueOffline,
@@ -400,355 +401,359 @@ const CreateP2HScreen = ({navigation}) => {
   }
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        {paddingTop: insets.top, paddingBottom: insets.bottom},
-      ]}>
-      <ScrollView contentContainerStyle={{paddingBottom: 30}}>
-        <Text style={styles.title}>Form Pemeriksaan P2H</Text>
-        {/* BADGE QUEUE */}
-        {queueCount > 0 && (
-          <View
-            style={{
-              backgroundColor: queueCount === 0 ? '#16a34a' : '#e74c3c',
-              alignSelf: 'flex-end',
-              paddingHorizontal: 12,
-              paddingVertical: 4,
-              borderRadius: 16,
-              marginBottom: 8,
-            }}>
-            <Text style={{color: 'white'}}>
-              {queueCount} data offline menunggu dikirim!
-            </Text>
-            {isConnected && (
-              <TouchableOpacity
-                onPress={async () => {
-                  setSyncing(true);
-                  const sent = await pushOfflineQueue(
-                    OFFLINE_SUBMIT_KEY,
-                    '/StoreP2H',
-                    undefined,
-                    API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
-                  );
-                  await refreshQueueCount();
-                  setSyncing(false);
-                  if (sent === 0) {
-                    Alert.alert(
-                      'Info',
-                      queueCount > 0
-                        ? 'Ada data yang gagal dikirim. Cek koneksi/server, data akan dicoba lagi otomatis saat online.'
-                        : 'Tidak ada data offline tersisa.',
-                    );
-                  }
-                }}
-                style={{
-                  marginTop: 6,
-                  backgroundColor: '#27ae60',
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                }}
-                disabled={syncing}>
-                <Text style={{color: '#fff', fontWeight: 'bold'}}>
-                  {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        <View style={{padding: 1, alignItems: 'center'}}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              padding: 6,
-              backgroundColor: isConnected ? '#dcfce7' : '#fee2e2',
-              borderRadius: 12,
-              marginBottom: 8,
-            }}>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+        <ScrollView contentContainerStyle={{paddingBottom: 30}}>
+          <Text style={styles.title}>Form Pemeriksaan P2H</Text>
+          {/* BADGE QUEUE */}
+          {queueCount > 0 && (
             <View
               style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: isConnected ? '#22c55e' : '#ef4444',
-                marginRight: 8,
-              }}
-            />
-            <Text
-              style={{
-                color: isConnected ? '#166534' : '#991b1b',
-                fontWeight: '600',
+                backgroundColor: queueCount === 0 ? '#16a34a' : '#e74c3c',
+                alignSelf: 'flex-end',
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 16,
+                marginBottom: 8,
               }}>
-              {isConnected ? 'Online' : 'Offline'}
-              {syncing && isConnected ? ' • Sinkronisasi...' : ''}
-            </Text>
-          </View>
-        </View>
-        {/* CARD: Informasi Unit */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Informasi Unit</Text>
-          <Text style={styles.label}>No. Unit</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="No Unit"
-            value={nounit}
-            onChangeText={setNoUnit}
-          />
-          <Text style={styles.label}>Model Unit</Text>
-          <RNPickerSelect
-            placeholder={{label: 'Pilih Model', value: ''}}
-            value={model}
-            onValueChange={setModel}
-            items={
-              Array.isArray(modelList)
-                ? modelList.map(m => ({
-                    label: m.value || m.desc || m.label,
-                    value: m.value || m.desc || m.value,
-                    key: String(m.id || m.desc || m.value),
-                  }))
-                : []
-            }
-            style={{
-              inputIOS: {...styles.input, color: '#111'},
-              inputAndroid: {...styles.input, color: '#111'},
-              placeholder: {...styles.input, color: '#aaa'},
-            }}
-          />
-          {modelList.length === 0 && (
-            <Text style={{color: 'red', marginBottom: 10}}>
-              Belum ada data model. Silakan refresh master.
-            </Text>
-          )}
-          <Text style={styles.label}>HM</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HM"
-            value={KM}
-            keyboardType="numeric"
-            onChangeText={setKM}
-          />
-        </View>
-
-        {/* CARD: Lokasi dan Departemen */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Lokasi & Departemen</Text>
-          <Text style={styles.label}>Site</Text>
-          <View style={[styles.input, {backgroundColor: '#f4f4f4'}]}>
-            <Text>{site ? site : '-'}</Text>
-          </View>
-          <Text style={styles.label}>Section</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Section"
-            value={section}
-            onChangeText={setSection}
-          />
-          <Text style={styles.label}>Departemen</Text>
-          <RNPickerSelect
-            placeholder={{label: 'Pilih Departemen', value: ''}}
-            value={dept}
-            onValueChange={setDept}
-            items={
-              Array.isArray(deptList)
-                ? deptList.map(d => ({
-                    label: d.department_name,
-                    value: d.id || d.value,
-                    key: String(d.id || d.value),
-                  }))
-                : []
-            }
-            style={{
-              inputIOS: {...styles.input, color: '#111'},
-              inputAndroid: {...styles.input, color: '#111'},
-              placeholder: {...styles.input, color: '#aaa'},
-            }}
-          />
-          {deptList.length === 0 && (
-            <Text style={{color: 'red', marginBottom: 10}}>
-              Belum ada departemen. Silakan refresh master.
-            </Text>
-          )}
-        </View>
-
-        {/* CARD: Checklist Pemeriksaan */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Checklist Pemeriksaan</Text>
-          {checklistQuestions.length === 0 && (
-            <Text style={{color: 'red', marginBottom: 10}}>
-              Belum ada pertanyaan. Silakan refresh master.
-            </Text>
-          )}
-          {checklistQuestions.map(q => (
-            <View key={q.id} style={styles.checklistCard}>
-              <Text style={{fontWeight: '600', marginBottom: 7}}>
-                {q.pertanyaan || q.question || q.label}
+              <Text style={{color: 'white'}}>
+                {queueCount} data offline menunggu dikirim!
               </Text>
-              <View style={styles.radioRow}>
-                {checklistOptions.map(opt => (
-                  <TouchableOpacity
-                    key={q.id + '-' + opt}
-                    onPress={() => handleChangeChecklist(q.id, opt)}
-                    style={styles.radioTouchable}
-                    activeOpacity={0.8}>
-                    <View
-                      style={[
-                        styles.radioOuter,
-                        inlineRadioOptions[q.id] === opt &&
-                          styles.radioOuterActive,
-                      ]}>
-                      {inlineRadioOptions[q.id] === opt && (
-                        <View style={styles.radioInnerFullBlue} />
-                      )}
-                    </View>
-                    <Text
-                      style={[
-                        styles.radioLabel,
-                        inlineRadioOptions[q.id] === opt &&
-                          styles.radioLabelActive,
-                      ]}>
-                      {opt}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {isConnected && (
+                <TouchableOpacity
+                  onPress={async () => {
+                    setSyncing(true);
+                    const sent = await pushOfflineQueue(
+                      OFFLINE_SUBMIT_KEY,
+                      '/StoreP2H',
+                      undefined,
+                      API_BASE_URL.p2h, // <<< PENTING: agar ke endpoint P2H, bukan mop!
+                    );
+                    await refreshQueueCount();
+                    setSyncing(false);
+                    if (sent === 0) {
+                      Alert.alert(
+                        'Info',
+                        queueCount > 0
+                          ? 'Ada data yang gagal dikirim. Cek koneksi/server, data akan dicoba lagi otomatis saat online.'
+                          : 'Tidak ada data offline tersisa.',
+                      );
+                    }
+                  }}
+                  style={{
+                    marginTop: 6,
+                    backgroundColor: '#27ae60',
+                    paddingVertical: 6,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                  }}
+                  disabled={syncing}>
+                  <Text style={{color: '#fff', fontWeight: 'bold'}}>
+                    {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-          ))}
-        </View>
+          )}
 
-        {/* CARD: Stiker Khusus */}
-        {(stickerCommissioningQ || stickerFuelPermitQ) && (
+          <View style={{padding: 1, alignItems: 'center'}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 6,
+                backgroundColor: isConnected ? '#dcfce7' : '#fee2e2',
+                borderRadius: 12,
+                marginBottom: 8,
+              }}>
+              <View
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: isConnected ? '#22c55e' : '#ef4444',
+                  marginRight: 8,
+                }}
+              />
+              <Text
+                style={{
+                  color: isConnected ? '#166534' : '#991b1b',
+                  fontWeight: '600',
+                }}>
+                {isConnected ? 'Online' : 'Offline'}
+                {syncing && isConnected ? ' • Sinkronisasi...' : ''}
+              </Text>
+            </View>
+          </View>
+          {/* CARD: Informasi Unit */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Stiker Khusus</Text>
-            {stickerCommissioningQ && (
-              <View style={{marginBottom: 16}}>
-                <Text style={styles.label}>
-                  {stickerCommissioningQ.pertanyaan}
-                </Text>
-                <View style={{flexDirection: 'row', gap: 16}}>
-                  {['Berlaku', 'Tidak Berlaku'].map(opt => (
-                    <TouchableOpacity
-                      key={'stickerCommissioning-' + opt}
-                      onPress={() => setStickerCommissioning(opt)}
-                      style={[
-                        styles.radioButton2,
-                        stickerCommissioning === opt &&
-                          styles.radioButton2Active,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.radioText2,
-                          stickerCommissioning === opt &&
-                            styles.radioText2Active,
-                        ]}>
-                        {opt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+            <Text style={styles.cardTitle}>Informasi Unit</Text>
+            <Text style={styles.label}>No. Unit</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="No Unit"
+              value={nounit}
+              onChangeText={setNoUnit}
+            />
+            <Text style={styles.label}>Model Unit</Text>
+            <RNPickerSelect
+              placeholder={{label: 'Pilih Model', value: ''}}
+              value={model}
+              onValueChange={setModel}
+              items={
+                Array.isArray(modelList)
+                  ? modelList.map(m => ({
+                      label: m.value || m.desc || m.label,
+                      value: m.value || m.desc || m.value,
+                      key: String(m.id || m.desc || m.value),
+                    }))
+                  : []
+              }
+              style={{
+                inputIOS: {...styles.input, color: '#111'},
+                inputAndroid: {...styles.input, color: '#111'},
+                placeholder: {...styles.input, color: '#aaa'},
+              }}
+            />
+            {modelList.length === 0 && (
+              <Text style={{color: 'red', marginBottom: 10}}>
+                Belum ada data model. Silakan refresh master.
+              </Text>
             )}
-            {stickerFuelPermitQ && (
-              <View style={{marginBottom: 16}}>
-                <Text style={styles.label}>
-                  {stickerFuelPermitQ.pertanyaan}
-                </Text>
-                <View style={{flexDirection: 'row', gap: 16}}>
-                  {['Berlaku', 'Tidak Berlaku'].map(opt => (
-                    <TouchableOpacity
-                      key={'stickerFuel-' + opt}
-                      onPress={() => setStickerFuelPermit(opt)}
-                      style={[
-                        styles.radioButton2,
-                        stickerFuelPermit === opt && styles.radioButton2Active,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.radioText2,
-                          stickerFuelPermit === opt && styles.radioText2Active,
-                        ]}>
-                        {opt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+            <Text style={styles.label}>HM</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="HM"
+              value={KM}
+              keyboardType="numeric"
+              onChangeText={setKM}
+            />
+          </View>
+
+          {/* CARD: Lokasi dan Departemen */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Lokasi & Departemen</Text>
+            <Text style={styles.label}>Site</Text>
+            <View style={[styles.input, {backgroundColor: '#f4f4f4'}]}>
+              <Text>{site ? site : '-'}</Text>
+            </View>
+            <Text style={styles.label}>Section</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Section"
+              value={section}
+              onChangeText={setSection}
+            />
+            <Text style={styles.label}>Departemen</Text>
+            <RNPickerSelect
+              placeholder={{label: 'Pilih Departemen', value: ''}}
+              value={dept}
+              onValueChange={setDept}
+              items={
+                Array.isArray(deptList)
+                  ? deptList.map(d => ({
+                      label: d.department_name,
+                      value: d.id || d.value,
+                      key: String(d.id || d.value),
+                    }))
+                  : []
+              }
+              style={{
+                inputIOS: {...styles.input, color: '#111'},
+                inputAndroid: {...styles.input, color: '#111'},
+                placeholder: {...styles.input, color: '#aaa'},
+              }}
+            />
+            {deptList.length === 0 && (
+              <Text style={{color: 'red', marginBottom: 10}}>
+                Belum ada departemen. Silakan refresh master.
+              </Text>
             )}
           </View>
-        )}
 
-        {/* CARD: Lainnya */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Lainnya</Text>
+          {/* CARD: Checklist Pemeriksaan */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Checklist Pemeriksaan</Text>
+            {checklistQuestions.length === 0 && (
+              <Text style={{color: 'red', marginBottom: 10}}>
+                Belum ada pertanyaan. Silakan refresh master.
+              </Text>
+            )}
+            {checklistQuestions.map(q => (
+              <View key={q.id} style={styles.checklistCard}>
+                <Text style={{fontWeight: '600', marginBottom: 7}}>
+                  {q.pertanyaan || q.question || q.label}
+                </Text>
+                <View style={styles.radioRow}>
+                  {checklistOptions.map(opt => (
+                    <TouchableOpacity
+                      key={q.id + '-' + opt}
+                      onPress={() => handleChangeChecklist(q.id, opt)}
+                      style={styles.radioTouchable}
+                      activeOpacity={0.8}>
+                      <View
+                        style={[
+                          styles.radioOuter,
+                          inlineRadioOptions[q.id] === opt &&
+                            styles.radioOuterActive,
+                        ]}>
+                        {inlineRadioOptions[q.id] === opt && (
+                          <View style={styles.radioInnerFullBlue} />
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.radioLabel,
+                          inlineRadioOptions[q.id] === opt &&
+                            styles.radioLabelActive,
+                        ]}>
+                        {opt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
 
-          {/* DATE PICKER */}
-          <Text style={styles.label}>Tanggal</Text>
-          <TouchableOpacity
-            style={[styles.input, {justifyContent: 'center'}]}
-            onPress={() => setShowDate(true)}>
-            <Text>{tanggal}</Text>
-          </TouchableOpacity>
-          {showDate && (
-            <DateTimePicker
-              value={dayjs(tanggal).toDate()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDate(false);
-                if (selectedDate) {
-                  setTanggal(dayjs(selectedDate).format('YYYY-MM-DD'));
-                }
-              }}
+          {/* CARD: Stiker Khusus */}
+          {(stickerCommissioningQ || stickerFuelPermitQ) && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Stiker Khusus</Text>
+              {stickerCommissioningQ && (
+                <View style={{marginBottom: 16}}>
+                  <Text style={styles.label}>
+                    {stickerCommissioningQ.pertanyaan}
+                  </Text>
+                  <View style={{flexDirection: 'row', gap: 16}}>
+                    {['Berlaku', 'Tidak Berlaku'].map(opt => (
+                      <TouchableOpacity
+                        key={'stickerCommissioning-' + opt}
+                        onPress={() => setStickerCommissioning(opt)}
+                        style={[
+                          styles.radioButton2,
+                          stickerCommissioning === opt &&
+                            styles.radioButton2Active,
+                        ]}>
+                        <Text
+                          style={[
+                            styles.radioText2,
+                            stickerCommissioning === opt &&
+                              styles.radioText2Active,
+                          ]}>
+                          {opt}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+              {stickerFuelPermitQ && (
+                <View style={{marginBottom: 16}}>
+                  <Text style={styles.label}>
+                    {stickerFuelPermitQ.pertanyaan}
+                  </Text>
+                  <View style={{flexDirection: 'row', gap: 16}}>
+                    {['Berlaku', 'Tidak Berlaku'].map(opt => (
+                      <TouchableOpacity
+                        key={'stickerFuel-' + opt}
+                        onPress={() => setStickerFuelPermit(opt)}
+                        style={[
+                          styles.radioButton2,
+                          stickerFuelPermit === opt &&
+                            styles.radioButton2Active,
+                        ]}>
+                        <Text
+                          style={[
+                            styles.radioText2,
+                            stickerFuelPermit === opt &&
+                              styles.radioText2Active,
+                          ]}>
+                          {opt}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* CARD: Lainnya */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Lainnya</Text>
+
+            {/* DATE PICKER */}
+            <Text style={styles.label}>Tanggal</Text>
+            <TouchableOpacity
+              style={[styles.input, {justifyContent: 'center'}]}
+              onPress={() => setShowDate(true)}>
+              <Text>{tanggal}</Text>
+            </TouchableOpacity>
+            {showDate && (
+              <DateTimePicker
+                value={dayjs(tanggal).toDate()}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDate(false);
+                  if (selectedDate) {
+                    setTanggal(dayjs(selectedDate).format('YYYY-MM-DD'));
+                  }
+                }}
+              />
+            )}
+
+            {/* TIME PICKER */}
+            <Text style={styles.label}>Jam</Text>
+            <TouchableOpacity
+              style={[styles.input, {justifyContent: 'center'}]}
+              onPress={() => setShowTime(true)}>
+              <Text>{jam}</Text>
+            </TouchableOpacity>
+            {showTime && (
+              <DateTimePicker
+                value={dayjs(jam, 'HH:mm').toDate()}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowTime(false);
+                  if (selectedTime) {
+                    setJam(dayjs(selectedTime).format('HH:mm'));
+                  }
+                }}
+              />
+            )}
+
+            <Text style={styles.label}>Keterangan</Text>
+            <TextInput
+              style={[styles.input, {height: 60}]}
+              placeholder="Keterangan"
+              value={keterangan}
+              onChangeText={setKeterangan}
+              multiline
             />
-          )}
+          </View>
 
-          {/* TIME PICKER */}
-          <Text style={styles.label}>Jam</Text>
+          {/* SUBMIT */}
           <TouchableOpacity
-            style={[styles.input, {justifyContent: 'center'}]}
-            onPress={() => setShowTime(true)}>
-            <Text>{jam}</Text>
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Kirim P2H</Text>
+            )}
           </TouchableOpacity>
-          {showTime && (
-            <DateTimePicker
-              value={dayjs(jam, 'HH:mm').toDate()}
-              mode="time"
-              is24Hour={true}
-              display="default"
-              onChange={(event, selectedTime) => {
-                setShowTime(false);
-                if (selectedTime) {
-                  setJam(dayjs(selectedTime).format('HH:mm'));
-                }
-              }}
-            />
-          )}
-
-          <Text style={styles.label}>Keterangan</Text>
-          <TextInput
-            style={[styles.input, {height: 60}]}
-            placeholder="Keterangan"
-            value={keterangan}
-            onChangeText={setKeterangan}
-            multiline
-          />
-        </View>
-
-        {/* SUBMIT */}
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Kirim P2H</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

@@ -5,7 +5,6 @@ const {width} = Dimensions.get('window');
 export const p2hStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
     paddingHorizontal: 18,
     paddingTop: Platform.OS === 'android' ? 8 : 0,
   },

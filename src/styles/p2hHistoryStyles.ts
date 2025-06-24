@@ -3,19 +3,15 @@ import {StyleSheet} from 'react-native';
 export const p2hHistoryStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f7fa',
   },
   headerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 18,
     paddingTop: 9,
     paddingBottom: 14,
-    borderBottomWidth: 0.4,
     borderBottomColor: '#cbd6ee',
     marginBottom: 5,
-    elevation: 1,
   },
   title: {
     fontWeight: 'bold',
@@ -128,10 +124,24 @@ export const p2hHistoryStyles = StyleSheet.create({
     fontSize: 13,
     marginLeft: 2,
   },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 52,
+    marginBottom: 52,
+    paddingHorizontal: 26,
+  },
   emptyText: {
-    color: '#aaa',
-    fontSize: 15,
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
     textAlign: 'center',
-    marginTop: 28,
+    marginBottom: 2,
+  },
+  emptySubText: {
+    color: '#fff',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 0,
   },
 });

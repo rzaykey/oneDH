@@ -3,7 +3,6 @@ import {StyleSheet} from 'react-native';
 export const sitePickerStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fbff',
   },
   inner: {
     flex: 1,

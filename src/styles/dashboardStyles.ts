@@ -3,7 +3,7 @@ const {width: SCREEN_WIDTH} = Dimensions.get('window');
 export const dashboardStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Sesuai gambar, putih
+    // backgroundColor: '#fff', // Sesuai gambar, putih
     paddingTop: 22,
     paddingHorizontal: 18,
   },
@@ -63,7 +63,7 @@ export const dashboardStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   carouselCard: {
-    backgroundColor: '#6E97CA',
+    backgroundColor: '#1E90FF',
     borderRadius: 20,
     width: SCREEN_WIDTH * 0.8, // 80% dari layar
     minHeight: 115,
@@ -234,5 +234,90 @@ export const dashboardStyles = StyleSheet.create({
     color: '#757686',
     fontSize: 13,
     fontStyle: 'italic',
+  },
+  profileCard: {
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 14,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.13,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  profileAvatar: {
+    marginRight: 14,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 40,
+    padding: 6,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 2,
+  },
+  profileInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+    gap: 8, // untuk spacing antar elemen, opsional jika pakai RN 0.71+
+  },
+  profileId: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 1,
+    marginRight: 10, // supaya berjarak kalau sejajar
+  },
+  profileDept: {
+    fontSize: 13,
+    color: '#3080d0',
+    fontWeight: '600',
+    marginBottom: 1,
+    marginRight: 10,
+  },
+  profilePosition: {
+    fontSize: 13,
+    color: '#2d9d78',
+    fontWeight: '600',
+    marginBottom: 1,
+  },
+  siteListRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    marginTop: 6,
+  },
+  siteListLabel: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: '600',
+    marginRight: 10,
+  },
+  notifCard: {
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 18,
+    marginTop: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notifText: {
+    fontSize: 15,
+    color: '#164160',
+    flex: 1,
   },
 });

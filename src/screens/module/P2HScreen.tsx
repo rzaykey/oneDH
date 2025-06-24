@@ -3,6 +3,7 @@ import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {p2hStyles as styles} from '../../styles/p2hStyles';
+import LinearGradient from 'react-native-linear-gradient';
 
 const p2hMenus = [
   {
@@ -30,30 +31,36 @@ const p2hMenus = [
 
 const P2HScreen = ({navigation}: any) => {
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>P2H - Pemeriksaan Harian Kendaraan</Text>
-      <FlatList
-        data={p2hMenus}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.menuList}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            activeOpacity={0.82}
-            style={styles.menuCard}
-            onPress={() => navigation.navigate(item.screen)}>
-            <View style={styles.iconCircle}>
-              <Icon name={item.icon} size={27} color="#fff" />
-            </View>
-            <View style={styles.menuInfo}>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuDesc}>{item.desc}</Text>
-            </View>
-            <Icon name="chevron-forward" size={23} color="#AAB2BD" />
-          </TouchableOpacity>
-        )}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>P2H - Pemeriksaan Harian Kendaraan</Text>
+        <FlatList
+          data={p2hMenus}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.menuList}
+          renderItem={({item}) => (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              style={styles.menuCard}
+              onPress={() => navigation.navigate(item.screen)}>
+              <View style={styles.iconCircle}>
+                <Icon name={item.icon} size={27} color="#fff" />
+              </View>
+              <View style={styles.menuInfo}>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={styles.menuDesc}>{item.desc}</Text>
+              </View>
+              <Icon name="chevron-forward" size={23} color="#AAB2BD" />
+            </TouchableOpacity>
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

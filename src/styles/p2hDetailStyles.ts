@@ -4,7 +4,6 @@ const {width: SCREEN_WIDTH} = Dimensions.get('window');
 export const p2hDetailStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
   headerCard: {
     backgroundColor: '#fff',

@@ -381,7 +381,9 @@ const EditDataMentoring = ({route}) => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('userToken');
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      const token = loginCache ? JSON.parse(loginCache).token : null;
+      console.log('TOKEN:', token);
       if (!token)
         throw new Error('Sesi telah berakhir. Silakan login kembali.');
       if (!unitType || !unitModel || !unitNumber)
@@ -445,6 +447,7 @@ const EditDataMentoring = ({route}) => {
       };
       console.log('Payload:', payload);
 
+      console.log('Token:', token);
       const response = await axios.put(
         `${API_BASE_URL.mop}/mentoring/${id}/update`,
         payload,
@@ -454,7 +457,6 @@ const EditDataMentoring = ({route}) => {
             Authorization: `Bearer ${token}`,
             Accept: 'application/json',
           },
-          withCredentials: true,
         },
       );
       if (response.data.success) {
@@ -466,16 +468,16 @@ const EditDataMentoring = ({route}) => {
     } catch (error) {
       console.error('Submission error:', error);
       if (error.response?.status === 401) {
-        await AsyncStorage.removeItem('userToken');
-        alert('Sesi telah berakhir. Silakan login kembali.');
-        navigation.reset({index: 0, routes: [{name: 'Login'}]});
+        // // INI yang penting: hanya hapus loginCache
+        // await AsyncStorage.removeItem('loginCache');
+        // alert('Sesi telah berakhir. Silakan login kembali.');
+        // navigation.reset({index: 0, routes: [{name: 'Login'}]});
       } else {
-        alert(
-          `Error: ${
-            error.response?.data?.message ||
+        Alert.alert(
+          'Error',
+          error.response?.data?.message ||
             error.message ||
-            'Terjadi kesalahan'
-          }`,
+            'Terjadi kesalahan saat mengupdate data',
         );
       }
     } finally {
