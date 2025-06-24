@@ -1,10 +1,11 @@
-import {StyleSheet, Dimensions} from 'react-native';
+import {StyleSheet, Platform, Dimensions} from 'react-native';
+
+// const {width} = Dimensions.get('window');
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 export const dashboardStyles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#fff', // Sesuai gambar, putih
-    paddingTop: 22,
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
     paddingHorizontal: 18,
   },
   headerRow: {
@@ -20,6 +21,7 @@ export const dashboardStyles = StyleSheet.create({
     color: '#444A5A',
     marginBottom: 2,
     letterSpacing: 0.2,
+    marginVertical: 18,
   },
   avatar: {
     width: 54,

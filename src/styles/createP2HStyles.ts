@@ -6,9 +6,9 @@ export const createP2HStyles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
     marginBottom: 18,
-    marginTop: 14,
     color: '#2463EB',
     textAlign: 'center',
+    marginVertical: 18,
   },
   label: {fontWeight: 'bold', fontSize: 13, color: '#333', marginTop: 12},
   input: {

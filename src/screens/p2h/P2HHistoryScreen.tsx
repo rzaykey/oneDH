@@ -187,7 +187,7 @@ const P2HHistoryScreen = () => {
             name="clipboard-outline"
             size={22}
             color="#2563eb"
-            style={{marginRight: 10}}
+            style={{marginRight: 20}}
           />
           <Text style={styles.title}>Riwayat Pemeriksaan P2H</Text>
         </View>

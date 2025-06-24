@@ -1,24 +1,30 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform, Dimensions} from 'react-native';
+
+const {width} = Dimensions.get('window');
 
 export const p2hHistoryStyles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
   },
   headerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center', // <-- ini yang bikin center horizontal
     paddingHorizontal: 18,
-    paddingTop: 9,
     paddingBottom: 14,
     borderBottomColor: '#cbd6ee',
     marginBottom: 5,
+    marginTop: 18, // atau paddingTop: 18,
   },
   title: {
     fontWeight: 'bold',
     fontSize: 18,
     color: '#1E90FF',
-    marginBottom: 0,
+    marginVertical: 0, // <-- hilangkan, sudah cukup di headerWrap
+    textAlign: 'center', // supaya teksnya juga rata tengah
   },
+
   list: {
     paddingHorizontal: 12,
     paddingBottom: 24,
@@ -132,14 +138,14 @@ export const p2hHistoryStyles = StyleSheet.create({
     paddingHorizontal: 26,
   },
   emptyText: {
-    color: '#fff',
+    color: '#176B87', // Lebih readable di white/gradient
     fontWeight: 'bold',
     fontSize: 17,
     textAlign: 'center',
     marginBottom: 2,
   },
   emptySubText: {
-    color: '#fff',
+    color: '#29436e',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 0,

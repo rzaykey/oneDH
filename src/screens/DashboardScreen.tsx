@@ -170,6 +170,8 @@ const DashboardScreen: React.FC = () => {
                 {user?.dept && (
                   <Text style={styles.profileDept}>{user.dept}</Text>
                 )}
+              </View>
+              <View style={styles.profileInfoRow}>
                 {user?.position && (
                   <Text style={styles.profilePosition}>{user.position}</Text>
                 )}

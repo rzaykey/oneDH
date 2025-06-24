@@ -5,7 +5,7 @@ export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 40, // Atur sesuai kebutuhan
+    paddingTop: 10, // Atur sesuai kebutuhan
   },
   logoContainer: {
     alignItems: 'center',

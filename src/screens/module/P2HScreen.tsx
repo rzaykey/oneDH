@@ -20,13 +20,13 @@ const p2hMenus = [
     desc: 'Lihat hasil pemeriksaan yang sudah dibuat',
     screen: 'P2HHistory',
   },
-  {
-    id: 'report',
-    label: 'Laporan Tidak Lolos',
-    icon: 'alert-circle-outline',
-    desc: 'Daftar kendaraan gagal inspeksi',
-    screen: 'P2HFailedReport',
-  },
+  // {
+  //   id: 'report',
+  //   label: 'Laporan Tidak Lolos',
+  //   icon: 'alert-circle-outline',
+  //   desc: 'Daftar kendaraan gagal inspeksi',
+  //   screen: 'P2HFailedReport',
+  // },
 ];
 
 const P2HScreen = ({navigation}: any) => {

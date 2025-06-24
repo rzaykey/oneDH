@@ -1,4 +1,5 @@
-import {StyleSheet, Dimensions} from 'react-native';
+import {StyleSheet, Platform, Dimensions} from 'react-native';
+const {width} = Dimensions.get('window');
 
 export const modulStyles = StyleSheet.create({
   container: {
@@ -14,6 +15,7 @@ export const modulStyles = StyleSheet.create({
     letterSpacing: 0.1,
     alignSelf: 'flex-start',
     marginLeft: 5,
+    marginVertical: 18
   },
   grid: {
     paddingBottom: 30,
@@ -48,5 +50,6 @@ export const modulStyles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     paddingHorizontal: 18,
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
   },
 });
