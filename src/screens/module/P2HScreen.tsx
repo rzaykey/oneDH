@@ -1,11 +1,12 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {p2hStyles as styles} from '../../styles/p2hStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
+import {p2hStyles as styles} from '../../styles/p2hStyles';
 
-const p2hMenus = [
+const fullMenu = [
   {
     id: 'input',
     label: 'Input Pemeriksaan',
@@ -17,19 +18,58 @@ const p2hMenus = [
     id: 'history',
     label: 'Riwayat Pemeriksaan',
     icon: 'document-text-outline',
-    desc: 'Lihat hasil pemeriksaan yang sudah dibuat',
+    desc: 'Lihat hasil pemeriksaan yang sudah dibuat karyawan',
     screen: 'P2HHistory',
   },
-  // {
-  //   id: 'report',
-  //   label: 'Laporan Tidak Lolos',
-  //   icon: 'alert-circle-outline',
-  //   desc: 'Daftar kendaraan gagal inspeksi',
-  //   screen: 'P2HFailedReport',
-  // },
+  {
+    id: 'myhistory',
+    label: 'Riwayat Pemeriksaan Saya',
+    icon: 'alert-circle-outline',
+    desc: 'Lihat hasil pemeriksaan diri sendiri',
+    screen: 'P2HMyHistory',
+  },
 ];
 
+// Fungsi pengecekan apakah user adalah Admin HSE
+const isAdminHSE = (role: any[], user: any, activeSite: string): boolean => {
+  return !!role.find(
+    r =>
+      r.code_site === activeSite &&
+      r.name?.toLowerCase().includes('admin hse') &&
+      r.user_id === user?.jdeno,
+  );
+};
+
 const P2HScreen = ({navigation}: any) => {
+  const [menus, setMenus] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadMenus = async () => {
+      try {
+        const loginCache = await AsyncStorage.getItem('loginCache');
+        if (!loginCache) return;
+
+        const parsed = JSON.parse(loginCache);
+        const user = parsed?.dataEmp;
+        const roles = parsed?.roles || [];
+        const site = user?.site || '';
+
+        const filtered = fullMenu.filter(menu => {
+          if (menu.id === 'history') {
+            return isAdminHSE(roles, user, site);
+          }
+          return true;
+        });
+
+        setMenus(filtered);
+      } catch (error) {
+        console.log('Gagal memuat role:', error);
+      }
+    };
+
+    loadMenus();
+  }, []);
+
   return (
     <LinearGradient
       colors={['#FFD700', '#1E90FF']}
@@ -39,7 +79,7 @@ const P2HScreen = ({navigation}: any) => {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>P2H - Pemeriksaan Harian Kendaraan</Text>
         <FlatList
-          data={p2hMenus}
+          data={menus}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.menuList}
           renderItem={({item}) => (

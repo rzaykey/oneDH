@@ -43,7 +43,7 @@ interface InfoEmptyProps {
   message?: string;
 }
 
-const API_URL = `${API_BASE_URL.p2h}/GetDataP2H`;
+const API_URL = `${API_BASE_URL.p2h}/GetDataP2HPersonal`;
 
 const P2HHistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<P2HItem[]>([]);
@@ -82,23 +82,30 @@ const P2HHistoryScreen: React.FC = () => {
 
     const currentPage = isLoadMore ? page + 1 : 1;
 
-    const params = new URLSearchParams({
-      page: String(currentPage),
-      limit: String(limit),
-      search,
-    });
+    let token = '';
+    let user = null;
 
     try {
-      const cache = await AsyncStorage.getItem('loginCache');
-      const token = cache && JSON.parse(cache)?.token;
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      if (loginCache) {
+        const parsed = JSON.parse(loginCache);
+        token = parsed?.token || '';
+        user = parsed?.dataEmp || null;
+      }
 
-      if (!token) {
+      if (!token || !user) {
         setError('Session habis. Silakan login ulang.');
         setHistory([]);
-        setLoading(false);
-        setIsLoadingMore(false);
         return;
       }
+
+      const effectiveSearch = !canViewAll && user?.jdeno ? user.jdeno : search;
+
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(limit),
+        search: effectiveSearch,
+      });
 
       const response = await fetch(`${API_URL}?${params.toString()}`, {
         headers: {Authorization: `Bearer ${token}`},
@@ -262,12 +269,12 @@ const P2HHistoryScreen: React.FC = () => {
           <Icon name="search-outline" size={20} color="#888" />
           <TextInput
             placeholder="Cari unit / driver..."
-            placeholderTextColor="#0f0f0f"
             value={search}
             onChangeText={text => setSearch(text)}
             onSubmitEditing={() => fetchHistory()}
             style={styles.searchInput}
             returnKeyType="search"
+            placeholderTextColor="#0f0f0f"
           />
           {search !== '' && (
             <TouchableOpacity

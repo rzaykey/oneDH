@@ -25,6 +25,7 @@ import JCMScreen from '../screens/module/JCMScreen';
 import MOPScreen from '../screens/module/MOPScreen';
 import SitePickerScreen from '../screens/SitePickerScreen';
 import P2HHistory from '../screens/p2h/P2HHistoryScreen';
+import P2HMyHistory from '../screens/p2h/P2HMyHistoryScreen';
 import P2HDetailScreen from '../screens/p2h/P2HDetailScreen';
 import CreateP2HScreen from '../screens/p2h/CreateP2HScreen';
 import MasterCacheScreen from '../screens/MasterCacheScreen';
@@ -45,6 +46,7 @@ const AppNavigator = () => (
     <Stack.Screen name="MOPScreen" component={MOPScreen} />
 
     <Stack.Screen name="P2HHistory" component={P2HHistory} />
+    <Stack.Screen name="P2HMyHistory" component={P2HMyHistory} />
     <Stack.Screen name="P2HDetail" component={P2HDetailScreen} />
     <Stack.Screen name="CreateP2HScreen" component={CreateP2HScreen} />
     <Stack.Screen name="MasterCacheScreen" component={MasterCacheScreen} />

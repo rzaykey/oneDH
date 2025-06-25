@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,15 @@ import {dashboardStyles as styles} from '../styles/dashboardStyles';
 import {useSiteContext} from '../context/SiteContext';
 import LinearGradient from 'react-native-linear-gradient';
 import {cacheAllMasterData} from '../utils/cacheAllMasterData'; // path ke fungsi kamu
+import {
+  addQueueOffline,
+  pushOfflineQueue,
+  getOfflineQueueCount,
+} from '../utils/offlineQueueHelper';
+import API_BASE_URL from '../config';
+import NetInfo from '@react-native-community/netinfo';
+
+const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
 
 const carouselData = [
   {id: '1', text: 'Sed viverra nibh eget tincidunt convallis...'},
@@ -36,13 +45,62 @@ const DashboardScreen: React.FC = () => {
   const {width: windowWidth} = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [refreshingMaster, setRefreshingMaster] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [queueCount, setQueueCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     cacheAllMasterData(); // tidak perlu await
   }, []);
+
   // Ambil semua dari context!
   const {activeSite, setActiveSite, sites, user, setSites, setRoles, setUser} =
     useSiteContext();
+
+  const refreshQueueCount = useCallback(async () => {
+    const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
+    setQueueCount(count);
+  }, []);
+
+  useEffect(() => {
+    refreshQueueCount();
+  }, [refreshQueueCount]);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected) {
+        setSyncing(true);
+        pushOfflineQueue(
+          OFFLINE_SUBMIT_KEY,
+          '/StoreP2H',
+          undefined,
+          API_BASE_URL.p2h,
+        ).then(() => {
+          refreshQueueCount(); // atau sekadar log
+          setSyncing(false);
+        });
+      }
+    });
+
+    // Jalankan saat pertama kali juga
+    NetInfo.fetch().then(state => {
+      if (state.isConnected) {
+        setSyncing(true);
+        pushOfflineQueue(
+          OFFLINE_SUBMIT_KEY,
+          '/StoreP2H',
+          undefined,
+          API_BASE_URL.p2h,
+        ).then(() => {
+          refreshQueueCount();
+          setSyncing(false);
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Carousel auto scroll
   useEffect(() => {

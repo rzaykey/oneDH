@@ -126,7 +126,8 @@ const LoginScreen = ({navigation}: Props) => {
           ]}>
           <TextInput
             style={styles.input}
-            placeholder="Username"
+            placeholder="JDE Employee"
+            placeholderTextColor="#0f0f0f"
             autoCapitalize="none"
             value={username}
             onFocus={() => setFocus(f => ({...f, user: true}))}
@@ -151,6 +152,7 @@ const LoginScreen = ({navigation}: Props) => {
           <TextInput
             style={styles.input}
             placeholder="Password"
+            placeholderTextColor="#0f0f0f"
             secureTextEntry={!showPassword}
             value={password}
             autoCapitalize="none"

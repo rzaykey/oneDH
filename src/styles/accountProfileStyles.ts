@@ -79,7 +79,7 @@ export const accountProfileStyles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    width: '100%', // ✅ penting
     shadowColor: '#e74c3c',
     shadowOpacity: 0.14,
     shadowRadius: 2,

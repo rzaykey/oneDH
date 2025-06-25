@@ -172,9 +172,11 @@ const CreateP2HScreen = ({navigation}) => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
   }, []);
+
   useEffect(() => {
     refreshQueueCount();
   }, [refreshQueueCount]);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(state.isConnected === true);
@@ -333,7 +335,7 @@ const CreateP2HScreen = ({navigation}) => {
         [
           {
             text: 'OK',
-            onPress: () => navigation.replace('P2HHistory'),
+            onPress: () => navigation.replace('P2HMyHistory'),
           },
         ],
       );
@@ -371,7 +373,7 @@ const CreateP2HScreen = ({navigation}) => {
         Alert.alert('Sukses', data.message || 'P2H berhasil disimpan!', [
           {
             text: 'OK',
-            onPress: () => navigation.replace('P2HHistory'),
+            onPress: () => navigation.replace('P2HMyHistory'),
           },
         ]);
       } else {

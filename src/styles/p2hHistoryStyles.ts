@@ -150,4 +150,52 @@ export const p2hHistoryStyles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 0,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    elevation: 1,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    fontSize: 14,
+    color: '#333',
+  },
+  limitPickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  limitLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 8,
+  },
+  limitButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  limitButtonActive: {
+    backgroundColor: '#2563eb22',
+    borderColor: '#2563eb',
+  },
+  limitText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  limitTextActive: {
+    color: '#2563eb',
+    fontWeight: 'bold',
+  },
 });
