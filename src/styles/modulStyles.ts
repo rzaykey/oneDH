@@ -15,7 +15,7 @@ export const modulStyles = StyleSheet.create({
     letterSpacing: 0.1,
     alignSelf: 'flex-start',
     marginLeft: 5,
-    marginVertical: 18
+    marginVertical: 18,
   },
   grid: {
     paddingBottom: 30,
@@ -37,7 +37,7 @@ export const modulStyles = StyleSheet.create({
     shadowOffset: {width: 0, height: 3},
   },
   icon: {
-    marginBottom: 8,
+    marginBottom: 1,
   },
   label: {
     fontSize: 16,

@@ -340,7 +340,7 @@ const DashboardScreen: React.FC = () => {
             </Pressable>
           </Modal>
           {/* CAROUSEL */}
-          <View style={styles.carouselContainer}>
+          {/* <View style={styles.carouselContainer}>
             <FlatList
               ref={carouselRef}
               data={carouselData}
@@ -391,7 +391,7 @@ const DashboardScreen: React.FC = () => {
                 />
               ))}
             </View>
-          </View>
+          </View> */}
           {/* --- Tambah menu dashboard lain di sini --- */}
         </View>
       </SafeAreaView>

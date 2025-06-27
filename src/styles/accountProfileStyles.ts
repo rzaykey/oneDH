@@ -12,6 +12,7 @@ export const accountProfileStyles = StyleSheet.create({
     paddingBottom: 4,
     borderBottomColor: '#eaeaea',
     borderBottomWidth: 1,
+    marginVertical: 18,
   },
   profileName: {
     fontSize: 22,

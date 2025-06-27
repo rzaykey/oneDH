@@ -9,21 +9,21 @@ import {p2hStyles as styles} from '../../styles/p2hStyles';
 const fullMenu = [
   {
     id: 'input',
-    label: 'Input Pemeriksaan',
+    label: 'Isi P2H',
     icon: 'checkbox-outline',
     desc: 'Isi checklist harian kendaraan',
     screen: 'CreateP2HScreen',
   },
   {
     id: 'history',
-    label: 'Riwayat Pemeriksaan',
+    label: 'Riwayat P2H',
     icon: 'document-text-outline',
     desc: 'Lihat hasil pemeriksaan yang sudah dibuat karyawan',
     screen: 'P2HHistory',
   },
   {
     id: 'myhistory',
-    label: 'Riwayat Pemeriksaan Saya',
+    label: 'Riwayat P2H Saya',
     icon: 'alert-circle-outline',
     desc: 'Lihat hasil pemeriksaan diri sendiri',
     screen: 'P2HMyHistory',

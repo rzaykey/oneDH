@@ -18,6 +18,7 @@ import API_BASE_URL from '../../config';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
 import LinearGradient from 'react-native-linear-gradient';
+import DeviceInfo from 'react-native-device-info';
 
 import {
   addQueueOffline,
@@ -91,6 +92,16 @@ const CreateP2HScreen = ({navigation}) => {
         // Note: dept di cache bisa nama, nanti user pilih di dropdown
         setDept('');
       }
+      // Restore section dan dept terakhir jika belum ada
+      const lastSection = await AsyncStorage.getItem('last_section');
+      const lastDept = await AsyncStorage.getItem('last_dept');
+      const lastNoUnit = await AsyncStorage.getItem('last_nounit');
+      const lastModel = await AsyncStorage.getItem('last_model');
+
+      setSection(prev => (prev ? prev : lastSection || ''));
+      setDept(prev => (prev ? prev : lastDept || ''));
+      setNoUnit(prev => (prev ? prev : lastNoUnit || ''));
+      setModel(prev => (prev ? prev : lastModel || ''));
     };
     restoreDraftOrLogin();
   }, [activeSite]);
@@ -200,6 +211,13 @@ const CreateP2HScreen = ({navigation}) => {
   // ==== 4. Save draft setiap perubahan ====
   useEffect(() => {
     const saveDraft = async () => {
+      const deviceInfoJson = JSON.stringify({
+        systemName: await DeviceInfo.getSystemName(),
+        systemVersion: await DeviceInfo.getSystemVersion(),
+        appVersion: await DeviceInfo.getVersion(),
+        buildNumber: await DeviceInfo.getBuildNumber(),
+        deviceId: await DeviceInfo.getDeviceId(),
+      });
       const draft = {
         nounit,
         model,
@@ -212,6 +230,7 @@ const CreateP2HScreen = ({navigation}) => {
         inlineRadioOptions,
         stickerCommissioning,
         stickerFuelPermit,
+        device_info: deviceInfoJson,
       };
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     };
@@ -231,25 +250,35 @@ const CreateP2HScreen = ({navigation}) => {
   ]);
 
   // ==== 5. Reset form ====
-  const resetForm = () => {
+  const resetForm = async () => {
     setNoUnit('');
     setModel('');
     setKM('');
     setSection('');
     setDept('');
-    // Ambil site dari loginCache setelah reset
-    AsyncStorage.getItem('loginCache').then(loginCache => {
-      if (loginCache) {
-        const cache = JSON.parse(loginCache);
-        setSite(cache.dataEmp?.site || activeSite || '');
-        setModel(cache.dataEmp?.model || '');
-        setDept('');
-      } else {
-        setSite('');
-        setModel('');
-        setDept('');
-      }
-    });
+    // Ambil site & model dari loginCache setelah reset
+    const loginCache = await AsyncStorage.getItem('loginCache');
+    if (loginCache) {
+      const cache = JSON.parse(loginCache);
+      setSite(cache.dataEmp?.site || activeSite || '');
+      setModel(cache.dataEmp?.model || '');
+      setDept('');
+    } else {
+      setSite('');
+      setModel('');
+      setDept('');
+    }
+
+    // ✅ Tambahan penting: restore last_section dan last_dept
+    const lastSection = await AsyncStorage.getItem('last_section');
+    const lastDept = await AsyncStorage.getItem('last_dept');
+    const lastNoUnit = await AsyncStorage.getItem('last_nounit');
+    const lastModel = await AsyncStorage.getItem('last_model');
+    setSection(lastSection || '');
+    setDept(lastDept || '');
+    setNoUnit(lastNoUnit || '');
+    setModel(lastModel || '');
+
     setTanggal(dayjs().format('YYYY-MM-DD'));
     setJam(dayjs().format('HH:mm'));
     setKeterangan('');
@@ -305,6 +334,14 @@ const CreateP2HScreen = ({navigation}) => {
     const jawabanChecklist = checklistQuestions.map(
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
+    // Ambil info device
+    const deviceInfo = {
+      systemName: await DeviceInfo.getSystemName(),
+      systemVersion: await DeviceInfo.getSystemVersion(),
+      deviceId: await DeviceInfo.getDeviceId(),
+      appVersion: await DeviceInfo.getVersion(),
+      buildNumber: await DeviceInfo.getBuildNumber(),
+    };
 
     const payload = {
       nounit,
@@ -320,8 +357,8 @@ const CreateP2HScreen = ({navigation}) => {
       Sticker: stickerFuelPermit,
       tanggal: `${tanggal} ${jam}`,
       keterangan,
+      device_info: JSON.stringify(deviceInfo),
     };
-
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -358,6 +395,12 @@ const CreateP2HScreen = ({navigation}) => {
 
       if (response.ok && data.status === true) {
         await removeDraft();
+        // ✅ SIMPAN SECTION DAN DEPT TERAKHIR
+        await AsyncStorage.setItem('last_section', section);
+        await AsyncStorage.setItem('last_dept', dept);
+        await AsyncStorage.setItem('last_nounit', nounit);
+        await AsyncStorage.setItem('last_model', model);
+
         resetForm();
         if (isConnected) {
           setSyncing(true);
@@ -717,12 +760,12 @@ const CreateP2HScreen = ({navigation}) => {
             )}
 
             {/* TIME PICKER */}
-            <Text style={styles.label}>Jam</Text>
-            <TouchableOpacity
+            {/* <Text style={styles.label}>Jam</Text> */}
+            {/* <TouchableOpacity
               style={[styles.input, {justifyContent: 'center'}]}
               onPress={() => setShowTime(true)}>
               <Text>{jam}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             {showTime && (
               <DateTimePicker
                 value={dayjs(jam, 'HH:mm').toDate()}

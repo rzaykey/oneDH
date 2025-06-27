@@ -165,29 +165,7 @@ const AccountProfileScreen = ({navigation}) => {
                 )}
               </View>
             </KeyboardAvoidingView>
-            <View
-              style={{
-                position: 'absolute',
-                bottom: insets.bottom + 20,
-                left: 20,
-                right: 20,
-                backgroundColor: 'transparent',
-              }}>
-              <TouchableOpacity
-                style={styles.logoutBtn}
-                onPress={async () => {
-                  await AsyncStorage.clear();
-                  navigation.replace('Login');
-                }}>
-                <Icon name="log-out-outline" size={20} color="#fff" />
-                <Text
-                  style={{color: '#fff', fontWeight: 'bold', marginLeft: 6}}>
-                  Logout
-                </Text>
-              </TouchableOpacity>
-            </View>
           </ScrollView>
-
           {/* ✅ Tombol Logout Tetap di Bawah */}
         </View>
       </SafeAreaView>

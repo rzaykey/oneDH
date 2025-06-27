@@ -41,7 +41,7 @@ export default function TabNavigator() {
         component={ModulScreen}
         options={{
           tabBarIcon: ({focused}) => (
-            <TabIcon icon="layers-outline" label="Modul" focused={focused} />
+            <TabIcon icon="layers-outline" label="Aplikasi" focused={focused} />
           ),
         }}
       />

@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
+import {View, Text, TouchableOpacity, FlatList, Image} from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useSiteContext} from '../context/SiteContext';
@@ -20,29 +20,26 @@ const iconForModule = (mod: string) => {
   switch (mod) {
     case 'P2H':
       return (
-        <Icon
-          name="car-outline"
-          size={26}
-          color="#4974c5"
-          style={styles.icon}
+        <Image
+          source={require('../assets/images/list.png')} // Ganti path sesuai lokasi car.png
+          style={[styles.icon, {width: 50, height: 50}]}
+          resizeMode="contain"
         />
       );
     case 'JCM':
       return (
-        <Icon
-          name="list-outline"
-          size={26}
-          color="#0d9c6c"
-          style={styles.icon}
+        <Image
+          source={require('../assets/images/mechanic.png')} // Ganti path sesuai lokasi car.png
+          style={[styles.icon, {width: 50, height: 50}]}
+          resizeMode="contain"
         />
       );
     case 'MOP':
       return (
-        <Icon
-          name="hammer-outline"
-          size={26}
-          color="#b47d04"
-          style={styles.icon}
+        <Image
+          source={require('../assets/images/practice.png')} // Ganti path sesuai lokasi car.png
+          style={[styles.icon, {width: 50, height: 50}]}
+          resizeMode="contain"
         />
       );
     default:
@@ -80,7 +77,8 @@ const ModuleScreen: React.FC = () => {
           // {paddingTop: insets.top + 8, paddingBottom: insets.bottom}, // biar kiri-kanan lebih lega
         ]}>
         <Text style={styles.sectionTitle}>
-          Modul Untuk Site: <Text style={{color: '#29436e'}}>{activeSite}</Text>
+          Aplikasi Untuk Site:{' '}
+          <Text style={{color: '#29436e'}}>{activeSite}</Text>
         </Text>
         {modulesForActiveSite.length === 0 ? (
           <View
@@ -109,13 +107,6 @@ const ModuleScreen: React.FC = () => {
                 onPress={() => handleModulePress(item.module)}>
                 {iconForModule(item.module)}
                 <Text style={styles.label}>{item.module}</Text>
-                <Text style={[styles.label, {fontSize: 13, color: '#444'}]}>
-                  {item.permit?.toUpperCase() || '-'}
-                </Text>
-                <Text
-                  style={{fontSize: 12, color: '#888', textAlign: 'center'}}>
-                  {item.name}
-                </Text>
               </TouchableOpacity>
             )}
           />
