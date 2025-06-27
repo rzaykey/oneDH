@@ -19,6 +19,7 @@ import API_BASE_URL from '../config';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import {useSiteContext} from '../context/SiteContext';
+import DeviceInfo from 'react-native-device-info';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -32,6 +33,8 @@ const LoginScreen = ({navigation}: Props) => {
   const insets = useSafeAreaInsets();
   const [isConnected, setIsConnected] = useState(true);
   const {refreshContext} = useSiteContext();
+  const [appVersion, setAppVersion] = useState('');
+
   // Login handler
   const handleLogin = async () => {
     let errUser = !username ? 'Username wajib diisi' : '';
@@ -79,6 +82,15 @@ const LoginScreen = ({navigation}: Props) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const getVersion = async () => {
+      const version = await DeviceInfo.getVersion();
+      const build = await DeviceInfo.getBuildNumber();
+      setAppVersion(`v${build} (${version})`);
+    };
+    getVersion();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -189,6 +201,9 @@ const LoginScreen = ({navigation}: Props) => {
             <Text style={styles.buttonText}>Masuk</Text>
           )}
         </TouchableOpacity>
+        <Text style={{textAlign: 'center', marginTop: 12, color: '#333'}}>
+          App Version: {appVersion}
+        </Text>
       </KeyboardAvoidingView>
     </LinearGradient>
   );

@@ -61,7 +61,7 @@ const ModuleScreen: React.FC = () => {
     if (screenName) {
       navigation.navigate(screenName as never);
     } else {
-      alert('Fitur untuk modul ini masih dalam tahap Development');
+      alert('Aplikasi ini dalam tahap pengembangan');
     }
   };
 
