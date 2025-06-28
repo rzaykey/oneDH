@@ -26,6 +26,7 @@ import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import API_BASE_URL from '../../../config';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
 // Aktifkan animasi layout Android
@@ -228,233 +229,198 @@ export default function TrainHoursScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[
-        {
-          flex: 1,
-          paddingHorizontal: 8,
-          paddingTop: 20,
-          paddingBottom: insets.bottom,
-        },
-      ]}>
-      {/* Header & Sync */}
-      <View style={{marginBottom: 10, marginTop: 2}}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-          {/* Status Online/Offline */}
-          <View style={{alignItems: 'flex-end', flex: 1}}>
-            <Text
-              style={{
-                backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-                color: isConnected ? '#155724' : '#721c24',
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                borderRadius: 16,
-                fontWeight: 'bold',
-                fontSize: 13,
-                alignSelf: 'flex-end',
-                marginBottom: 3,
-              }}>
-              {isConnected ? '🟢 Online' : '🔴 Offline'}
-            </Text>
-            {isConnected && isSyncing && (
-              <ActivityIndicator
-                size="small"
-                color="#1E90FF"
-                style={{marginLeft: 8, marginBottom: 2}}
-              />
-            )}
-          </View>
-          {/* Tombol Refresh dari Server */}
-          {isConnected && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#1E90FF',
-                borderRadius: 8,
-                paddingVertical: 7,
-                paddingHorizontal: 16,
-                alignSelf: 'flex-end',
-                marginLeft: 12,
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView
+        style={[
+          {
+            flex: 1,
+            paddingHorizontal: 8,
+            paddingTop: 20,
+            paddingBottom: insets.bottom,
+          },
+        ]}>
+        {/* Header & Sync */}
+        <View style={{marginBottom: 10, marginTop: 2}}>
+          {/* Judul */}
+          <Text style={[styles.pageTitle, {marginBottom: 2}]}>Train Hours</Text>
+        </View>
+
+        {/* Search */}
+        <TextInput
+          placeholder="Cari Nama, Position, Site..."
+          value={searchQuery}
+          onChangeText={text => {
+            setSearchQuery(text);
+            setPage(1);
+          }}
+          style={styles.searchInput}
+          {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
+        />
+
+        {/* Picker jumlah item per halaman */}
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Items per page:</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={pageSize}
+              onValueChange={itemValue => {
+                setPageSize(itemValue);
+                setPage(1);
               }}
-              onPress={handleForceRefresh}
-              disabled={loading}>
-              <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>
-                Ambil Ulang dari Server
-              </Text>
-            </TouchableOpacity>
-          )}
+              style={styles.picker}
+              dropdownIconColor="#1E90FF"
+              mode="dropdown">
+              {pageSizeOptions.map(size => (
+                <Picker.Item key={size} label={size.toString()} value={size} />
+              ))}
+            </Picker>
+          </View>
         </View>
-        {/* Judul */}
-        <Text style={[styles.pageTitle, {marginBottom: 2}]}>Train Hours</Text>
-      </View>
 
-      {/* Search */}
-      <TextInput
-        placeholder="Cari Nama, Position, Site..."
-        value={searchQuery}
-        onChangeText={text => {
-          setSearchQuery(text);
-          setPage(1);
-        }}
-        style={styles.searchInput}
-        {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
-      />
-
-      {/* Picker jumlah item per halaman */}
-      <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Items per page:</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={pageSize}
-            onValueChange={itemValue => {
-              setPageSize(itemValue);
-              setPage(1);
-            }}
-            style={styles.picker}
-            dropdownIconColor="#1E90FF"
-            mode="dropdown">
-            {pageSizeOptions.map(size => (
-              <Picker.Item key={size} label={size.toString()} value={size} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      {/* List data utama */}
-      <FlatList
-        data={paginatedData}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({item}) => {
-          const expanded = item.id === expandedId;
-          return (
-            <Animatable.View
-              animation={expanded ? 'fadeInDown' : 'fadeInUp'}
-              duration={320}
-              style={styles.cardContainer}>
-              {/* HEADER CARD */}
-              <TouchableOpacity
-                onPress={() => toggleExpand(item.id)}
-                activeOpacity={0.88}
-                style={styles.cardHeader}>
-                <View
-                  style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
-                  <View style={styles.avatar}>
-                    <Icon name="person-outline" size={20} color="#fff" />
+        {/* List data utama */}
+        <FlatList
+          data={paginatedData}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({item}) => {
+            const expanded = item.id === expandedId;
+            return (
+              <Animatable.View
+                animation={expanded ? 'fadeInDown' : 'fadeInUp'}
+                duration={320}
+                style={styles.cardContainer}>
+                {/* HEADER CARD */}
+                <TouchableOpacity
+                  onPress={() => toggleExpand(item.id)}
+                  activeOpacity={0.88}
+                  style={styles.cardHeader}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}>
+                    <View style={styles.avatar}>
+                      <Icon name="person-outline" size={20} color="#fff" />
+                    </View>
+                    <View>
+                      <Text style={styles.cardTitle}>{item.employee_name}</Text>
+                      <Text style={styles.cardSubtitle}>
+                        {item.position || item.site}
+                      </Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text style={styles.cardTitle}>{item.employee_name}</Text>
-                    <Text style={styles.cardSubtitle}>
-                      {item.position || item.site}
+                  <View style={{alignItems: 'flex-end', minWidth: 70}}>
+                    <Text style={styles.cardSite}>{item.site}</Text>
+                    <Text
+                      style={{fontSize: 12, color: '#888', marginBottom: 3}}>
+                      {(item.date_activity || '').split(' ')[0]}
                     </Text>
+                    <Icon
+                      name={
+                        expanded ? 'chevron-up-outline' : 'chevron-down-outline'
+                      }
+                      size={18}
+                      color="#bbb"
+                    />
                   </View>
-                </View>
-                <View style={{alignItems: 'flex-end', minWidth: 70}}>
-                  <Text style={styles.cardSite}>{item.site}</Text>
-                  <Text style={{fontSize: 12, color: '#888', marginBottom: 3}}>
-                    {(item.date_activity || '').split(' ')[0]}
-                  </Text>
-                  <Icon
-                    name={
-                      expanded ? 'chevron-up-outline' : 'chevron-down-outline'
-                    }
-                    size={18}
-                    color="#bbb"
-                  />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              {/* DETAIL CARD */}
-              {expanded && (
-                <View style={styles.cardDetail}>
-                  <Text style={styles.cardDetailText}>
-                    Training:{' '}
-                    <Text style={{fontWeight: 'bold'}}>
-                      {item.training_type || '-'}
+                {/* DETAIL CARD */}
+                {expanded && (
+                  <View style={styles.cardDetail}>
+                    <Text style={styles.cardDetailText}>
+                      Training:{' '}
+                      <Text style={{fontWeight: 'bold'}}>
+                        {item.training_type || '-'}
+                      </Text>
                     </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Unit:{' '}
-                    <Text style={{fontWeight: 'bold'}}>
-                      {item.unit_class || '-'}
+                    <Text style={styles.cardDetailText}>
+                      Unit:{' '}
+                      <Text style={{fontWeight: 'bold'}}>
+                        {item.unit_class || '-'}
+                      </Text>
                     </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Type Class:{' '}
-                    <Text style={{fontWeight: 'bold'}}>
-                      {(item.unit_type || '').split(' ')[0]}
+                    <Text style={styles.cardDetailText}>
+                      Type Class:{' '}
+                      <Text style={{fontWeight: 'bold'}}>
+                        {(item.unit_type || '').split(' ')[0]}
+                      </Text>
                     </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    HM Start:{' '}
-                    <Text style={{fontWeight: 'bold'}}>{item.hm_start}</Text> -
-                    HM End:{' '}
-                    <Text style={{fontWeight: 'bold'}}>{item.hm_end}</Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Plan Total HM: {item.plan_total_hm} | Total HM:{' '}
-                    {item.total_hm}
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Progres: {item.progres}
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Persentase Progres:{' '}
-                    {item.plan_total_hm > 0
-                      ? Math.round((item.progres / item.plan_total_hm) * 100)
-                      : 0}
-                    %
-                  </Text>
-                  {/* Tombol Edit */}
-                  <View style={styles.cardActionRow}>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => handleEdit(item)}>
-                      <Text style={styles.actionButtonText}>Edit</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.cardDetailText}>
+                      HM Start:{' '}
+                      <Text style={{fontWeight: 'bold'}}>{item.hm_start}</Text>{' '}
+                      - HM End:{' '}
+                      <Text style={{fontWeight: 'bold'}}>{item.hm_end}</Text>
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Plan Total HM: {item.plan_total_hm} | Total HM:{' '}
+                      {item.total_hm}
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Progres: {item.progres}
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Persentase Progres:{' '}
+                      {item.plan_total_hm > 0
+                        ? Math.round((item.progres / item.plan_total_hm) * 100)
+                        : 0}
+                      %
+                    </Text>
+                    {/* Tombol Edit */}
+                    <View style={styles.cardActionRow}>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => handleEdit(item)}>
+                        <Text style={styles.actionButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              )}
-            </Animatable.View>
-          );
-        }}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        showsVerticalScrollIndicator={true}
-        ListEmptyComponent={
-          <Text
-            style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
-            Tidak ada data ditemukan.
+                )}
+              </Animatable.View>
+            );
+          }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          showsVerticalScrollIndicator={true}
+          ListEmptyComponent={
+            <Text
+              style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
+              Tidak ada data ditemukan.
+            </Text>
+          }
+          contentContainerStyle={{paddingBottom: 22}}
+        />
+
+        {/* Navigasi halaman (pagination) */}
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            onPress={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={[
+              styles.pageButton,
+              page === 1 && styles.pageButtonDisabled,
+            ]}>
+            <Text style={styles.pageButtonText}>Prev</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageInfo}>
+            Page {page} / {totalPages || 1}
           </Text>
-        }
-        contentContainerStyle={{paddingBottom: 22}}
-      />
-
-      {/* Navigasi halaman (pagination) */}
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          onPress={() => setPage(p => Math.max(1, p - 1))}
-          disabled={page === 1}
-          style={[styles.pageButton, page === 1 && styles.pageButtonDisabled]}>
-          <Text style={styles.pageButtonText}>Prev</Text>
-        </TouchableOpacity>
-        <Text style={styles.pageInfo}>
-          Page {page} / {totalPages || 1}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setPage(p => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages || totalPages === 0}
-          style={[
-            styles.pageButton,
-            (page === totalPages || totalPages === 0) &&
-              styles.pageButtonDisabled,
-          ]}>
-          <Text style={styles.pageButtonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <TouchableOpacity
+            onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+            style={[
+              styles.pageButton,
+              (page === totalPages || totalPages === 0) &&
+                styles.pageButtonDisabled,
+            ]}>
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

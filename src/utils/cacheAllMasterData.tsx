@@ -12,9 +12,9 @@ export const cacheAllMasterData = async () => {
     const state = await NetInfo.fetch();
     if (!state.isConnected) return;
 
-    // const now = Date.now();
-    // const lastCache = await AsyncStorage.getItem('cache_master_last');
-    // if (lastCache && now - Number(lastCache) < TTL) return;
+    const now = Date.now();
+    const lastCache = await AsyncStorage.getItem('cache_master_last');
+    if (lastCache && now - Number(lastCache) < TTL) return;
 
     // --- AMBIL SEKALI BEARER TOKEN ---
     let token = '';
@@ -165,35 +165,6 @@ export const cacheAllMasterData = async () => {
     } catch (err) {
       console.log('Gagal cache UNIT LIST:', err?.message || err);
     }
-
-    // --- Cache lainnya
-    try {
-      const listResp = await axios.get(`${API_BASE_URL.mop}/apiDayActAll`, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-      const allDaily = Array.isArray(listResp.data)
-        ? listResp.data
-        : listResp.data.data || [];
-      await AsyncStorage.setItem(
-        'cached_daily_activity_list',
-        JSON.stringify(allDaily),
-      );
-    } catch (err) {
-      console.log('Gagal cache DAILY LIST:', err?.message || err);
-    }
-
-    // try {
-    //   const optResp = await axios.get(
-    //     `${API_BASE_URL.mop}/getEmployeeOperatorAll`,
-    //     {headers: {Authorization: `Bearer ${token}`}},
-    //   );
-    //   const allOpt = Array.isArray(optResp.data)
-    //     ? optResp.data
-    //     : optResp.data.data || [];
-    //   await AsyncStorage.setItem('cached_opt_list', JSON.stringify(allOpt));
-    // } catch (err) {
-    //   console.log('Gagal cache OPT LIST:', err?.message || err);
-    // }
 
     // await AsyncStorage.setItem('cache_master_last', String(now));
     console.log('✅ Master data cached (all)');

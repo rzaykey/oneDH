@@ -10,7 +10,6 @@ import {
   LayoutAnimation,
   UIManager,
   ActivityIndicator,
-  ScrollView,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
@@ -22,6 +21,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import API_BASE_URL from '../../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
 // Aktifkan LayoutAnimation Android
@@ -46,12 +46,6 @@ const CollapsibleCard = ({title, children}) => {
   );
 };
 
-/**
- * EditDailyActivity (Optimized)
- * - Offline/online edit, dropdown cache, tombol save aman di safe area
- * - Tidak tarik master berulang! Hanya cache, kecuali user force refresh di halaman list.
- * - Data detail prioritas dari server jika online, cache jika offline
- */
 const EditDailyActivity = ({route}) => {
   const {id} = route.params;
   const navigation = useNavigation();
@@ -251,7 +245,8 @@ const EditDailyActivity = ({route}) => {
       edit_total_hour: Number(formData.total_hour),
     };
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      const token = loginCache ? JSON.parse(loginCache).token : null;
       if (!token) {
         Alert.alert('Error', 'Token tidak ditemukan. Silakan login ulang.');
         return;
@@ -304,145 +299,152 @@ const EditDailyActivity = ({route}) => {
   }
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={[
-          addDailyAct.container,
-          {paddingBottom: 24 + insets.bottom}, // Aman tombol simpan!
-        ]}
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={120}>
-        {/* Status Online/Offline */}
-        <View style={{alignItems: 'flex-end', marginBottom: 8, marginTop: 8}}>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={{flex: 1}}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={[
+            addDailyAct.container,
+            {paddingBottom: 24 + insets.bottom}, // Aman tombol simpan!
+          ]}
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={120}>
+          {/* Status Online/Offline */}
+          <View style={{alignItems: 'flex-end', marginBottom: 8, marginTop: 8}}>
+            <Text
+              style={{
+                backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
+                color: isConnected ? '#155724' : '#721c24',
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 16,
+                fontWeight: 'bold',
+                fontSize: 13,
+                alignSelf: 'flex-end',
+              }}>
+              {isConnected ? '🟢 Online' : '🔴 Offline'}
+            </Text>
+          </View>
           <Text
-            style={{
-              backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-              color: isConnected ? '#155724' : '#721c24',
-              paddingHorizontal: 12,
-              paddingVertical: 4,
-              borderRadius: 16,
-              fontWeight: 'bold',
-              fontSize: 13,
-              alignSelf: 'flex-end',
-            }}>
-            {isConnected ? '🟢 Online' : '🔴 Offline'}
+            style={[addDailyAct.header, {textAlign: 'center', marginTop: 6}]}>
+            EDIT DAILY ACTIVITY
           </Text>
-        </View>
-        <Text style={[addDailyAct.header, {textAlign: 'center', marginTop: 6}]}>
-          EDIT DAILY ACTIVITY
-        </Text>
 
-        {/* User Info */}
-        <CollapsibleCard title="User Info">
-          <Text style={addDailyAct.label}>JDE No</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.jde_no}
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Employee Name</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.employee_name}
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Site</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.site}
-            editable={false}
-          />
-        </CollapsibleCard>
-        {/* Activity Info */}
-        <CollapsibleCard title="Activity Info">
-          <Text style={addDailyAct.label}>Date Activity</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          {/* User Info */}
+          <CollapsibleCard title="User Info">
+            <Text style={addDailyAct.label}>JDE No</Text>
             <TextInput
               style={addDailyAct.input}
-              value={formData.date_activity}
-              placeholder="YYYY-MM-DD"
+              value={formData.jde_no}
               editable={false}
             />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
+            <Text style={addDailyAct.label}>Employee Name</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.employee_name}
+              editable={false}
             />
-          )}
-          <Text style={addDailyAct.label}>KPI Type</Text>
-          <RNPickerSelect
-            onValueChange={onKpiChange}
-            value={formData.kpi_type}
-            placeholder={{label: 'Pilih KPI', value: ''}}
-            items={kpiOptions}
-            style={{
-              inputIOS: addDailyAct.pickerSelectIOS,
-              inputAndroid: addDailyAct.pickerSelectAndroid,
-            }}
-          />
-          <Text style={addDailyAct.label}>Activity</Text>
-          <RNPickerSelect
-            onValueChange={val => handleChange('activity', val)}
-            value={formData.activity}
-            placeholder={{label: 'Pilih Activity', value: ''}}
-            items={activityOptions}
-            style={{
-              inputIOS: addDailyAct.pickerSelectIOS,
-              inputAndroid: addDailyAct.pickerSelectAndroid,
-            }}
-          />
-        </CollapsibleCard>
-        {/* Unit Info */}
-        <CollapsibleCard title="Unit Info">
-          <Text style={addDailyAct.label}>Detail Unit</Text>
-          <DropDownPicker
-            open={unitOpen}
-            value={unitValue}
-            items={unitOptions}
-            setOpen={setUnitOpen}
-            setValue={setUnitValue}
-            onChangeValue={val => {
-              setUnitValue(val);
-              handleChange('unit_detail', val);
-            }}
-            setItems={setUnitOptions}
-            placeholder="Pilih Unit"
-            searchable
-            listMode="MODAL"
-            modalTitle="Pilih Unit"
-            modalProps={{animationType: 'slide'}}
-            dropDownDirection="AUTO"
-            zIndex={3000}
-            zIndexInverse={1000}
-          />
-        </CollapsibleCard>
-        {/* Participant Info */}
-        <CollapsibleCard title="Participant Info">
-          <Text style={addDailyAct.label}>Total Participant</Text>
-          <TextInput
-            style={addDailyAct.input}
-            keyboardType="numeric"
-            value={formData.total_participant}
-            onChangeText={text => handleChange('total_participant', text)}
-          />
-          <Text style={addDailyAct.label}>Total Hour</Text>
-          <TextInput
-            style={addDailyAct.input}
-            keyboardType="numeric"
-            value={formData.total_hour}
-            onChangeText={text => handleChange('total_hour', text)}
-          />
-        </CollapsibleCard>
-        {/* Simpan */}
-        <View style={{marginTop: 24}}>
-          <Button title="Simpan" onPress={handleSubmit} />
-        </View>
-      </KeyboardAwareScrollView>
-    </SafeAreaView>
+            <Text style={addDailyAct.label}>Site</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.site}
+              editable={false}
+            />
+          </CollapsibleCard>
+          {/* Activity Info */}
+          <CollapsibleCard title="Activity Info">
+            <Text style={addDailyAct.label}>Date Activity</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <TextInput
+                style={addDailyAct.input}
+                value={formData.date_activity}
+                placeholder="YYYY-MM-DD"
+                editable={false}
+              />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+            <Text style={addDailyAct.label}>KPI Type</Text>
+            <RNPickerSelect
+              onValueChange={onKpiChange}
+              value={formData.kpi_type}
+              placeholder={{label: 'Pilih KPI', value: ''}}
+              items={kpiOptions}
+              style={{
+                inputIOS: addDailyAct.pickerSelectIOS,
+                inputAndroid: addDailyAct.pickerSelectAndroid,
+              }}
+            />
+            <Text style={addDailyAct.label}>Activity</Text>
+            <RNPickerSelect
+              onValueChange={val => handleChange('activity', val)}
+              value={formData.activity}
+              placeholder={{label: 'Pilih Activity', value: ''}}
+              items={activityOptions}
+              style={{
+                inputIOS: addDailyAct.pickerSelectIOS,
+                inputAndroid: addDailyAct.pickerSelectAndroid,
+              }}
+            />
+          </CollapsibleCard>
+          {/* Unit Info */}
+          <CollapsibleCard title="Unit Info">
+            <Text style={addDailyAct.label}>Detail Unit</Text>
+            <DropDownPicker
+              open={unitOpen}
+              value={unitValue}
+              items={unitOptions}
+              setOpen={setUnitOpen}
+              setValue={setUnitValue}
+              onChangeValue={val => {
+                setUnitValue(val);
+                handleChange('unit_detail', val);
+              }}
+              setItems={setUnitOptions}
+              placeholder="Pilih Unit"
+              searchable
+              listMode="MODAL"
+              modalTitle="Pilih Unit"
+              modalProps={{animationType: 'slide'}}
+              dropDownDirection="AUTO"
+              zIndex={3000}
+              zIndexInverse={1000}
+            />
+          </CollapsibleCard>
+          {/* Participant Info */}
+          <CollapsibleCard title="Participant Info">
+            <Text style={addDailyAct.label}>Total Participant</Text>
+            <TextInput
+              style={addDailyAct.input}
+              keyboardType="numeric"
+              value={formData.total_participant}
+              onChangeText={text => handleChange('total_participant', text)}
+            />
+            <Text style={addDailyAct.label}>Total Hour</Text>
+            <TextInput
+              style={addDailyAct.input}
+              keyboardType="numeric"
+              value={formData.total_hour}
+              onChangeText={text => handleChange('total_hour', text)}
+            />
+          </CollapsibleCard>
+          {/* Simpan */}
+          <View style={{marginTop: 24}}>
+            <Button title="Simpan" onPress={handleSubmit} />
+          </View>
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

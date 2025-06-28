@@ -22,6 +22,7 @@ import {addQueueOffline} from '../../../utils/offlineQueueHelper';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import axios from 'axios';
 import API_BASE_URL from '../../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TRAINHOURS_QUEUE_KEY = 'trainhours_queue_offline';
@@ -334,26 +335,38 @@ const AddTrainHours = () => {
       }
 
       // If online langsung POST
-      let token = '';
       try {
         const loginCache = await AsyncStorage.getItem('loginCache');
-        if (loginCache) {
-          const parsed = JSON.parse(loginCache);
-          token = parsed.token || '';
+        const token = loginCache ? JSON.parse(loginCache).token : null;
+
+        if (!token) {
+          Alert.alert('Gagal', 'Token tidak ditemukan. Silakan login ulang.');
+          return;
         }
-      } catch {}
-      if (!token) token = await AsyncStorage.getItem('userToken');
-      const response = await axios.post(
-        `${API_BASE_URL.mop}/trainHours/store`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+
+        const response = await axios.post(
+          `${API_BASE_URL.mop}/trainHours/store`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
           },
-        },
-      );
+        );
+
+        console.log('Store success:', response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.warn('API Error:', error.response?.data || error.message);
+        } else {
+          console.warn('Unexpected Error:', error);
+        }
+
+        Alert.alert('Gagal', 'Terjadi kesalahan saat mengirim data.');
+      }
+
       if (response.data.status || response.data.success) {
         Alert.alert(
           'Sukses',
@@ -397,243 +410,249 @@ const AddTrainHours = () => {
   }
 
   return (
-    <View style={{flex: 1, paddingBottom: insets.bottom}}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={addDailyAct.container}
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={120}>
-        <Text style={addDailyAct.header}>INPUT TRAIN HOURS</Text>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <View style={{flex: 1, paddingBottom: insets.bottom}}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={addDailyAct.container}
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={120}>
+          <Text style={addDailyAct.header}>INPUT TRAIN HOURS</Text>
 
-        {/* Offline Badge & Push Button */}
-        {trainHoursQueueCount > 0 && (
-          <View
-            style={{
-              backgroundColor: '#e74c3c',
-              alignSelf: 'flex-end',
-              paddingHorizontal: 12,
-              paddingVertical: 4,
-              borderRadius: 16,
-              marginBottom: 8,
-            }}>
-            <Text style={{color: 'white'}}>
-              {trainHoursQueueCount} data offline menunggu jaringan!
-            </Text>
-            <TouchableOpacity
-              onPress={pushTrainHoursQueue}
+          {/* Offline Badge & Push Button */}
+          {trainHoursQueueCount > 0 && (
+            <View
               style={{
-                marginTop: 6,
-                backgroundColor: '#27ae60',
-                paddingVertical: 6,
-                borderRadius: 12,
-                alignItems: 'center',
-                opacity: syncing ? 0.6 : 1,
-              }}
-              disabled={syncing}>
-              <Text style={{color: '#fff', fontWeight: 'bold'}}>
-                {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
+                backgroundColor: '#e74c3c',
+                alignSelf: 'flex-end',
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 16,
+                marginBottom: 8,
+              }}>
+              <Text style={{color: 'white'}}>
+                {trainHoursQueueCount} data offline menunggu jaringan!
               </Text>
-              {syncing && (
-                <ActivityIndicator
-                  size="small"
-                  color="#fff"
-                  style={{marginLeft: 8}}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                onPress={pushTrainHoursQueue}
+                style={{
+                  marginTop: 6,
+                  backgroundColor: '#27ae60',
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  opacity: syncing ? 0.6 : 1,
+                }}
+                disabled={syncing}>
+                <Text style={{color: '#fff', fontWeight: 'bold'}}>
+                  {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
+                </Text>
+                {syncing && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                    style={{marginLeft: 8}}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
 
-        {/* Employee Info Section */}
-        <CollapsibleCard title="Employee Info">
-          <Text style={addDailyAct.label}>JDE No</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.jde_no}
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Employee Name</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.employee_name}
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Site</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.site}
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Position</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.position}
-            editable={false}
-          />
-        </CollapsibleCard>
-
-        {/* Training Info Section */}
-        <CollapsibleCard title="Training Info">
-          <Text style={addDailyAct.label}>Training Type</Text>
-          <DropDownPicker
-            listMode="MODAL"
-            open={trainingTypeOpen}
-            value={trainingTypeValue}
-            items={trainingTypeOptions}
-            setOpen={setTrainingTypeOpen}
-            setValue={val => onChangeTrainingType(val())}
-            setItems={setTrainingTypeOptions}
-            placeholder="Pilih Training Type"
-            searchable
-            zIndex={3500}
-            zIndexInverse={3000}
-          />
-          <Text style={addDailyAct.label}>Batch</Text>
-          <DropDownPicker
-            listMode="MODAL"
-            open={batchOpen}
-            value={formData.batch}
-            items={batchOptions}
-            setOpen={setBatchOpen}
-            setValue={val => {
-              setBatchOpen(false);
-              handleChange('batch', val());
-            }}
-            setItems={setBatchOptions}
-            placeholder="Pilih Batch"
-            searchable
-            zIndex={3000}
-            zIndexInverse={1000}
-          />
-        </CollapsibleCard>
-
-        {/* Unit Info Section */}
-        <CollapsibleCard title="Unit Info">
-          <Text style={addDailyAct.label}>Unit Type</Text>
-          <DropDownPicker
-            listMode="MODAL"
-            open={unitTypeOpen}
-            value={formData.unit_type}
-            items={unitTypeOptions}
-            setOpen={setUnitTypeOpen}
-            setValue={val => onChangeUnitType(val())}
-            setItems={setUnitTypeOptions}
-            placeholder="Pilih Unit Type"
-            searchable
-            zIndex={2000}
-            zIndexInverse={2500}
-          />
-          <Text style={addDailyAct.label}>Unit Class</Text>
-          <DropDownPicker
-            listMode="MODAL"
-            open={unitClassOpen}
-            value={formData.unit_class}
-            items={filteredClassUnitOptions}
-            setOpen={setUnitClassOpen}
-            setValue={val => onChangeUnitClass(val())}
-            setItems={setFilteredClassUnitOptions}
-            placeholder={
-              !formData.unit_type
-                ? 'Pilih Unit Type dahulu'
-                : 'Pilih Unit Class'
-            }
-            searchable
-            disabled={!formData.unit_type}
-            zIndex={2500}
-            zIndexInverse={2000}
-          />
-          <Text style={addDailyAct.label}>Code</Text>
-          <DropDownPicker
-            listMode="MODAL"
-            open={codeOpen}
-            value={formData.code}
-            items={codeOptions}
-            setOpen={setCodeOpen}
-            setValue={val => {
-              setCodeOpen(false);
-              handleChange('code', val());
-            }}
-            setItems={setCodeOptions}
-            placeholder={
-              !formData.unit_class ? 'Pilih Unit Class dahulu' : 'Pilih Code'
-            }
-            searchable
-            disabled={!formData.unit_class}
-            zIndex={1500}
-            zIndexInverse={1000}
-          />
-        </CollapsibleCard>
-
-        {/* Hour Info Section */}
-        <CollapsibleCard title="Hour Info">
-          <Text style={addDailyAct.label}>Plan Total HM</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.plan_total_hm}
-            onChangeText={text => handleChange('plan_total_hm', text)}
-            keyboardType="numeric"
-          />
-          <Text style={addDailyAct.label}>HM Start</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.hm_start}
-            onChangeText={text => handleChange('hm_start', text)}
-            keyboardType="numeric"
-          />
-          <Text style={addDailyAct.label}>HM End</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.hm_end}
-            onChangeText={text => handleChange('hm_end', text)}
-            keyboardType="numeric"
-          />
-          <Text style={addDailyAct.label}>Total HM</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.total_hm}
-            onChangeText={text => handleChange('total_hm', text)}
-            keyboardType="numeric"
-            editable={false}
-          />
-          <Text style={addDailyAct.label}>Progres</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.progres}
-            onChangeText={text => handleChange('progres', text)}
-            keyboardType="numeric"
-            editable={false}
-          />
-        </CollapsibleCard>
-
-        {/* Tanggal Section */}
-        <CollapsibleCard title="Tanggal">
-          <Text style={addDailyAct.label}>Date Activity</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          {/* Employee Info Section */}
+          <CollapsibleCard title="Employee Info">
+            <Text style={addDailyAct.label}>JDE No</Text>
             <TextInput
               style={addDailyAct.input}
-              value={formData.date_activity}
-              placeholder="YYYY-MM-DD"
+              value={formData.jde_no}
               editable={false}
             />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
+            <Text style={addDailyAct.label}>Employee Name</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.employee_name}
+              editable={false}
             />
-          )}
-        </CollapsibleCard>
+            <Text style={addDailyAct.label}>Site</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.site}
+              editable={false}
+            />
+            <Text style={addDailyAct.label}>Position</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.position}
+              editable={false}
+            />
+          </CollapsibleCard>
 
-        {/* Tombol Simpan */}
-        <Button
-          title={isSubmitting ? 'Menyimpan...' : 'Simpan'}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        />
-      </KeyboardAwareScrollView>
-    </View>
+          {/* Training Info Section */}
+          <CollapsibleCard title="Training Info">
+            <Text style={addDailyAct.label}>Training Type</Text>
+            <DropDownPicker
+              listMode="MODAL"
+              open={trainingTypeOpen}
+              value={trainingTypeValue}
+              items={trainingTypeOptions}
+              setOpen={setTrainingTypeOpen}
+              setValue={val => onChangeTrainingType(val())}
+              setItems={setTrainingTypeOptions}
+              placeholder="Pilih Training Type"
+              searchable
+              zIndex={3500}
+              zIndexInverse={3000}
+            />
+            <Text style={addDailyAct.label}>Batch</Text>
+            <DropDownPicker
+              listMode="MODAL"
+              open={batchOpen}
+              value={formData.batch}
+              items={batchOptions}
+              setOpen={setBatchOpen}
+              setValue={val => {
+                setBatchOpen(false);
+                handleChange('batch', val());
+              }}
+              setItems={setBatchOptions}
+              placeholder="Pilih Batch"
+              searchable
+              zIndex={3000}
+              zIndexInverse={1000}
+            />
+          </CollapsibleCard>
+
+          {/* Unit Info Section */}
+          <CollapsibleCard title="Unit Info">
+            <Text style={addDailyAct.label}>Unit Type</Text>
+            <DropDownPicker
+              listMode="MODAL"
+              open={unitTypeOpen}
+              value={formData.unit_type}
+              items={unitTypeOptions}
+              setOpen={setUnitTypeOpen}
+              setValue={val => onChangeUnitType(val())}
+              setItems={setUnitTypeOptions}
+              placeholder="Pilih Unit Type"
+              searchable
+              zIndex={2000}
+              zIndexInverse={2500}
+            />
+            <Text style={addDailyAct.label}>Unit Class</Text>
+            <DropDownPicker
+              listMode="MODAL"
+              open={unitClassOpen}
+              value={formData.unit_class}
+              items={filteredClassUnitOptions}
+              setOpen={setUnitClassOpen}
+              setValue={val => onChangeUnitClass(val())}
+              setItems={setFilteredClassUnitOptions}
+              placeholder={
+                !formData.unit_type
+                  ? 'Pilih Unit Type dahulu'
+                  : 'Pilih Unit Class'
+              }
+              searchable
+              disabled={!formData.unit_type}
+              zIndex={2500}
+              zIndexInverse={2000}
+            />
+            <Text style={addDailyAct.label}>Code</Text>
+            <DropDownPicker
+              listMode="MODAL"
+              open={codeOpen}
+              value={formData.code}
+              items={codeOptions}
+              setOpen={setCodeOpen}
+              setValue={val => {
+                setCodeOpen(false);
+                handleChange('code', val());
+              }}
+              setItems={setCodeOptions}
+              placeholder={
+                !formData.unit_class ? 'Pilih Unit Class dahulu' : 'Pilih Code'
+              }
+              searchable
+              disabled={!formData.unit_class}
+              zIndex={1500}
+              zIndexInverse={1000}
+            />
+          </CollapsibleCard>
+
+          {/* Hour Info Section */}
+          <CollapsibleCard title="Hour Info">
+            <Text style={addDailyAct.label}>Plan Total HM</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.plan_total_hm}
+              onChangeText={text => handleChange('plan_total_hm', text)}
+              keyboardType="numeric"
+            />
+            <Text style={addDailyAct.label}>HM Start</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.hm_start}
+              onChangeText={text => handleChange('hm_start', text)}
+              keyboardType="numeric"
+            />
+            <Text style={addDailyAct.label}>HM End</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.hm_end}
+              onChangeText={text => handleChange('hm_end', text)}
+              keyboardType="numeric"
+            />
+            <Text style={addDailyAct.label}>Total HM</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.total_hm}
+              onChangeText={text => handleChange('total_hm', text)}
+              keyboardType="numeric"
+              editable={false}
+            />
+            <Text style={addDailyAct.label}>Progres</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.progres}
+              onChangeText={text => handleChange('progres', text)}
+              keyboardType="numeric"
+              editable={false}
+            />
+          </CollapsibleCard>
+
+          {/* Tanggal Section */}
+          <CollapsibleCard title="Tanggal">
+            <Text style={addDailyAct.label}>Date Activity</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <TextInput
+                style={addDailyAct.input}
+                value={formData.date_activity}
+                placeholder="YYYY-MM-DD"
+                editable={false}
+              />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+          </CollapsibleCard>
+
+          {/* Tombol Simpan */}
+          <Button
+            title={isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          />
+        </KeyboardAwareScrollView>
+      </View>
+    </LinearGradient>
   );
 };
 

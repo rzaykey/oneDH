@@ -153,10 +153,11 @@ const AccountProfileScreen = ({navigation}) => {
                         <Text style={styles.roleSite}> ({r.code_site})</Text>
                       </View>
                       <Text style={styles.rolePerm}>
-                        {r.module} -{' '}
-                        <Text style={{fontWeight: 'bold'}}>
+                        {r.module}
+                        {/* -{' '} */}
+                        {/* <Text style={{fontWeight: 'bold'}}>
                           {(r.permit || '').toUpperCase()}
-                        </Text>
+                        </Text> */}
                       </Text>
                     </View>
                   ))

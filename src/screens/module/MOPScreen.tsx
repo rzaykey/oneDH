@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 import {mopStyles} from '../../styles/mopStyles';
 import {
   getModulePermit,
@@ -85,20 +86,6 @@ const sectionConfig = [
         action: 'add',
         module: 'MOP',
       },
-      {
-        icon: 'create-outline',
-        label: 'Edit Train Hours',
-        screen: 'EditTrainHours',
-        action: 'edit',
-        module: 'MOP',
-      },
-      {
-        icon: 'trash-outline',
-        label: 'Hapus Train Hours',
-        screen: '', // butuh onPress custom delete
-        action: 'delete',
-        module: 'MOP',
-      },
     ],
   },
   {
@@ -143,99 +130,106 @@ const MOPScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={mopStyles.safeArea}>
-      <ScrollView
-        contentContainerStyle={mopStyles.container}
-        showsVerticalScrollIndicator={false}>
-        <Text style={mopStyles.title}>Mine Operator Performance</Text>
-        {sectionConfig.map(section => (
-          <View key={section.section}>
-            <Text style={mopStyles.section}>{section.section}</Text>
-            {section.items
-              .filter(item => actionChecker[item.action](permit))
-              .map(item => (
-                <TouchableOpacity
-                  key={item.label}
-                  style={mopStyles.button}
-                  activeOpacity={0.85}
-                  onPress={() =>
-                    item.customAction === 'openMentoringFormPicker'
-                      ? handleMentoringFormPress()
-                      : item.screen && navigation.navigate(item.screen)
-                  }>
-                  <Icon
-                    name={item.icon}
-                    size={24}
-                    color="#1E90FF"
-                    style={{marginRight: 10}}
-                  />
-                  <Text style={mopStyles.buttonText}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-          </View>
-        ))}
-      </ScrollView>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={mopStyles.safeArea}>
+        <ScrollView
+          contentContainerStyle={mopStyles.container}
+          showsVerticalScrollIndicator={false}>
+          <Text style={mopStyles.title}>Mine Operator Performance</Text>
+          {sectionConfig.map(section => (
+            <View key={section.section}>
+              <Text style={mopStyles.section}>{section.section}</Text>
+              {section.items
+                .filter(item => actionChecker[item.action](permit))
+                .map(item => (
+                  <TouchableOpacity
+                    key={item.label}
+                    style={mopStyles.button}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      item.customAction === 'openMentoringFormPicker'
+                        ? handleMentoringFormPress()
+                        : item.screen && navigation.navigate(item.screen)
+                    }>
+                    <Icon
+                      name={item.icon}
+                      size={24}
+                      color="#1E90FF"
+                      style={{marginRight: 10}}
+                    />
+                    <Text style={mopStyles.buttonText}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+          ))}
+        </ScrollView>
 
-      {/* Modal Pilihan Form Mentoring */}
-      <Modal
-        visible={showMentoringFormPicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowMentoringFormPicker(false)}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0,0,0,0.3)',
-          }}>
+        {/* Modal Pilihan Form Mentoring */}
+        <Modal
+          visible={showMentoringFormPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowMentoringFormPicker(false)}>
           <View
             style={{
-              backgroundColor: '#fff',
-              borderRadius: 12,
-              padding: 24,
-              width: 300,
-              elevation: 3,
+              flex: 1,
+              justifyContent: 'center',
               alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.3)',
             }}>
-            <Text
+            <View
               style={{
-                fontWeight: 'bold',
-                fontSize: 18,
-                marginBottom: 12,
-                color: '#2d3748',
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                padding: 24,
+                width: 300,
+                elevation: 3,
+                alignItems: 'center',
               }}>
-              Pilih Form Mentoring
-            </Text>
-            {mentoringForms.map(item => (
-              <TouchableOpacity
-                key={item.unitType}
+              <Text
                 style={{
-                  paddingVertical: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '100%',
-                  marginBottom: 4,
-                }}
-                onPress={() => handleFormSelect(item)}>
-                <Icon
-                  name={item.icon}
-                  size={20}
-                  color="#6366f1"
-                  style={{marginRight: 10}}
-                />
-                <Text style={{fontSize: 16, color: '#1a202c'}}>
-                  {item.label}
-                </Text>
+                  fontWeight: 'bold',
+                  fontSize: 18,
+                  marginBottom: 12,
+                  color: '#2d3748',
+                }}>
+                Pilih Form Mentoring
+              </Text>
+              {mentoringForms.map(item => (
+                <TouchableOpacity
+                  key={item.unitType}
+                  style={{
+                    paddingVertical: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '100%',
+                    marginBottom: 4,
+                  }}
+                  onPress={() => handleFormSelect(item)}>
+                  <Icon
+                    name={item.icon}
+                    size={20}
+                    color="#6366f1"
+                    style={{marginRight: 10}}
+                  />
+                  <Text style={{fontSize: 16, color: '#1a202c'}}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                onPress={() => setShowMentoringFormPicker(false)}>
+                <Text style={{color: '#e74c3c', marginTop: 14}}>Batal</Text>
               </TouchableOpacity>
-            ))}
-            <TouchableOpacity onPress={() => setShowMentoringFormPicker(false)}>
-              <Text style={{color: '#e74c3c', marginTop: 14}}>Batal</Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

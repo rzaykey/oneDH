@@ -19,6 +19,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from '@react-native-community/checkbox';
+import LinearGradient from 'react-native-linear-gradient';
 import {editDataStyles as styles} from '../../../styles/editDataStyles';
 import {pickerSelectStyles} from '../../../styles/pickerSelectStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -503,280 +504,273 @@ const EditDataMentoring = ({route}) => {
 
   // ==== RENDER FORM ====
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
       style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{paddingBottom: 48}}>
-          <View style={styles.container}>
-            <Text style={styles.title}>Edit Data Mentoring</Text>
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{paddingBottom: 48}}>
+            <View style={styles.container}>
+              <Text style={styles.title}>Edit Data Mentoring</Text>
 
-            {/* --- HEADER CARD --- */}
-            <View style={styles.card}>
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => setExpanded(!expanded)}>
-                <Icon
-                  name={expanded ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#007AFF"
-                />
-                <Text style={styles.sectionTitle}>Header</Text>
-              </TouchableOpacity>
-              {expanded && (
-                <View style={styles.sectionContent}>
-                  <View style={styles.row}>
-                    <View style={styles.half}>
-                      <Text style={styles.label}>Trainer JDE</Text>
-                      <Text style={styles.value}>{headerData.trainer_jde}</Text>
-                    </View>
-                    <View style={styles.half}>
-                      <Text style={styles.label}>Nama Trainer</Text>
-                      <Text style={styles.value}>
-                        {headerData.trainer_name}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={{padding: 1}}>
-                    <Text style={{fontSize: 16, marginBottom: 8}}>
-                      Operator
-                    </Text>
-                    <TextInput
-                      placeholder="Cari Operator JDE"
-                      value={operatorQuery}
-                      onChangeText={searchOperator}
-                      style={[styles.value, {paddingVertical: 10}]}
-                    />
-                    {/* Search Results */}
-                    {showResults && searchResults.length > 0 && (
-                      <View style={[styles.indicatorDetail, {maxHeight: 150}]}>
-                        <FlatList
-                          data={searchResults}
-                          keyExtractor={item => item.employeeId}
-                          renderItem={({item}) => (
-                            <TouchableOpacity
-                              onPress={() => handleSelectOperator(item)}
-                              style={[styles.pointCard, {paddingVertical: 10}]}>
-                              <Text>{`${item.employeeId} - ${item.EmployeeName}`}</Text>
-                            </TouchableOpacity>
-                          )}
-                          nestedScrollEnabled={true}
-                        />
+              {/* --- HEADER CARD --- */}
+              <View style={styles.card}>
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={() => setExpanded(!expanded)}>
+                  <Icon
+                    name={expanded ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color="#007AFF"
+                  />
+                  <Text style={styles.sectionTitle}>Header</Text>
+                </TouchableOpacity>
+                {expanded && (
+                  <View style={styles.sectionContent}>
+                    <View style={styles.row}>
+                      <View style={styles.half}>
+                        <Text style={styles.label}>Trainer JDE</Text>
+                        <Text style={styles.value}>
+                          {headerData.trainer_jde}
+                        </Text>
                       </View>
-                    )}
-                    <View style={styles.operatorBox}>
-                      <Text style={{fontSize: 16, marginBottom: 8}}>
-                        Operator JDE: {operatorJDE}
-                      </Text>
-                      <View
-                        style={{
-                          height: 1,
-                          backgroundColor: '#e0e0e0',
-                          marginVertical: 8,
-                        }}
-                      />
-                      <Text style={{fontSize: 16}}>
-                        Nama Operator: {operatorName}
-                      </Text>
+                      <View style={styles.half}>
+                        <Text style={styles.label}>Nama Trainer</Text>
+                        <Text style={styles.value}>
+                          {headerData.trainer_name}
+                        </Text>
+                      </View>
                     </View>
+                    <View style={{padding: 1}}>
+                      <Text style={{fontSize: 16, marginBottom: 8}}>
+                        Operator
+                      </Text>
+                      <TextInput
+                        placeholder="Cari Operator JDE"
+                        value={operatorQuery}
+                        onChangeText={searchOperator}
+                        style={[styles.value, {paddingVertical: 10}]}
+                      />
+                      {/* Search Results */}
+                      {showResults && searchResults.length > 0 && (
+                        <View
+                          style={[styles.indicatorDetail, {maxHeight: 150}]}>
+                          <FlatList
+                            data={searchResults}
+                            keyExtractor={item => item.employeeId}
+                            renderItem={({item}) => (
+                              <TouchableOpacity
+                                onPress={() => handleSelectOperator(item)}
+                                style={[
+                                  styles.pointCard,
+                                  {paddingVertical: 10},
+                                ]}>
+                                <Text>{`${item.employeeId} - ${item.EmployeeName}`}</Text>
+                              </TouchableOpacity>
+                            )}
+                            nestedScrollEnabled={true}
+                          />
+                        </View>
+                      )}
+                      <View style={styles.operatorBox}>
+                        <Text style={{fontSize: 16, marginBottom: 8}}>
+                          Operator JDE: {operatorJDE}
+                        </Text>
+                        <View
+                          style={{
+                            height: 1,
+                            backgroundColor: '#e0e0e0',
+                            marginVertical: 8,
+                          }}
+                        />
+                        <Text style={{fontSize: 16}}>
+                          Nama Operator: {operatorName}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.label}>Site</Text>
+                    <TextInput
+                      value={site || ''}
+                      editable={false}
+                      style={styles.input}
+                    />
+                    <Text style={styles.label}>Area</Text>
+                    <TextInput
+                      value={area ?? ''}
+                      onChangeText={setArea}
+                      placeholder="Masukkan nama Area"
+                      style={[
+                        styles.input,
+                        {minHeight: 40, textAlignVertical: 'top'},
+                      ]}
+                      multiline
+                    />
                   </View>
-                  <Text style={styles.label}>Site</Text>
-                  <TextInput
-                    value={site || ''}
-                    editable={false}
-                    style={styles.input}
-                  />
-                  <Text style={styles.label}>Area</Text>
-                  <TextInput
-                    value={area ?? ''}
-                    onChangeText={setArea}
-                    placeholder="Masukkan nama Area"
-                    style={[
-                      styles.input,
-                      {minHeight: 40, textAlignVertical: 'top'},
-                    ]}
-                    multiline
-                  />
-                </View>
-              )}
-            </View>
+                )}
+              </View>
 
-            {/* --- UNIT DAN WAKTU CARD --- */}
-            <ToggleCard title="Unit dan Waktu" defaultExpanded={true}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Unit Type</Text>
-                <RNPickerSelect
-                  onValueChange={setUnitType}
-                  items={unitTypes}
-                  value={unitType}
-                  placeholder={{label: 'Pilih Tipe Unit', value: null}}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
-                  Icon={() => (
-                    <Icon name="chevron-down" size={20} color="#9ca3af" />
-                  )}
-                />
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Unit Model</Text>
-                <RNPickerSelect
-                  onValueChange={setUnitModel}
-                  items={modelUnits}
-                  value={unitModel}
-                  placeholder={{label: 'Pilih Model Unit', value: null}}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
-                  Icon={() => (
-                    <Icon name="chevron-down" size={20} color="#9ca3af" />
-                  )}
-                />
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Unit Number</Text>
-                <RNPickerSelect
-                  onValueChange={setUnitNumber}
-                  items={unitNumbers}
-                  value={unitNumber}
-                  placeholder={{label: 'Pilih Unit Number', value: null}}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
-                  Icon={() => (
-                    <Icon name="chevron-down" size={20} color="#9ca3af" />
-                  )}
-                />
-              </View>
-              <View style={styles.timeDateGroup}>
-                <View style={styles.timeDateInput}>
-                  <Text style={styles.label}>Tanggal</Text>
-                  <TouchableOpacity
-                    onPress={() => setShowDatePicker(true)}
-                    style={styles.datePickerButton}>
-                    <Icon name="calendar" size={18} color="#6366f1" />
-                    <Text style={styles.datePickerText}>
-                      {dateMentoring.toLocaleDateString('id-ID')}
-                    </Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={dateMentoring}
-                      mode="date"
-                      display="default"
-                      onChange={onChangeDate}
-                    />
-                  )}
+              {/* --- UNIT DAN WAKTU CARD --- */}
+              <ToggleCard title="Unit dan Waktu" defaultExpanded={true}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Unit Type</Text>
+                  <RNPickerSelect
+                    onValueChange={setUnitType}
+                    items={unitTypes}
+                    value={unitType}
+                    placeholder={{label: 'Pilih Tipe Unit', value: null}}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                    Icon={() => (
+                      <Icon name="chevron-down" size={20} color="#9ca3af" />
+                    )}
+                  />
                 </View>
-                <View style={styles.timeDateInput}>
-                  <Text style={styles.label}>Waktu Mulai</Text>
-                  <TouchableOpacity
-                    onPress={() => setShowStartTimePicker(true)}
-                    style={styles.datePickerButton}>
-                    <Icon name="time" size={18} color="#6366f1" />
-                    <Text style={styles.datePickerText}>
-                      {startTime.toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </Text>
-                  </TouchableOpacity>
-                  {showStartTimePicker && (
-                    <DateTimePicker
-                      value={startTime}
-                      mode="time"
-                      display="default"
-                      onChange={onChangeStartTime}
-                    />
-                  )}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Unit Model</Text>
+                  <RNPickerSelect
+                    onValueChange={setUnitModel}
+                    items={modelUnits}
+                    value={unitModel}
+                    placeholder={{label: 'Pilih Model Unit', value: null}}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                    Icon={() => (
+                      <Icon name="chevron-down" size={20} color="#9ca3af" />
+                    )}
+                  />
                 </View>
-                <View style={styles.timeDateInput}>
-                  <Text style={styles.label}>Waktu Selesai</Text>
-                  <TouchableOpacity
-                    onPress={() => setShowEndTimePicker(true)}
-                    style={styles.datePickerButton}>
-                    <Icon name="time" size={18} color="#6366f1" />
-                    <Text style={styles.datePickerText}>
-                      {endTime.toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </Text>
-                  </TouchableOpacity>
-                  {showEndTimePicker && (
-                    <DateTimePicker
-                      value={endTime}
-                      mode="time"
-                      display="default"
-                      onChange={onChangeEndTime}
-                    />
-                  )}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Unit Number</Text>
+                  <RNPickerSelect
+                    onValueChange={setUnitNumber}
+                    items={unitNumbers}
+                    value={unitNumber}
+                    placeholder={{label: 'Pilih Unit Number', value: null}}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                    Icon={() => (
+                      <Icon name="chevron-down" size={20} color="#9ca3af" />
+                    )}
+                  />
                 </View>
-              </View>
-            </ToggleCard>
+                <View style={styles.timeDateGroup}>
+                  <View style={styles.timeDateInput}>
+                    <Text style={styles.label}>Tanggal</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowDatePicker(true)}
+                      style={styles.datePickerButton}>
+                      <Icon name="calendar" size={18} color="#6366f1" />
+                      <Text style={styles.datePickerText}>
+                        {dateMentoring.toLocaleDateString('id-ID')}
+                      </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={dateMentoring}
+                        mode="date"
+                        display="default"
+                        onChange={onChangeDate}
+                      />
+                    )}
+                  </View>
+                  <View style={styles.timeDateInput}>
+                    <Text style={styles.label}>Waktu Mulai</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowStartTimePicker(true)}
+                      style={styles.datePickerButton}>
+                      <Icon name="time" size={18} color="#6366f1" />
+                      <Text style={styles.datePickerText}>
+                        {startTime.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </Text>
+                    </TouchableOpacity>
+                    {showStartTimePicker && (
+                      <DateTimePicker
+                        value={startTime}
+                        mode="time"
+                        display="default"
+                        onChange={onChangeStartTime}
+                      />
+                    )}
+                  </View>
+                  <View style={styles.timeDateInput}>
+                    <Text style={styles.label}>Waktu Selesai</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowEndTimePicker(true)}
+                      style={styles.datePickerButton}>
+                      <Icon name="time" size={18} color="#6366f1" />
+                      <Text style={styles.datePickerText}>
+                        {endTime.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </Text>
+                    </TouchableOpacity>
+                    {showEndTimePicker && (
+                      <DateTimePicker
+                        value={endTime}
+                        mode="time"
+                        display="default"
+                        onChange={onChangeEndTime}
+                      />
+                    )}
+                  </View>
+                </View>
+              </ToggleCard>
 
-            {/* --- INDIKATOR --- */}
-            <ToggleCard title="Indikator Mentoring" defaultExpanded={true}>
-              {Object.entries(indicators).map(([kategori, list]) => (
-                <View key={kategori} style={styles.indicatorCategory}>
-                  <TouchableOpacity
-                    onPress={() => toggleCategoryVisibility(kategori)}
-                    style={styles.categoryHeader}>
-                    <Text style={styles.categoryTitle}>{kategori}</Text>
-                    <Icon
-                      name={
-                        visibleCategories[kategori]
-                          ? 'chevron-up'
-                          : 'chevron-down'
-                      }
-                      size={18}
-                      color="#6b7280"
-                    />
-                  </TouchableOpacity>
-                  {visibleCategories[kategori] && (
-                    <>
-                      {list.map(ind => {
-                        const detail = editableDetails.find(
-                          d => String(d.fid_indicator) === String(ind.id),
-                        ) || {
-                          is_observasi: '0',
-                          is_mentoring: '0',
-                          note_observasi: '',
-                          fid_indicator: ind.id,
-                        };
-                        return (
-                          <View key={ind.id} style={styles.indicatorItem}>
-                            <Text style={styles.indicatorParam}>
-                              • {ind.param1}
-                            </Text>
-                            <View style={styles.indicatorDetail}>
-                              <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>
-                                  Observasi:
-                                </Text>
-                                <CheckBox
-                                  value={detail.is_observasi === '1'}
-                                  onValueChange={() =>
-                                    toggleCheckbox(
-                                      detail.fid_indicator,
-                                      'is_observasi',
-                                    )
-                                  }
-                                  tintColors={{true: '#111', false: '#111'}}
-                                  boxType="square"
-                                  style={{width: 20, height: 20}}
-                                />
-                              </View>
-                              <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>
-                                  Mentoring:
-                                </Text>
-                                <View style={styles.checkBoxWrapper}>
+              {/* --- INDIKATOR --- */}
+              <ToggleCard title="Indikator Mentoring" defaultExpanded={true}>
+                {Object.entries(indicators).map(([kategori, list]) => (
+                  <View key={kategori} style={styles.indicatorCategory}>
+                    <TouchableOpacity
+                      onPress={() => toggleCategoryVisibility(kategori)}
+                      style={styles.categoryHeader}>
+                      <Text style={styles.categoryTitle}>{kategori}</Text>
+                      <Icon
+                        name={
+                          visibleCategories[kategori]
+                            ? 'chevron-up'
+                            : 'chevron-down'
+                        }
+                        size={18}
+                        color="#6b7280"
+                      />
+                    </TouchableOpacity>
+                    {visibleCategories[kategori] && (
+                      <>
+                        {list.map(ind => {
+                          const detail = editableDetails.find(
+                            d => String(d.fid_indicator) === String(ind.id),
+                          ) || {
+                            is_observasi: '0',
+                            is_mentoring: '0',
+                            note_observasi: '',
+                            fid_indicator: ind.id,
+                          };
+                          return (
+                            <View key={ind.id} style={styles.indicatorItem}>
+                              <Text style={styles.indicatorParam}>
+                                • {ind.param1}
+                              </Text>
+                              <View style={styles.indicatorDetail}>
+                                <View style={styles.detailRow}>
+                                  <Text style={styles.detailLabel}>
+                                    Observasi:
+                                  </Text>
                                   <CheckBox
-                                    value={detail.is_mentoring === '1'}
+                                    value={detail.is_observasi === '1'}
                                     onValueChange={() =>
                                       toggleCheckbox(
                                         detail.fid_indicator,
-                                        'is_mentoring',
+                                        'is_observasi',
                                       )
                                     }
                                     tintColors={{true: '#111', false: '#111'}}
@@ -784,52 +778,73 @@ const EditDataMentoring = ({route}) => {
                                     style={{width: 20, height: 20}}
                                   />
                                 </View>
-                              </View>
-                              <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Catatan:</Text>
-                                <TextInput
-                                  style={styles.detailValue}
-                                  multiline
-                                  placeholder="Masukkan catatan..."
-                                  value={detail.note_observasi || ''}
-                                  onChangeText={text =>
-                                    updateNote(detail.fid_indicator, text)
-                                  }
-                                />
+                                <View style={styles.detailRow}>
+                                  <Text style={styles.detailLabel}>
+                                    Mentoring:
+                                  </Text>
+                                  <View style={styles.checkBoxWrapper}>
+                                    <CheckBox
+                                      value={detail.is_mentoring === '1'}
+                                      onValueChange={() =>
+                                        toggleCheckbox(
+                                          detail.fid_indicator,
+                                          'is_mentoring',
+                                        )
+                                      }
+                                      tintColors={{true: '#111', false: '#111'}}
+                                      boxType="square"
+                                      style={{width: 20, height: 20}}
+                                    />
+                                  </View>
+                                </View>
+                                <View style={styles.detailRow}>
+                                  <Text style={styles.detailLabel}>
+                                    Catatan:
+                                  </Text>
+                                  <TextInput
+                                    style={styles.detailValue}
+                                    multiline
+                                    placeholder="Masukkan catatan..."
+                                    value={detail.note_observasi || ''}
+                                    onChangeText={text =>
+                                      updateNote(detail.fid_indicator, text)
+                                    }
+                                  />
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        );
-                      })}
-                      {/* Skor per kategori */}
-                      <View style={styles.categoryScore}>
-                        <Text style={styles.scoreText}>
-                          Observasi : Y Score:{' '}
-                          {points[kategori]?.yscoreObservasi ?? 0} | Point:{' '}
-                          {points[kategori]?.pointObservasi ?? 0}
-                        </Text>
-                        <Text style={styles.scoreText}>
-                          Mentoring : Y Score:{' '}
-                          {points[kategori]?.yscoreMentoring ?? 0} | Point:{' '}
-                          {points[kategori]?.pointMentoring ?? 0}
-                        </Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-              ))}
-            </ToggleCard>
+                          );
+                        })}
+                        {/* Skor per kategori */}
+                        <View style={styles.categoryScore}>
+                          <Text style={styles.scoreText}>
+                            Observasi : Y Score:{' '}
+                            {points[kategori]?.yscoreObservasi ?? 0} | Point:{' '}
+                            {points[kategori]?.pointObservasi ?? 0}
+                          </Text>
+                          <Text style={styles.scoreText}>
+                            Mentoring : Y Score:{' '}
+                            {points[kategori]?.yscoreMentoring ?? 0} | Point:{' '}
+                            {points[kategori]?.pointMentoring ?? 0}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                ))}
+              </ToggleCard>
 
-            {/* --- Rekap Point --- */}
-            {observasiPoints.jsx}
-            {mentoringPoints.jsx}
+              {/* --- Rekap Point --- */}
+              {observasiPoints.jsx}
+              {mentoringPoints.jsx}
 
-            {/* --- Simpan --- */}
-            <Button title="Simpan" onPress={handleSubmit} />
-          </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+              {/* --- Simpan --- */}
+              <Button title="Simpan" onPress={handleSubmit} />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 

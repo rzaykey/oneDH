@@ -1,10 +1,8 @@
-// editDataStyles.js
 import {StyleSheet} from 'react-native';
 
 export const editDataStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
     padding: 16,
   },
   contentContainer: {
@@ -14,7 +12,6 @@ export const editDataStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
   },
   errorText: {
     fontSize: 16,
@@ -26,6 +23,7 @@ export const editDataStyles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 20,
     textAlign: 'center',
+    marginVertical: 18,
   },
   card: {
     backgroundColor: 'white',

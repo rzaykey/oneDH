@@ -1,3 +1,4 @@
+// tabelStyles.js
 export const tabelStyles = {
   pageTitle: {
     fontSize: 21,
@@ -5,6 +6,7 @@ export const tabelStyles = {
     color: '#1E90FF',
     marginBottom: 16,
     alignSelf: 'center',
+    marginVertical: 18,
   },
   searchInput: {
     backgroundColor: '#fff',
@@ -28,11 +30,9 @@ export const tabelStyles = {
     fontSize: 15,
   },
   pickerWrapper: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 4,
     borderColor: '#e6e8ec',
-    borderWidth: 1,
     minWidth: 65,
   },
   picker: {
@@ -54,15 +54,12 @@ export const tabelStyles = {
     marginBottom: 10,
   },
   pageButton: {
-    backgroundColor: '#1E90FF',
     paddingVertical: 8,
     paddingHorizontal: 18,
     borderRadius: 12,
     marginHorizontal: 8,
   },
-  pageButtonDisabled: {
-    backgroundColor: '#b0c4de',
-  },
+  pageButtonDisabled: {},
   pageButtonText: {
     color: '#fff',
     fontWeight: 'bold',
@@ -71,7 +68,7 @@ export const tabelStyles = {
   pageInfo: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E90FF',
+    color: '#fff',
     marginHorizontal: 10,
   },
   center: {
@@ -158,7 +155,6 @@ export const tabelStyles = {
     fontWeight: 'bold',
     fontSize: 14,
   },
-  // Extra (optional)
   avatar: {
     width: 38,
     height: 38,

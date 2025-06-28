@@ -20,6 +20,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
 import API_BASE_URL from '../../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
 import {addQueueOffline} from '../../../utils/offlineQueueHelper';
@@ -218,7 +219,8 @@ const AddDailyActivity = () => {
       }
     }
 
-    const token = await AsyncStorage.getItem('userToken');
+    const loginCache = await AsyncStorage.getItem('loginCache');
+    const token = loginCache ? JSON.parse(loginCache).token : null;
     if (!token) {
       Alert.alert('Error', 'Token tidak ditemukan. Silakan login ulang.');
       setIsSubmitting(false);
@@ -295,182 +297,188 @@ const AddDailyActivity = () => {
 
   // ==== UI ====
   return (
-    <View style={{flex: 1}}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={addDailyAct.container}
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={120}>
-        <Text style={addDailyAct.header}>INPUT DAILY ACTIVITY</Text>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <View style={{flex: 1}}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={addDailyAct.container}
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={120}>
+          <Text style={addDailyAct.header}>INPUT DAILY ACTIVITY</Text>
 
-        {/* Badge/tombol Offline Queue */}
-        {dailyQueueCount > 0 && (
-          <View
-            style={{
-              backgroundColor: '#e74c3c',
-              alignSelf: 'flex-end',
-              paddingHorizontal: 12,
-              paddingVertical: 4,
-              borderRadius: 16,
-              marginBottom: 8,
-            }}>
-            <Text style={{color: 'white'}}>
-              {dailyQueueCount} data offline menunggu jaringan!
-            </Text>
-            {isConnected && (
-              <TouchableOpacity
-                onPress={pushDailyQueue}
-                style={{
-                  marginTop: 6,
-                  backgroundColor: '#27ae60',
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                }}
-                disabled={syncing}>
-                <Text style={{color: '#fff', fontWeight: 'bold'}}>
-                  {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {/* User Info Card */}
-        <CollapsibleCard title="User Info">
-          <Text style={addDailyAct.label}>JDE No</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.jde_no}
-            editable={false}
-          />
-
-          <Text style={addDailyAct.label}>Employee Name</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.employee_name}
-            editable={false}
-          />
-
-          <Text style={addDailyAct.label}>Site</Text>
-          <TextInput
-            style={addDailyAct.input}
-            value={formData.site}
-            editable={false}
-          />
-        </CollapsibleCard>
-
-        {/* Activity Info Card */}
-        <CollapsibleCard title="Activity Info">
-          <Text style={addDailyAct.label}>Date Activity</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <TextInput
-              style={addDailyAct.input}
-              value={formData.date_activity}
-              placeholder="YYYY-MM-DD"
-              editable={false}
-            />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-            />
+          {/* Badge/tombol Offline Queue */}
+          {dailyQueueCount > 0 && (
+            <View
+              style={{
+                backgroundColor: '#e74c3c',
+                alignSelf: 'flex-end',
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 16,
+                marginBottom: 8,
+              }}>
+              <Text style={{color: 'white'}}>
+                {dailyQueueCount} data offline menunggu jaringan!
+              </Text>
+              {isConnected && (
+                <TouchableOpacity
+                  onPress={pushDailyQueue}
+                  style={{
+                    marginTop: 6,
+                    backgroundColor: '#27ae60',
+                    paddingVertical: 6,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                  }}
+                  disabled={syncing}>
+                  <Text style={{color: '#fff', fontWeight: 'bold'}}>
+                    {syncing ? 'Mengirim...' : 'Push Sekarang ke Server'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
 
-          <Text style={addDailyAct.label}>KPI Type</Text>
-          <RNPickerSelect
-            onValueChange={onKpiChange}
-            value={formData.kpi_type}
-            placeholder={{label: 'Pilih KPI', value: ''}}
-            items={kpiOptions}
-            style={{
-              inputIOS: addDailyAct.pickerSelectIOS,
-              inputAndroid: addDailyAct.pickerSelectAndroid,
-            }}
+          {/* User Info Card */}
+          <CollapsibleCard title="User Info">
+            <Text style={addDailyAct.label}>JDE No</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.jde_no}
+              editable={false}
+            />
+
+            <Text style={addDailyAct.label}>Employee Name</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.employee_name}
+              editable={false}
+            />
+
+            <Text style={addDailyAct.label}>Site</Text>
+            <TextInput
+              style={addDailyAct.input}
+              value={formData.site}
+              editable={false}
+            />
+          </CollapsibleCard>
+
+          {/* Activity Info Card */}
+          <CollapsibleCard title="Activity Info">
+            <Text style={addDailyAct.label}>Date Activity</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <TextInput
+                style={addDailyAct.input}
+                value={formData.date_activity}
+                placeholder="YYYY-MM-DD"
+                editable={false}
+              />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+
+            <Text style={addDailyAct.label}>KPI Type</Text>
+            <RNPickerSelect
+              onValueChange={onKpiChange}
+              value={formData.kpi_type}
+              placeholder={{label: 'Pilih KPI', value: ''}}
+              items={kpiOptions}
+              style={{
+                inputIOS: addDailyAct.pickerSelectIOS,
+                inputAndroid: addDailyAct.pickerSelectAndroid,
+              }}
+            />
+
+            <Text style={addDailyAct.label}>Activity</Text>
+            <RNPickerSelect
+              onValueChange={val => handleChange('activity', val)}
+              value={formData.activity}
+              placeholder={{label: 'Pilih Activity', value: ''}}
+              items={activityOptions}
+              style={{
+                inputIOS: addDailyAct.pickerSelectIOS,
+                inputAndroid: addDailyAct.pickerSelectAndroid,
+              }}
+            />
+          </CollapsibleCard>
+
+          {/* Unit Info Card */}
+          <CollapsibleCard title="Unit Info">
+            <Text style={addDailyAct.label}>Detail Unit</Text>
+            <DropDownPicker
+              open={unitOpen}
+              value={unitValue}
+              items={unitOptions}
+              setOpen={setUnitOpen}
+              setValue={val => {
+                setUnitValue(val());
+                const selected = unitOptions.find(item => item.value === val());
+                handleChange('unit_detail', selected?.modelOnly || '');
+              }}
+              setItems={setUnitOptions}
+              placeholder="Pilih Unit"
+              searchable
+              listMode="MODAL"
+              modalTitle="Pilih Unit"
+              modalProps={{animationType: 'slide'}}
+              dropDownDirection="AUTO"
+              zIndex={3000}
+              zIndexInverse={1000}
+            />
+          </CollapsibleCard>
+
+          {/* Participant Info Card */}
+          <CollapsibleCard title="Participant Info">
+            <Text style={addDailyAct.label}>Total Participant</Text>
+            <TextInput
+              style={addDailyAct.input}
+              keyboardType="numeric"
+              value={formData.total_participant}
+              onChangeText={text => handleChange('total_participant', text)}
+            />
+
+            <Text style={addDailyAct.label}>Total Hour</Text>
+            <TextInput
+              style={addDailyAct.input}
+              keyboardType="numeric"
+              value={formData.total_hour}
+              onChangeText={text => handleChange('total_hour', text)}
+            />
+          </CollapsibleCard>
+
+          {/* Submit Button */}
+          <Button
+            title={isSubmitting || syncing ? 'Menyimpan...' : 'Simpan'}
+            onPress={handleSubmit}
+            disabled={isSubmitting || syncing}
           />
 
-          <Text style={addDailyAct.label}>Activity</Text>
-          <RNPickerSelect
-            onValueChange={val => handleChange('activity', val)}
-            value={formData.activity}
-            placeholder={{label: 'Pilih Activity', value: ''}}
-            items={activityOptions}
-            style={{
-              inputIOS: addDailyAct.pickerSelectIOS,
-              inputAndroid: addDailyAct.pickerSelectAndroid,
-            }}
-          />
-        </CollapsibleCard>
-
-        {/* Unit Info Card */}
-        <CollapsibleCard title="Unit Info">
-          <Text style={addDailyAct.label}>Detail Unit</Text>
-          <DropDownPicker
-            open={unitOpen}
-            value={unitValue}
-            items={unitOptions}
-            setOpen={setUnitOpen}
-            setValue={val => {
-              setUnitValue(val());
-              const selected = unitOptions.find(item => item.value === val());
-              handleChange('unit_detail', selected?.modelOnly || '');
-            }}
-            setItems={setUnitOptions}
-            placeholder="Pilih Unit"
-            searchable
-            listMode="MODAL"
-            modalTitle="Pilih Unit"
-            modalProps={{animationType: 'slide'}}
-            dropDownDirection="AUTO"
-            zIndex={3000}
-            zIndexInverse={1000}
-          />
-        </CollapsibleCard>
-
-        {/* Participant Info Card */}
-        <CollapsibleCard title="Participant Info">
-          <Text style={addDailyAct.label}>Total Participant</Text>
-          <TextInput
-            style={addDailyAct.input}
-            keyboardType="numeric"
-            value={formData.total_participant}
-            onChangeText={text => handleChange('total_participant', text)}
-          />
-
-          <Text style={addDailyAct.label}>Total Hour</Text>
-          <TextInput
-            style={addDailyAct.input}
-            keyboardType="numeric"
-            value={formData.total_hour}
-            onChangeText={text => handleChange('total_hour', text)}
-          />
-        </CollapsibleCard>
-
-        {/* Submit Button */}
-        <Button
-          title={isSubmitting || syncing ? 'Menyimpan...' : 'Simpan'}
-          onPress={handleSubmit}
-          disabled={isSubmitting || syncing}
-        />
-
-        {/* Indikator status sinkronisasi */}
-        <View style={{marginTop: 12, alignItems: 'center'}}>
-          {!isConnected ? (
-            <Text style={{color: '#a94442'}}>
-              📡 Offline: Data akan dikirim otomatis saat online.
-            </Text>
-          ) : syncing ? (
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <ActivityIndicator size="small" color="#555" />
-              <Text style={{marginLeft: 8}}>Sinkronisasi...</Text>
-            </View>
-          ) : null}
-        </View>
-      </KeyboardAwareScrollView>
-    </View>
+          {/* Indikator status sinkronisasi */}
+          <View style={{marginTop: 12, alignItems: 'center'}}>
+            {!isConnected ? (
+              <Text style={{color: '#a94442'}}>
+                📡 Offline: Data akan dikirim otomatis saat online.
+              </Text>
+            ) : syncing ? (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <ActivityIndicator size="small" color="#555" />
+                <Text style={{marginLeft: 8}}>Sinkronisasi...</Text>
+              </View>
+            ) : null}
+          </View>
+        </KeyboardAwareScrollView>
+      </View>
+    </LinearGradient>
   );
 };
 

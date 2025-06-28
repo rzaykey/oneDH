@@ -12,8 +12,8 @@ const CARD_SIZE = (Dimensions.get('window').width - 54) / 2;
 
 const MODULE_TO_SCREEN: Record<string, string> = {
   P2H: 'P2HScreen',
-  // JCM: 'JCMScreen',
-  // MOP: 'MOPScreen',
+  JCM: 'JCMScreen',
+  MOP: 'MOPScreen',
 };
 
 const iconForModule = (mod: string) => {

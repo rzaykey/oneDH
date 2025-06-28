@@ -1,16 +1,3 @@
-/**
- * DailyActivity.tsx (Full Optimized + Background Sync)
- * ----------------------------------------------------
- * - Auto background refresh saat app online/setiap X menit
- * - Manual force refresh by button
- * - Cek summary {max_id, last_update} agar super efisien
- * - List tetap cache/offline, edit/delete hanya online
- * - SafeArea: Tombol dan UI tidak ketutup navbar
- * - Fully documented & optimized
- *
- * @created 2024-06-14
- */
-
 import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {
   SafeAreaView,
@@ -36,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import API_BASE_URL from '../../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
 const pageSizeOptions = [5, 10, 50, 100];
@@ -334,238 +322,214 @@ export default function Daily() {
 
   // --- UI ---
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
-      <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>
-        {/* --- Judul halaman dan Force Refresh --- */}
-        <View style={{marginBottom: 10, marginTop: 2}}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-            {/* Status Online/Offline */}
-            <View style={{alignItems: 'flex-end', flex: 1}}>
-              <Text
-                style={{
-                  backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-                  color: isConnected ? '#155724' : '#721c24',
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  borderRadius: 16,
-                  fontWeight: 'bold',
-                  fontSize: 13,
-                  alignSelf: 'flex-end',
-                  marginBottom: 3,
-                }}>
-                {isConnected ? '🟢 Online' : '🔴 Offline'}
-              </Text>
-              {isConnected && isSyncing && (
-                <ActivityIndicator
-                  size="small"
-                  color="#1E90FF"
-                  style={{marginLeft: 8, marginBottom: 2}}
-                />
-              )}
-            </View>
-            {/* Tombol Ambil Ulang dari Server */}
-            {isConnected && (
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#1E90FF',
-                  borderRadius: 8,
-                  paddingVertical: 7,
-                  paddingHorizontal: 16,
-                  alignSelf: 'flex-end',
-                  marginLeft: 12,
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>
+          {/* --- Judul halaman dan Force Refresh --- */}
+          <View style={{marginBottom: 10, marginTop: 2}}>
+            {/* Judul halaman */}
+            <Text style={[styles.pageTitle, {marginBottom: 2}]}>
+              Daily Activity
+            </Text>
+          </View>
+          {/* Search */}
+          <TextInput
+            placeholder="Cari Nama, JDE, atau Site..."
+            value={searchQuery}
+            onChangeText={text => {
+              setSearchQuery(text);
+              setPage(1);
+            }}
+            style={styles.searchInput}
+            {...(Platform.OS === 'ios'
+              ? {clearButtonMode: 'while-editing'}
+              : {})}
+          />
+          {/* Pilihan page size */}
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerLabel}>Items per page:</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={pageSize}
+                onValueChange={itemValue => {
+                  setPageSize(itemValue);
+                  setPage(1);
                 }}
-                onPress={handleForceRefresh}
-                disabled={loading}>
-                <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>
-                  Ambil Ulang dari Server
-                </Text>
-              </TouchableOpacity>
-            )}
+                style={styles.picker}
+                dropdownIconColor="#1E90FF"
+                mode="dropdown">
+                {pageSizeOptions.map(size => (
+                  <Picker.Item
+                    key={size}
+                    label={size.toString()}
+                    value={size}
+                  />
+                ))}
+              </Picker>
+            </View>
           </View>
-          {/* Judul halaman */}
-          <Text style={[styles.pageTitle, {marginBottom: 2}]}>
-            Daily Activity
-          </Text>
-        </View>
-        {/* Search */}
-        <TextInput
-          placeholder="Cari Nama, JDE, atau Site..."
-          value={searchQuery}
-          onChangeText={text => {
-            setSearchQuery(text);
-            setPage(1);
-          }}
-          style={styles.searchInput}
-          {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
-        />
-        {/* Pilihan page size */}
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>Items per page:</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={pageSize}
-              onValueChange={itemValue => {
-                setPageSize(itemValue);
-                setPage(1);
-              }}
-              style={styles.picker}
-              dropdownIconColor="#1E90FF"
-              mode="dropdown">
-              {pageSizeOptions.map(size => (
-                <Picker.Item key={size} label={size.toString()} value={size} />
-              ))}
-            </Picker>
-          </View>
-        </View>
-        {/* FlatList data */}
-        <FlatList
-          data={paginatedData}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => {
-            const expanded = item.id === expandedId;
-            return (
-              <Animatable.View
-                animation={expanded ? 'fadeInDown' : 'fadeInUp'}
-                duration={350}
-                style={[styles.cardContainer, expanded && styles.cardExpanded]}>
-                {/* Card Header */}
-                <TouchableOpacity
-                  onPress={() => toggleExpand(item.id)}
-                  style={{paddingBottom: expanded ? 0 : 8}}
-                  activeOpacity={0.88}>
-                  <View style={styles.cardHeader}>
-                    <View>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          flex: 1,
-                        }}>
-                        <View style={styles.avatar}>
-                          <Icon name="person-outline" size={20} color="#fff" />
-                        </View>
-                        <View>
-                          <Text style={styles.cardTitle}>
-                            {item.employee_name}
-                          </Text>
-                          <Text style={styles.cardSubtitle}>
-                            {item.position || item.site}
-                          </Text>
-                          <Text style={styles.cardSubtitle}>
-                            JDE: {item.jde_no}
-                          </Text>
+          {/* FlatList data */}
+          <FlatList
+            data={paginatedData}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({item}) => {
+              const expanded = item.id === expandedId;
+              return (
+                <Animatable.View
+                  animation={expanded ? 'fadeInDown' : 'fadeInUp'}
+                  duration={350}
+                  style={[
+                    styles.cardContainer,
+                    expanded && styles.cardExpanded,
+                  ]}>
+                  {/* Card Header */}
+                  <TouchableOpacity
+                    onPress={() => toggleExpand(item.id)}
+                    style={{paddingBottom: expanded ? 0 : 8}}
+                    activeOpacity={0.88}>
+                    <View style={styles.cardHeader}>
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            flex: 1,
+                          }}>
+                          <View style={styles.avatar}>
+                            <Icon
+                              name="person-outline"
+                              size={20}
+                              color="#fff"
+                            />
+                          </View>
+                          <View>
+                            <Text style={styles.cardTitle}>
+                              {item.employee_name}
+                            </Text>
+                            <Text style={styles.cardSubtitle}>
+                              {item.position || item.site}
+                            </Text>
+                            <Text style={styles.cardSubtitle}>
+                              JDE: {item.jde_no}
+                            </Text>
+                          </View>
                         </View>
                       </View>
+                      <View style={{alignItems: 'flex-end', minWidth: 70}}>
+                        <Text style={styles.cardSite}>{item.site}</Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: '#888',
+                            marginBottom: 3,
+                          }}>
+                          {item.date_activity?.split(' ')[0]}
+                        </Text>
+                        <Icon
+                          name={
+                            expanded
+                              ? 'chevron-up-outline'
+                              : 'chevron-down-outline'
+                          }
+                          size={18}
+                          color="#bbb"
+                        />
+                      </View>
                     </View>
-                    <View style={{alignItems: 'flex-end', minWidth: 70}}>
-                      <Text style={styles.cardSite}>{item.site}</Text>
-                      <Text
-                        style={{fontSize: 12, color: '#888', marginBottom: 3}}>
-                        {item.date_activity?.split(' ')[0]}
+                  </TouchableOpacity>
+                  {/* Card Detail */}
+                  {expanded && (
+                    <View style={styles.cardDetail}>
+                      <Text style={styles.cardDetailText}>
+                        Jenis KPI: {getKpiLabelById(item.kpi_type)} -{' '}
+                        {getActivityLabelById(item.activity)}
                       </Text>
-                      <Icon
-                        name={
-                          expanded
-                            ? 'chevron-up-outline'
-                            : 'chevron-down-outline'
-                        }
-                        size={18}
-                        color="#bbb"
-                      />
+                      <Text style={styles.cardDetailText}>
+                        Unit Detail: {getUnitLabelById(item.unit_detail)}
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Jumlah Peserta: {item.total_participant}
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Total Hours: {item.total_hour}
+                      </Text>
+                      <View style={styles.cardActionRow}>
+                        <TouchableOpacity
+                          style={[styles.editButton]}
+                          onPress={() => handleEdit(item)}>
+                          <Text style={styles.actionButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.deleteButton,
+                            !isConnected && {opacity: 0.4},
+                          ]}
+                          onPress={() => handleDelete(item.id)}
+                          disabled={!isConnected}>
+                          <Text style={styles.actionButtonText}>Hapus</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-                {/* Card Detail */}
-                {expanded && (
-                  <View style={styles.cardDetail}>
-                    <Text style={styles.cardDetailText}>
-                      Jenis KPI: {getKpiLabelById(item.kpi_type)} -{' '}
-                      {getActivityLabelById(item.activity)}
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Unit Detail: {getUnitLabelById(item.unit_detail)}
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Jumlah Peserta: {item.total_participant}
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Total Hours: {item.total_hour}
-                    </Text>
-                    <View style={styles.cardActionRow}>
-                      <TouchableOpacity
-                        style={[styles.editButton]}
-                        onPress={() => handleEdit(item)}>
-                        <Text style={styles.actionButtonText}>Edit</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.deleteButton,
-                          !isConnected && {opacity: 0.4},
-                        ]}
-                        onPress={() => handleDelete(item.id)}
-                        disabled={!isConnected}>
-                        <Text style={styles.actionButtonText}>Hapus</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </Animatable.View>
-            );
-          }}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          showsVerticalScrollIndicator={true}
-          ListEmptyComponent={
-            <Text
-              style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
-              Tidak ada data ditemukan.
-            </Text>
-          }
-          contentContainerStyle={{
-            paddingBottom: 100 + insets.bottom,
-          }}
-        />
+                  )}
+                </Animatable.View>
+              );
+            }}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            showsVerticalScrollIndicator={true}
+            ListEmptyComponent={
+              <Text
+                style={{
+                  textAlign: 'center',
+                  marginVertical: 16,
+                  color: 'gray',
+                }}>
+                Tidak ada data ditemukan.
+              </Text>
+            }
+            contentContainerStyle={{
+              paddingBottom: 100 + insets.bottom,
+            }}
+          />
 
-        {/* Pagination Bar */}
-        <View
-          style={[
-            styles.paginationContainer,
-            {
-              paddingBottom: insets.bottom || 18,
-              backgroundColor: '#fff',
-              borderTopWidth: 0.5,
-              borderColor: '#eee',
-            },
-          ]}>
-          <TouchableOpacity
-            onPress={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
+          {/* Pagination Bar */}
+          <View
             style={[
-              styles.pageButton,
-              page === 1 && styles.pageButtonDisabled,
+              styles.paginationContainer,
+              {
+                paddingBottom: insets.bottom || 18,
+                borderColor: '#eee',
+              },
             ]}>
-            <Text style={styles.pageButtonText}>Prev</Text>
-          </TouchableOpacity>
-          <Text style={styles.pageInfo}>
-            Page {page} / {totalPages || 1}
-          </Text>
-          <TouchableOpacity
-            onPress={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages || totalPages === 0}
-            style={[
-              styles.pageButton,
-              (page === totalPages || totalPages === 0) &&
-                styles.pageButtonDisabled,
-            ]}>
-            <Text style={styles.pageButtonText}>Next</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              style={[
+                styles.pageButton,
+                page === 1 && styles.pageButtonDisabled,
+              ]}>
+              <Text style={styles.pageButtonText}>Prev</Text>
+            </TouchableOpacity>
+            <Text style={styles.pageInfo}>
+              Page {page} / {totalPages || 1}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              style={[
+                styles.pageButton,
+                (page === totalPages || totalPages === 0) &&
+                  styles.pageButtonDisabled,
+              ]}>
+              <Text style={styles.pageButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

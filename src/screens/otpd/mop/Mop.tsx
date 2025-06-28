@@ -23,6 +23,7 @@ import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import NetInfo from '@react-native-community/netinfo';
 import API_BASE_URL from '../../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 if (Platform.OS === 'android') {
@@ -184,272 +185,242 @@ export default function Mop() {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        paddingHorizontal: 8,
-        paddingTop: 20,
-        paddingBottom: insets.bottom,
-        backgroundColor: '#fff',
-      }}>
-      {/* Status + Force Refresh */}
-      <View
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 8,
+          flex: 1,
+          paddingHorizontal: 8,
+          paddingTop: 20,
+          paddingBottom: insets.bottom,
         }}>
-        <View style={{alignItems: 'flex-end', flex: 1}}>
-          <Text
-            style={{
-              backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-              color: isConnected ? '#155724' : '#721c24',
-              paddingHorizontal: 12,
-              paddingVertical: 4,
-              borderRadius: 16,
-              fontWeight: 'bold',
-              fontSize: 13,
-              alignSelf: 'flex-end',
-            }}>
-            {isConnected ? '🟢 Online' : '🔴 Offline'}
-            {syncing && (
-              <ActivityIndicator
-                size="small"
-                color="#1E90FF"
-                style={{marginLeft: 8, marginTop: 2}}
-              />
-            )}
-          </Text>
+        {/* Judul halaman */}
+        <Text style={styles.pageTitle}>Mine Operator Performance</Text>
+
+        {/* Kolom pencarian */}
+        <TextInput
+          placeholder="Cari Nama, JDE, atau Site..."
+          value={searchQuery}
+          onChangeText={text => {
+            setSearchQuery(text);
+            setPage(1);
+          }}
+          style={styles.searchInput}
+          {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
+        />
+
+        {/* Pilih items per page */}
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Items per page:</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={pageSize}
+              onValueChange={itemValue => {
+                setPageSize(itemValue);
+                setPage(1);
+              }}
+              style={styles.picker}
+              dropdownIconColor="#1E90FF"
+              mode="dropdown">
+              {pageSizeOptions.map(size => (
+                <Picker.Item key={size} label={size.toString()} value={size} />
+              ))}
+            </Picker>
+          </View>
         </View>
-        {isConnected && (
-          <TouchableOpacity
-            style={{
-              backgroundColor: syncing ? '#bbb' : '#1E90FF',
-              borderRadius: 8,
-              paddingVertical: 7,
-              paddingHorizontal: 16,
-              alignSelf: 'flex-end',
-              marginLeft: 12,
-              opacity: syncing ? 0.7 : 1,
-            }}
-            onPress={handleForceRefresh}
-            disabled={syncing}>
-            <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>
-              Ambil Ulang dari Server
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Judul halaman */}
-      <Text style={styles.pageTitle}>Mine Operator Performance</Text>
-
-      {/* Kolom pencarian */}
-      <TextInput
-        placeholder="Cari Nama, JDE, atau Site..."
-        value={searchQuery}
-        onChangeText={text => {
-          setSearchQuery(text);
-          setPage(1);
-        }}
-        style={styles.searchInput}
-        {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
-      />
-
-      {/* Pilih items per page */}
-      <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Items per page:</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={pageSize}
-            onValueChange={itemValue => {
-              setPageSize(itemValue);
-              setPage(1);
-            }}
-            style={styles.picker}
-            dropdownIconColor="#1E90FF"
-            mode="dropdown">
-            {pageSizeOptions.map(size => (
-              <Picker.Item key={size} label={size.toString()} value={size} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      {/* Daftar data MOP */}
-      <FlatList
-        data={paginatedData}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({item, index}) => {
-          const expanded = item.id === expandedId;
-          return (
-            <Animatable.View
-              animation={expanded ? 'fadeInDown' : 'fadeInUp'}
-              duration={350}
-              style={styles.cardContainer}>
-              {/* Card Header */}
-              <TouchableOpacity
-                onPress={() => toggleExpand(item.id)}
-                style={styles.cardHeader}
-                activeOpacity={0.88}>
-                <View
-                  style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
-                  <View style={styles.avatar}>
-                    <Icon name="person-outline" size={20} color="#fff" />
-                  </View>
-                  <View>
-                    <Text style={styles.cardTitle}>{item.employee_name}</Text>
-                    <Text style={styles.cardSubtitle}>JDE: {item.jde_no}</Text>
-                  </View>
-                </View>
-                <View style={{alignItems: 'flex-end', minWidth: 70}}>
-                  <Text style={styles.cardSite}>{item.site}</Text>
-                  <Text style={{fontSize: 12, color: '#888'}}>
-                    {item.month}/{item.year}
-                  </Text>
-                  <Icon
-                    name={
-                      expanded ? 'chevron-up-outline' : 'chevron-down-outline'
-                    }
-                    size={18}
-                    color="#bbb"
-                    style={{marginTop: 2}}
-                  />
-                </View>
-              </TouchableOpacity>
-
-              {/* Detail card */}
-              {expanded && (
-                <View
-                  style={[
-                    styles.cardDetail,
-                    {paddingTop: 6, borderTopWidth: 1, borderTopColor: '#eee'},
-                  ]}>
-                  <Text style={[styles.cardSectionTitle, {marginBottom: 2}]}>
-                    KPI & Absensi
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Absensi: {item.a_attendance_ratio}%
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Disiplin: {item.b_discipline}
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Safety Awareness: {item.c_safety_awareness}
-                  </Text>
-
-                  <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
-                    WH Waste Equip
-                  </Text>
-                  {[1, 2, 3, 4, 5, 6].map(i => {
-                    const val = item[`d_wh_waste_equiptype${i}`];
-                    return val ? (
-                      <Text key={`wh-waste-${i}`} style={styles.cardDetailText}>
-                        Equip {i}: {val}
+        {/* Daftar data MOP */}
+        <FlatList
+          data={paginatedData}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({item, index}) => {
+            const expanded = item.id === expandedId;
+            return (
+              <Animatable.View
+                animation={expanded ? 'fadeInDown' : 'fadeInUp'}
+                duration={350}
+                style={styles.cardContainer}>
+                {/* Card Header */}
+                <TouchableOpacity
+                  onPress={() => toggleExpand(item.id)}
+                  style={styles.cardHeader}
+                  activeOpacity={0.88}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}>
+                    <View style={styles.avatar}>
+                      <Icon name="person-outline" size={20} color="#fff" />
+                    </View>
+                    <View>
+                      <Text style={styles.cardTitle}>{item.employee_name}</Text>
+                      <Text style={styles.cardSubtitle}>
+                        JDE: {item.jde_no}
                       </Text>
-                    ) : null;
-                  })}
+                    </View>
+                  </View>
+                  <View style={{alignItems: 'flex-end', minWidth: 70}}>
+                    <Text style={styles.cardSite}>{item.site}</Text>
+                    <Text style={{fontSize: 12, color: '#888'}}>
+                      {item.month}/{item.year}
+                    </Text>
+                    <Icon
+                      name={
+                        expanded ? 'chevron-up-outline' : 'chevron-down-outline'
+                      }
+                      size={18}
+                      color="#bbb"
+                      style={{marginTop: 2}}
+                    />
+                  </View>
+                </TouchableOpacity>
 
-                  <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
-                    PTY Equip
-                  </Text>
-                  {[1, 2, 3, 4, 5, 6].map(i => {
-                    const val = item[`e_pty_equiptype${i}`];
-                    return val ? (
-                      <Text
-                        key={`pty-equip-${i}`}
-                        style={styles.cardDetailText}>
-                        Equip {i}: {val}
-                      </Text>
-                    ) : null;
-                  })}
-
-                  <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
-                    Point & Grade
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Point Eligibilitas:{' '}
-                    <Text style={{fontWeight: 'bold'}}>
-                      {item.point_eligibilitas}
-                    </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Point Produksi:{' '}
-                    <Text style={{fontWeight: 'bold'}}>
-                      {item.point_produksi}
-                    </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Total Point:{' '}
-                    <Text style={{fontWeight: 'bold', color: '#1E90FF'}}>
-                      {item.total_point}
-                    </Text>
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Grade Bulanan:{' '}
-                    <Text style={{fontWeight: 'bold', color: '#E67E22'}}>
-                      {item.mop_bulanan_grade}
-                    </Text>
-                  </Text>
-
-                  <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
-                    Info Lain
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Tipe MOP: {item.mop_type} | Target Avg HM:{' '}
-                    {item.target_avg_hm}
-                  </Text>
-                  <Text style={styles.cardDetailText}>
-                    Point: A {item.point_a} | B {item.point_b} | C{' '}
-                    {item.point_c} | D {item.point_d} | E {item.point_e}
-                  </Text>
-                  <Text
+                {/* Detail card */}
+                {expanded && (
+                  <View
                     style={[
-                      styles.cardDetailText,
-                      {marginBottom: 4, color: '#aaa', fontSize: 12},
+                      styles.cardDetail,
+                      {
+                        paddingTop: 6,
+                        borderTopWidth: 1,
+                        borderTopColor: '#eee',
+                      },
                     ]}>
-                    Input: {item.created_at && item.created_at.split('T')[0]}
-                  </Text>
-                </View>
-              )}
-            </Animatable.View>
-          );
-        }}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        showsVerticalScrollIndicator={true}
-        ListEmptyComponent={
-          <Text
-            style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
-            Tidak ada data ditemukan.
-          </Text>
-        }
-        contentContainerStyle={{paddingBottom: 22}}
-      />
+                    <Text style={[styles.cardSectionTitle, {marginBottom: 2}]}>
+                      KPI & Absensi
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Absensi: {item.a_attendance_ratio}%
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Disiplin: {item.b_discipline}
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Safety Awareness: {item.c_safety_awareness}
+                    </Text>
 
-      {/* Pagination navigasi */}
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          onPress={() => setPage(p => Math.max(1, p - 1))}
-          disabled={page === 1}
-          style={[styles.pageButton, page === 1 && styles.pageButtonDisabled]}>
-          <Text style={styles.pageButtonText}>Prev</Text>
-        </TouchableOpacity>
-        <Text style={styles.pageInfo}>
-          Page {page} / {totalPages || 1}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setPage(p => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages || totalPages === 0}
-          style={[
-            styles.pageButton,
-            (page === totalPages || totalPages === 0) &&
-              styles.pageButtonDisabled,
-          ]}>
-          <Text style={styles.pageButtonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+                    <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
+                      WH Waste Equip
+                    </Text>
+                    {[1, 2, 3, 4, 5, 6].map(i => {
+                      const val = item[`d_wh_waste_equiptype${i}`];
+                      return val ? (
+                        <Text
+                          key={`wh-waste-${i}`}
+                          style={styles.cardDetailText}>
+                          Equip {i}: {val}
+                        </Text>
+                      ) : null;
+                    })}
+
+                    <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
+                      PTY Equip
+                    </Text>
+                    {[1, 2, 3, 4, 5, 6].map(i => {
+                      const val = item[`e_pty_equiptype${i}`];
+                      return val ? (
+                        <Text
+                          key={`pty-equip-${i}`}
+                          style={styles.cardDetailText}>
+                          Equip {i}: {val}
+                        </Text>
+                      ) : null;
+                    })}
+
+                    <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
+                      Point & Grade
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Point Eligibilitas:{' '}
+                      <Text style={{fontWeight: 'bold'}}>
+                        {item.point_eligibilitas}
+                      </Text>
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Point Produksi:{' '}
+                      <Text style={{fontWeight: 'bold'}}>
+                        {item.point_produksi}
+                      </Text>
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Total Point:{' '}
+                      <Text style={{fontWeight: 'bold', color: '#1E90FF'}}>
+                        {item.total_point}
+                      </Text>
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Grade Bulanan:{' '}
+                      <Text style={{fontWeight: 'bold', color: '#E67E22'}}>
+                        {item.mop_bulanan_grade}
+                      </Text>
+                    </Text>
+
+                    <Text style={[styles.cardSectionTitle, {marginTop: 10}]}>
+                      Info Lain
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Tipe MOP: {item.mop_type} | Target Avg HM:{' '}
+                      {item.target_avg_hm}
+                    </Text>
+                    <Text style={styles.cardDetailText}>
+                      Point: A {item.point_a} | B {item.point_b} | C{' '}
+                      {item.point_c} | D {item.point_d} | E {item.point_e}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.cardDetailText,
+                        {marginBottom: 4, color: '#aaa', fontSize: 12},
+                      ]}>
+                      Input: {item.created_at && item.created_at.split('T')[0]}
+                    </Text>
+                  </View>
+                )}
+              </Animatable.View>
+            );
+          }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          showsVerticalScrollIndicator={true}
+          ListEmptyComponent={
+            <Text
+              style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
+              Tidak ada data ditemukan.
+            </Text>
+          }
+          contentContainerStyle={{paddingBottom: 22}}
+        />
+
+        {/* Pagination navigasi */}
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            onPress={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={[
+              styles.pageButton,
+              page === 1 && styles.pageButtonDisabled,
+            ]}>
+            <Text style={styles.pageButtonText}>Prev</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageInfo}>
+            Page {page} / {totalPages || 1}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+            style={[
+              styles.pageButton,
+              (page === totalPages || totalPages === 0) &&
+                styles.pageButtonDisabled,
+            ]}>
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

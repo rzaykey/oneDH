@@ -3,7 +3,6 @@ import {StyleSheet} from 'react-native';
 export const addDailyAct = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#f9fafb',
   },
   header: {
     fontSize: 20,
@@ -11,6 +10,7 @@ export const addDailyAct = StyleSheet.create({
     color: '#111827',
     marginBottom: 20,
     textAlign: 'center',
+    marginVertical: 18,
   },
   label: {
     fontSize: 14,
@@ -33,34 +33,6 @@ export const addDailyAct = StyleSheet.create({
     backgroundColor: '#e5e7eb',
     color: '#9ca3af',
   },
-  // picker: {
-  //   inputIOS: {
-  //     fontSize: 14,
-  //     paddingVertical: 12,
-  //     paddingHorizontal: 10,
-  //     borderWidth: 1,
-  //     borderColor: '#d1d5db',
-  //     borderRadius: 8,
-  //     backgroundColor: '#fff',
-  //     color: '#111827',
-  //     paddingRight: 30,
-  //   },
-  //   inputAndroid: {
-  //     height: 48, // atau coba 50
-  //     minHeight: 48, // tambahan jaga-jaga
-  //     paddingHorizontal: 16,
-  //     paddingVertical: 12, // tambahkan supaya teks tidak kepotong
-  //     borderWidth: 1,
-  //     borderColor: '#ccc',
-  //     borderRadius: 8,
-  //     fontSize: 16,
-  //     color: '#333',
-  //     justifyContent: 'center',
-  //     textAlignVertical: 'center', // ini penting di Android
-  //     backgroundColor: '#fff',
-  //     lineHeight: 24, // pastikan cukup besar
-  //   },
-  // },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
@@ -85,6 +57,7 @@ export const addDailyAct = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
+    marginVertical: 18,
   },
   collapseIcon: {
     fontSize: 18,

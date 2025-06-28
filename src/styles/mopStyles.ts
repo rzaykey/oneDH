@@ -1,9 +1,12 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform, Dimensions} from 'react-native';
+
+const {width} = Dimensions.get('window');
 
 export const mopStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f4f7fa',
+    paddingHorizontal: 18,
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
   },
   container: {
     flexGrow: 1,
@@ -16,7 +19,8 @@ export const mopStyles = StyleSheet.create({
     marginBottom: 18,
     marginTop: 8,
     alignSelf: 'center',
-    letterSpacing: 1,
+    marginLeft: 3,
+    marginVertical: 18,
   },
   section: {
     fontWeight: '600',

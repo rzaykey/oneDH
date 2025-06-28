@@ -19,6 +19,7 @@ import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList, MentoringData} from '../../../navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import NetInfo from '@react-native-community/netinfo';
@@ -264,248 +265,211 @@ export default function Data() {
 
   // --- UI ---
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
-      <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>
-        {/* Status + Force Refresh */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 8,
-          }}>
-          <View style={{alignItems: 'flex-end', flex: 1}}>
-            <Text
-              style={{
-                backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-                color: isConnected ? '#155724' : '#721c24',
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                borderRadius: 16,
-                fontWeight: 'bold',
-                fontSize: 13,
-                alignSelf: 'flex-end',
-              }}>
-              {isConnected ? '🟢 Online' : '🔴 Offline'}
-              {syncing && (
-                <ActivityIndicator
-                  size="small"
-                  color="#1E90FF"
-                  style={{marginLeft: 8, marginTop: 2}}
-                />
-              )}
-            </Text>
+    <LinearGradient
+      colors={['#FFD700', '#1E90FF']}
+      style={{flex: 1}}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>
+          <Text style={styles.pageTitle}>Data Mentoring</Text>
+
+          <TextInput
+            placeholder="Cari Trainer, Operator, atau Site..."
+            value={searchQuery}
+            onChangeText={text => {
+              setSearchQuery(text);
+              setPage(1);
+            }}
+            style={styles.searchInput}
+            {...(Platform.OS === 'ios'
+              ? {clearButtonMode: 'while-editing'}
+              : {})}
+          />
+
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerLabel}>Items per page:</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={pageSize}
+                onValueChange={itemValue => {
+                  setPageSize(itemValue);
+                  setPage(1);
+                }}
+                style={styles.picker}
+                dropdownIconColor="#1E90FF"
+                mode="dropdown">
+                {pageSizeOptions.map(size => (
+                  <Picker.Item
+                    key={size}
+                    label={size.toString()}
+                    value={size}
+                  />
+                ))}
+              </Picker>
+            </View>
           </View>
-          {isConnected && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: syncing ? '#bbb' : '#1E90FF',
-                borderRadius: 8,
-                paddingVertical: 7,
-                paddingHorizontal: 16,
-                alignSelf: 'flex-end',
-                marginLeft: 12,
-                opacity: syncing ? 0.7 : 1,
-              }}
-              onPress={handleForceRefresh}
-              disabled={syncing}>
-              <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>
-                Ambil Ulang dari Server
+
+          <FlatList
+            data={paginatedData}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({item}) => {
+              const expanded = item.id === expandedId;
+              return (
+                <Animatable.View
+                  animation={expanded ? 'fadeInDown' : 'fadeInUp'}
+                  duration={350}
+                  style={styles.cardContainer}>
+                  <TouchableOpacity
+                    onPress={() => toggleExpand(item.id)}
+                    activeOpacity={0.88}
+                    style={styles.cardHeader}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                      }}>
+                      <View style={styles.avatar}>
+                        <Icon name="person-outline" size={20} color="#fff" />
+                      </View>
+                      <View>
+                        <Text style={styles.cardTitle}>
+                          {item.operator_name}
+                        </Text>
+                        <Text style={styles.cardSubtitle}>
+                          {item.trainer_name}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{alignItems: 'flex-end', minWidth: 70}}>
+                      <Text style={styles.cardSite}>{item.site}</Text>
+                      <Icon
+                        name={
+                          expanded
+                            ? 'chevron-up-outline'
+                            : 'chevron-down-outline'
+                        }
+                        size={18}
+                        color="#bbb"
+                        style={{marginTop: 2}}
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  {expanded && (
+                    <View style={styles.cardDetail}>
+                      <Text style={styles.cardDetailText}>
+                        Area:{' '}
+                        <Text style={{fontWeight: 'bold'}}>{item.area}</Text>
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Unit Class:{' '}
+                        <Text style={{fontWeight: 'bold'}}>
+                          {item.class_name}
+                        </Text>
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Date:{' '}
+                        <Text style={{fontWeight: 'bold'}}>
+                          {item.date_mentoring.split(' ')[0]}
+                        </Text>
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Hour:{' '}
+                        <Text style={{fontWeight: 'bold'}}>
+                          {item.start_time} - {item.end_time}
+                        </Text>
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Point Observasi:{' '}
+                        <Text style={{fontWeight: 'bold'}}>
+                          {item.average_point_observation}
+                        </Text>
+                      </Text>
+                      <Text style={styles.cardDetailText}>
+                        Point Mentoring:{' '}
+                        <Text style={{fontWeight: 'bold'}}>
+                          {item.average_point_mentoring}
+                        </Text>
+                      </Text>
+                      <View style={styles.cardActionRow}>
+                        <TouchableOpacity
+                          style={[
+                            styles.editButton,
+                            (!isConnected || syncing) && {opacity: 0.5},
+                          ]}
+                          onPress={() => handleEdit(item)}
+                          disabled={!isConnected || syncing}>
+                          <Text style={styles.actionButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.deleteButton,
+                            (!isConnected || syncing) && {opacity: 0.5},
+                          ]}
+                          onPress={() => handleDelete(item.id)}
+                          disabled={!isConnected || syncing}>
+                          <Text style={styles.actionButtonText}>Hapus</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </Animatable.View>
+              );
+            }}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            showsVerticalScrollIndicator={true}
+            ListEmptyComponent={
+              <Text
+                style={{
+                  textAlign: 'center',
+                  marginVertical: 16,
+                  color: 'gray',
+                }}>
+                Tidak ada data ditemukan.
               </Text>
+            }
+            contentContainerStyle={{
+              paddingBottom: 100 + insets.bottom,
+            }}
+          />
+
+          <View
+            style={[
+              styles.paginationContainer,
+              {
+                paddingBottom: insets.bottom || 18,
+                borderTopWidth: 0.5,
+                borderColor: '#eee',
+              },
+            ]}>
+            <TouchableOpacity
+              onPress={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              style={[
+                styles.pageButton,
+                page === 1 && styles.pageButtonDisabled,
+              ]}>
+              <Text style={styles.pageButtonText}>Prev</Text>
             </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Judul halaman */}
-        <Text style={styles.pageTitle}>Data Mentoring</Text>
-
-        {/* Search input */}
-        <TextInput
-          placeholder="Cari Trainer, Operator, atau Site..."
-          value={searchQuery}
-          onChangeText={text => {
-            setSearchQuery(text);
-            setPage(1);
-          }}
-          style={styles.searchInput}
-          {...(Platform.OS === 'ios' ? {clearButtonMode: 'while-editing'} : {})}
-        />
-
-        {/* Picker jumlah item per halaman */}
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>Items per page:</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={pageSize}
-              onValueChange={itemValue => {
-                setPageSize(itemValue);
-                setPage(1);
-              }}
-              style={styles.picker}
-              dropdownIconColor="#1E90FF"
-              mode="dropdown">
-              {pageSizeOptions.map(size => (
-                <Picker.Item key={size} label={size.toString()} value={size} />
-              ))}
-            </Picker>
+            <Text style={styles.pageInfo}>
+              Page {page} / {totalPages || 1}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              style={[
+                styles.pageButton,
+                (page === totalPages || totalPages === 0) &&
+                  styles.pageButtonDisabled,
+              ]}>
+              <Text style={styles.pageButtonText}>Next</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* FlatList data */}
-        <FlatList
-          data={paginatedData}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => {
-            const expanded = item.id === expandedId;
-            return (
-              <Animatable.View
-                animation={expanded ? 'fadeInDown' : 'fadeInUp'}
-                duration={350}
-                style={styles.cardContainer}>
-                {/* HEADER */}
-                <TouchableOpacity
-                  onPress={() => toggleExpand(item.id)}
-                  activeOpacity={0.88}
-                  style={styles.cardHeader}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      flex: 1,
-                    }}>
-                    <View style={styles.avatar}>
-                      <Icon name="person-outline" size={20} color="#fff" />
-                    </View>
-                    <View>
-                      <Text style={styles.cardTitle}>{item.operator_name}</Text>
-                      <Text style={styles.cardSubtitle}>
-                        {item.trainer_name}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={{alignItems: 'flex-end', minWidth: 70}}>
-                    <Text style={styles.cardSite}>{item.site}</Text>
-                    <Icon
-                      name={
-                        expanded ? 'chevron-up-outline' : 'chevron-down-outline'
-                      }
-                      size={18}
-                      color="#bbb"
-                      style={{marginTop: 2}}
-                    />
-                  </View>
-                </TouchableOpacity>
-                {/* DETAIL */}
-                {expanded && (
-                  <View style={styles.cardDetail}>
-                    <Text style={styles.cardDetailText}>
-                      Area:{' '}
-                      <Text style={{fontWeight: 'bold'}}>{item.area}</Text>
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Unit Class:{' '}
-                      <Text style={{fontWeight: 'bold'}}>
-                        {item.class_name}
-                      </Text>
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Date:{' '}
-                      <Text style={{fontWeight: 'bold'}}>
-                        {item.date_mentoring.split(' ')[0]}
-                      </Text>
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Hour:{' '}
-                      <Text style={{fontWeight: 'bold'}}>
-                        {item.start_time} - {item.end_time}
-                      </Text>
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Point Observasi:{' '}
-                      <Text style={{fontWeight: 'bold'}}>
-                        {item.average_point_observation}
-                      </Text>
-                    </Text>
-                    <Text style={styles.cardDetailText}>
-                      Point Mentoring:{' '}
-                      <Text style={{fontWeight: 'bold'}}>
-                        {item.average_point_mentoring}
-                      </Text>
-                    </Text>
-                    <View style={styles.cardActionRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.editButton,
-                          (!isConnected || syncing) && {opacity: 0.5},
-                        ]}
-                        onPress={() => handleEdit(item)}
-                        disabled={!isConnected || syncing}>
-                        <Text style={styles.actionButtonText}>Edit</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.deleteButton,
-                          (!isConnected || syncing) && {opacity: 0.5},
-                        ]}
-                        onPress={() => handleDelete(item.id)}
-                        disabled={!isConnected || syncing}>
-                        <Text style={styles.actionButtonText}>Hapus</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </Animatable.View>
-            );
-          }}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          showsVerticalScrollIndicator={true}
-          ListEmptyComponent={
-            <Text
-              style={{textAlign: 'center', marginVertical: 16, color: 'gray'}}>
-              Tidak ada data ditemukan.
-            </Text>
-          }
-          contentContainerStyle={{
-            paddingBottom: 100 + insets.bottom, // Supaya aman dari gesture bar
-          }}
-        />
-
-        {/* Pagination bar */}
-        <View
-          style={[
-            styles.paginationContainer,
-            {
-              paddingBottom: insets.bottom || 18,
-              backgroundColor: '#fff',
-              borderTopWidth: 0.5,
-              borderColor: '#eee',
-            },
-          ]}>
-          <TouchableOpacity
-            onPress={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            style={[
-              styles.pageButton,
-              page === 1 && styles.pageButtonDisabled,
-            ]}>
-            <Text style={styles.pageButtonText}>Prev</Text>
-          </TouchableOpacity>
-          <Text style={styles.pageInfo}>
-            Page {page} / {totalPages || 1}
-          </Text>
-          <TouchableOpacity
-            onPress={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages || totalPages === 0}
-            style={[
-              styles.pageButton,
-              (page === totalPages || totalPages === 0) &&
-                styles.pageButtonDisabled,
-            ]}>
-            <Text style={styles.pageButtonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
