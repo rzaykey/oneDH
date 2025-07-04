@@ -2,12 +2,14 @@ import {StyleSheet, Platform, Dimensions} from 'react-native';
 
 const {width} = Dimensions.get('window');
 
-export const p2hStyles = StyleSheet.create({
+export const jcmStyles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: Platform.OS === 'android' ? 8 : 0,
+    backgroundColor: 'transparent',
   },
+
   title: {
     fontSize: 19,
     color: '#2463EB',
@@ -16,9 +18,22 @@ export const p2hStyles = StyleSheet.create({
     marginLeft: 3,
     letterSpacing: 0.3,
   },
+
   menuList: {
-    // paddingBottom: 22,
+    paddingBottom: 22,
   },
+
+  sectionContainer: {
+    marginBottom: 24,
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 12,
+  },
+
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -34,9 +49,8 @@ export const p2hStyles = StyleSheet.create({
     minHeight: 66,
     borderWidth: 1,
     borderColor: '#e9eef6',
-    // Optional anim effect:
-    // transform: [{scale: 0.98}]
   },
+
   iconCircle: {
     width: 44,
     height: 44,
@@ -50,16 +64,19 @@ export const p2hStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+
   menuInfo: {
     flex: 1,
     minWidth: 0,
   },
+
   menuLabel: {
     fontSize: 16.2,
     color: '#2463EB',
     fontWeight: 'bold',
     marginBottom: 2,
   },
+
   menuDesc: {
     fontSize: 13,
     color: '#586479',

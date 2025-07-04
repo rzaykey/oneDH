@@ -178,7 +178,7 @@ export default function Mop() {
   if (loading && !refreshing) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#2463EB" />
         <Text style={{marginTop: 12}}>Memuat data...</Text>
       </SafeAreaView>
     );
@@ -186,10 +186,10 @@ export default function Mop() {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView
         style={{
           flex: 1,
@@ -223,7 +223,7 @@ export default function Mop() {
                 setPage(1);
               }}
               style={styles.picker}
-              dropdownIconColor="#1E90FF"
+              dropdownIconColor="#2463EB"
               mode="dropdown">
               {pageSizeOptions.map(size => (
                 <Picker.Item key={size} label={size.toString()} value={size} />
@@ -349,7 +349,7 @@ export default function Mop() {
                     </Text>
                     <Text style={styles.cardDetailText}>
                       Total Point:{' '}
-                      <Text style={{fontWeight: 'bold', color: '#1E90FF'}}>
+                      <Text style={{fontWeight: 'bold', color: '#2463EB'}}>
                         {item.total_point}
                       </Text>
                     </Text>

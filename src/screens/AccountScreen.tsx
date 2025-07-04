@@ -55,13 +55,13 @@ const AccountProfileScreen = ({navigation}) => {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#FFD700', '#1E90FF']}
+        colors={['#FFD700', '#2463EB']}
         style={{flex: 1}}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 1}}>
-        <SafeAreaView style={{flex: 1, paddingTop: insets.top}}>
+        <SafeAreaView style={{flex: 1}}>
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#1E90FF" />
+            <ActivityIndicator size="large" color="#2463EB" />
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -71,11 +71,11 @@ const AccountProfileScreen = ({navigation}) => {
   if (!profile) {
     return (
       <LinearGradient
-        colors={['#FFD700', '#1E90FF']}
+        colors={['#FFD700', '#2463EB']}
         style={{flex: 1}}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 1}}>
-        <SafeAreaView style={{flex: 1, paddingTop: insets.top}}>
+        <SafeAreaView style={{flex: 1}}>
           <View style={styles.center}>
             <Text style={{color: 'red'}}>Tidak ada data profil ditemukan.</Text>
           </View>
@@ -86,12 +86,12 @@ const AccountProfileScreen = ({navigation}) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
-        <View style={{flex: 1, paddingTop: insets.top}}>
+        <View style={{flex: 1}}>
           <ScrollView
             contentContainerStyle={{paddingBottom: 140, paddingHorizontal: 20}}
             showsVerticalScrollIndicator={false}
@@ -105,7 +105,7 @@ const AccountProfileScreen = ({navigation}) => {
                 <Icon
                   name="person-circle"
                   size={60}
-                  color="#1E90FF"
+                  color="#2463EB"
                   style={{marginBottom: 5}}
                 />
                 <Text style={styles.profileName}>
@@ -146,7 +146,7 @@ const AccountProfileScreen = ({navigation}) => {
                         }}>
                         <Icon
                           name="checkmark-circle"
-                          color="#1E90FF"
+                          color="#2463EB"
                           size={16}
                         />
                         <Text style={styles.roleName}>{r.name}</Text>

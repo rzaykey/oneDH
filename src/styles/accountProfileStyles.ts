@@ -70,7 +70,7 @@ export const accountProfileStyles = StyleSheet.create({
     shadowRadius: 2,
     shadowOffset: {width: 0, height: 1},
   },
-  roleName: {marginLeft: 7, color: '#1E90FF', fontWeight: 'bold', fontSize: 15},
+  roleName: {marginLeft: 7, color: '#2463EB', fontWeight: 'bold', fontSize: 15},
   roleSite: {marginLeft: 8, color: '#606060', fontSize: 13, fontWeight: '600'},
   rolePerm: {marginLeft: 24, fontSize: 13, color: '#555', marginTop: -3},
   logoutBtn: {

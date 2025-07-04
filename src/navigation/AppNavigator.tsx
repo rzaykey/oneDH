@@ -20,10 +20,14 @@ import EditTrainHours from '../screens/otpd/trainhours/EditTrainHours';
 import Mop from '../screens/otpd/mop/Mop';
 import AddMop from '../screens/otpd/mop/AddMop';
 import TabNavigator from './TabNavigator';
-import P2HScreen from '../screens/module/P2HScreen';
 import JCMScreen from '../screens/module/JCMScreen';
+import CreateJCMScreen from '../screens/jcm/CreateJCMScreen';
+import JCMHistoryScreen from '../screens/jcm/JCMHistoryScreen';
+import JCMOpenScreen from '../screens/jcm/JCMOpenScreen';
+import JCMValidasiScreen from '../screens/jcm/JCMValidasiScreen';
 import MOPScreen from '../screens/module/MOPScreen';
 import SitePickerScreen from '../screens/SitePickerScreen';
+import P2HScreen from '../screens/module/P2HScreen';
 import P2HHistory from '../screens/p2h/P2HHistoryScreen';
 import P2HMyHistory from '../screens/p2h/P2HMyHistoryScreen';
 import P2HDetailScreen from '../screens/p2h/P2HDetailScreen';
@@ -41,14 +45,20 @@ const AppNavigator = () => (
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="SitePicker" component={SitePickerScreen} />
     <Stack.Screen name="MainApp" component={TabNavigator} />
-    <Stack.Screen name="P2HScreen" component={P2HScreen} />
-    <Stack.Screen name="JCMScreen" component={JCMScreen} />
     <Stack.Screen name="MOPScreen" component={MOPScreen} />
 
+    <Stack.Screen name="JCMScreen" component={JCMScreen} />
+    <Stack.Screen name="JCMHistoryScreen" component={JCMHistoryScreen} />
+    <Stack.Screen name="CreateJCMScreen" component={CreateJCMScreen} />
+    <Stack.Screen name="JCMOpenScreen" component={JCMOpenScreen} />
+    <Stack.Screen name="JCMValidasiScreen" component={JCMValidasiScreen} />
+
+    <Stack.Screen name="P2HScreen" component={P2HScreen} />
     <Stack.Screen name="P2HHistory" component={P2HHistory} />
     <Stack.Screen name="P2HMyHistory" component={P2HMyHistory} />
     <Stack.Screen name="P2HDetail" component={P2HDetailScreen} />
     <Stack.Screen name="CreateP2HScreen" component={CreateP2HScreen} />
+
     <Stack.Screen name="MasterCacheScreen" component={MasterCacheScreen} />
 
     <Stack.Screen

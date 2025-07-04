@@ -65,7 +65,7 @@ export const dashboardStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   carouselCard: {
-    backgroundColor: '#1E90FF',
+    backgroundColor: '#2463EB',
     borderRadius: 20,
     width: SCREEN_WIDTH * 0.8, // 80% dari layar
     minHeight: 115,
@@ -137,7 +137,7 @@ export const dashboardStyles = StyleSheet.create({
     minWidth: 140,
     maxWidth: '47%',
     elevation: 2,
-    shadowColor: '#1E90FF',
+    shadowColor: '#2463EB',
     shadowOpacity: 0.08,
     shadowRadius: 6,
   },
@@ -187,7 +187,7 @@ export const dashboardStyles = StyleSheet.create({
   siteLabel: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E90FF',
+    color: '#2463EB',
     marginRight: 7,
   },
   siteChip: {
@@ -227,7 +227,7 @@ export const dashboardStyles = StyleSheet.create({
     minWidth: 64,
   },
   modulePermit: {
-    color: '#1E90FF',
+    color: '#2463EB',
     fontSize: 13,
     marginRight: 8,
     fontWeight: 'bold',

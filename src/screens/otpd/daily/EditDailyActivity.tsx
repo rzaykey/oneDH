@@ -292,7 +292,7 @@ const EditDailyActivity = ({route}) => {
           alignItems: 'center',
           backgroundColor: '#fff',
         }}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#2463EB" />
         <Text style={{marginTop: 14}}>Loading data ...</Text>
       </SafeAreaView>
     );
@@ -300,10 +300,10 @@ const EditDailyActivity = ({route}) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <KeyboardAwareScrollView
           contentContainerStyle={[

@@ -86,7 +86,7 @@ export const p2hDetailStyles = StyleSheet.create({
   },
   noText: {
     fontWeight: '700',
-    color: '#1E90FF',
+    color: '#2463EB',
     fontSize: 15,
   },
   question: {

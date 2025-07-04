@@ -12,7 +12,7 @@ export const sitePickerStyles = StyleSheet.create({
   title: {
     fontSize: 23,
     fontWeight: 'bold',
-    color: '#1E90FF',
+    color: '#2463EB',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -28,7 +28,7 @@ export const sitePickerStyles = StyleSheet.create({
     marginBottom: 13,
     alignItems: 'center',
     elevation: 2,
-    shadowColor: '#1E90FF',
+    shadowColor: '#2463EB',
     shadowOpacity: 0.07,
     shadowRadius: 4,
     shadowOffset: {width: 0, height: 2},

@@ -200,7 +200,7 @@ export const editDataStyles = StyleSheet.create({
     marginTop: 4,
   },
   submitButton: {
-    backgroundColor: '#1E90FF',
+    backgroundColor: '#2463EB',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',

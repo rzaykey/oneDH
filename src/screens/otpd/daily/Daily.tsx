@@ -242,7 +242,8 @@ export default function Daily() {
         return;
       }
       try {
-        const token = await AsyncStorage.getItem('userToken');
+        const loginCache = await AsyncStorage.getItem('loginCache');
+        const token = loginCache ? JSON.parse(loginCache).token : null;
         if (!token) return Alert.alert('Sesi Habis', 'Silakan login kembali.');
         Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
           {text: 'Batal', style: 'cancel'},
@@ -315,7 +316,7 @@ export default function Daily() {
   if (loading && !refreshing) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#2463EB" />
       </SafeAreaView>
     );
   }
@@ -323,10 +324,10 @@ export default function Daily() {
   // --- UI ---
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>
           {/* --- Judul halaman dan Force Refresh --- */}
@@ -360,7 +361,7 @@ export default function Daily() {
                   setPage(1);
                 }}
                 style={styles.picker}
-                dropdownIconColor="#1E90FF"
+                dropdownIconColor="#2463EB"
                 mode="dropdown">
                 {pageSizeOptions.map(size => (
                   <Picker.Item

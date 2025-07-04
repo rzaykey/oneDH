@@ -10,7 +10,7 @@ export const modulStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 21,
     fontWeight: 'bold',
-    color: '#1E90FF',
+    color: '#2463EB',
     marginBottom: 18,
     letterSpacing: 0.1,
     alignSelf: 'flex-start',
@@ -31,7 +31,7 @@ export const modulStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
-    shadowColor: '#1E90FF',
+    shadowColor: '#2463EB',
     shadowOpacity: 0.12,
     shadowRadius: 7,
     shadowOffset: {width: 0, height: 3},
@@ -42,7 +42,7 @@ export const modulStyles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1E90FF',
+    color: '#2463EB',
     textAlign: 'center',
     marginTop: 4,
     letterSpacing: 0.03,

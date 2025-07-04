@@ -5,6 +5,29 @@ export interface P2HDetail {
   driver: string;
   tanggal: string;
 }
+export interface JCMItem {
+  id: number | string;
+  unitno: string;
+  wono: string;
+  fid_wotask: string;
+  wo_task_no: string;
+  task_desc: string;
+  jde_mekanik: string;
+  nama_mekanik: string;
+  tanggal_mulai: string; // format: 'dd-mm-yyyy'
+  waktu_mulai: string; // format: 'HH:MM:SS'
+  tanggal_selesai: string; // sebenarnya waktu (dari `date_finish` -> format waktu)
+  waktu_selesai: string; // dari `time_finish`
+  durasi: string;
+  remark: string;
+  status: string;
+  validate_status: string;
+  jde_pengawas: string;
+  nama_pengawas: string;
+  unit_grp_id: string;
+  parrend_wo_task: string;
+  fid_hdr: string;
+}
 
 export interface MentoringData {
   id: number;

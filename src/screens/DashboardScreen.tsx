@@ -71,31 +71,51 @@ const DashboardScreen: React.FC = () => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected) {
         setSyncing(true);
-        pushOfflineQueue(
-          OFFLINE_SUBMIT_KEY,
-          '/StoreP2H',
-          undefined,
-          API_BASE_URL.p2h,
-        ).then(() => {
-          refreshQueueCount(); // atau sekadar log
-          setSyncing(false);
-        });
+
+        Promise.all([
+          pushOfflineQueue(
+            OFFLINE_SUBMIT_KEY,
+            '/StoreP2H',
+            undefined,
+            API_BASE_URL.onedh,
+          ),
+          pushOfflineQueue(
+            OFFLINE_SUBMIT_KEY,
+            '/StoreJCM',
+            (current: number, total: number) => {
+              console.log(`Sync JCM progress: ${current} / ${total}`);
+            },
+            API_BASE_URL.onedh,
+          ),
+        ])
+          .then(refreshQueueCount)
+          .finally(() => setSyncing(false));
       }
     });
 
-    // Jalankan saat pertama kali juga
+    // Jalankan juga sekali saat mount
     NetInfo.fetch().then(state => {
       if (state.isConnected) {
         setSyncing(true);
-        pushOfflineQueue(
-          OFFLINE_SUBMIT_KEY,
-          '/StoreP2H',
-          undefined,
-          API_BASE_URL.p2h,
-        ).then(() => {
-          refreshQueueCount();
-          setSyncing(false);
-        });
+
+        Promise.all([
+          pushOfflineQueue(
+            OFFLINE_SUBMIT_KEY,
+            '/StoreP2H',
+            undefined,
+            API_BASE_URL.onedh,
+          ),
+          pushOfflineQueue(
+            OFFLINE_SUBMIT_KEY,
+            '/StoreJCM',
+            (current: number, total: number) => {
+              console.log(`Initial Sync JCM: ${current}/${total}`);
+            },
+            API_BASE_URL.onedh,
+          ),
+        ])
+          .then(refreshQueueCount)
+          .finally(() => setSyncing(false));
       }
     });
 
@@ -182,10 +202,10 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <View style={styles.container}>
           {/* HEADER */}
@@ -201,19 +221,19 @@ const DashboardScreen: React.FC = () => {
                   styles.title,
                   {fontSize: 24, fontWeight: 'bold', color: '#183153'},
                 ]}>
-                Home
+                Dashboard
               </Text>
             </View>
             <TouchableOpacity
               style={{padding: 8}}
               onPress={() => setDropdownVisible(true)}>
-              <Icon name="ellipsis-vertical" size={28} color="#1E90FF" />
+              <Icon name="ellipsis-vertical" size={28} color="#2463EB" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.profileCard}>
             <View style={styles.profileAvatar}>
-              <Icon name="person-circle" size={56} color="#1E90FF" />
+              <Icon name="person-circle" size={56} color="#2463EB" />
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{user?.name ?? 'User'}</Text>
@@ -295,7 +315,7 @@ const DashboardScreen: React.FC = () => {
               <View style={styles.dropdownMenu}>
                 {refreshingMaster ? (
                   <View style={{alignItems: 'center', padding: 16}}>
-                    <ActivityIndicator size="large" color="#1E90FF" />
+                    <ActivityIndicator size="large" color="#2463EB" />
                     <Text style={{marginTop: 12}}>Memuat master data...</Text>
                   </View>
                 ) : (
@@ -307,7 +327,7 @@ const DashboardScreen: React.FC = () => {
                         await handleRefreshMaster();
                         setDropdownVisible(false); // Tutup setelah loading selesai
                       }}>
-                      <Icon name="refresh-outline" size={20} color="#1E90FF" />
+                      <Icon name="refresh-outline" size={20} color="#2463EB" />
                       <Text style={styles.dropdownText}>
                         Refresh Master Data
                       </Text>
@@ -321,7 +341,7 @@ const DashboardScreen: React.FC = () => {
                       <Icon
                         name="swap-horizontal-outline"
                         size={20}
-                        color="#1E90FF"
+                        color="#2463EB"
                       />
                       <Text style={styles.dropdownText}>Ganti Site</Text>
                     </TouchableOpacity>

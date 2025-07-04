@@ -36,7 +36,7 @@ const AuthLoadingScreen = ({navigation}) => {
 
   return (
     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <ActivityIndicator size="large" color="#1E90FF" />
+      <ActivityIndicator size="large" color="#2463EB" />
     </View>
   );
 };

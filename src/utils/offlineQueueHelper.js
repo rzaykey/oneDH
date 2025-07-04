@@ -15,17 +15,8 @@ export const addQueueOffline = async (queueKey, payload) => {
     const str = await AsyncStorage.getItem(queueKey);
     if (str) arr = JSON.parse(str);
   } catch {}
-  // Hindari duplikat based on isi selain id_local
-  if (
-    !arr.find(
-      item =>
-        JSON.stringify({...item, id_local: undefined}) ===
-        JSON.stringify({...fullPayload, id_local: undefined}),
-    )
-  ) {
-    arr.push(fullPayload);
-    await AsyncStorage.setItem(queueKey, JSON.stringify(arr));
-  }
+  arr.push(fullPayload);
+  await AsyncStorage.setItem(queueKey, JSON.stringify(arr));
   return arr.length;
 };
 

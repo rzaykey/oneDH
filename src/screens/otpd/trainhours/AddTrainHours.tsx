@@ -117,15 +117,12 @@ const AddTrainHours = () => {
         let username = '';
         try {
           const loginCacheStr = await AsyncStorage.getItem('loginCache');
-          console.log('LoginCache:', loginCacheStr);
           if (loginCacheStr) {
             const loginCache = JSON.parse(loginCacheStr);
             token = loginCache.token || '';
             username = loginCache.dataEmp?.jdeno || '';
           }
-        } catch (err) {
-          console.log('[ERROR ambil loginCache]', err);
-        }
+        } catch (err) {}
 
         if (!token) {
           Alert.alert('Session Habis', 'Silakan login ulang.');
@@ -136,8 +133,6 @@ const AddTrainHours = () => {
         // 3. Request master data pakai token & param JDE
         let url = `${API_BASE_URL.mop}/trainHours/create`;
         if (username) url += `?username=${username}`;
-
-        console.log('[REQ] GET:', url, token);
 
         const response = await axios.get(url, {
           headers: {Authorization: `Bearer ${token}`},
@@ -196,13 +191,6 @@ const AddTrainHours = () => {
           })),
         );
       } catch (err) {
-        // --- DEBUG LOG ---
-        console.log(
-          '[ERROR fetchMasterData]',
-          err?.response?.data,
-          err?.message,
-          err,
-        );
         Alert.alert(
           'Error',
           'Gagal load master train hours (pastikan online): ' +
@@ -355,8 +343,6 @@ const AddTrainHours = () => {
             },
           },
         );
-
-        console.log('Store success:', response.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           console.warn('API Error:', error.response?.data || error.message);
@@ -411,10 +397,10 @@ const AddTrainHours = () => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <View style={{flex: 1, paddingBottom: insets.bottom}}>
         <KeyboardAwareScrollView
           contentContainerStyle={addDailyAct.container}

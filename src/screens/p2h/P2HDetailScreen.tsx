@@ -7,7 +7,7 @@ import {p2hDetailStyles as styles} from '../../styles/p2hDetailStyles';
 import LinearGradient from 'react-native-linear-gradient';
 import API_BASE_URL from '../../config';
 
-const API_DETAIL_URL = `${API_BASE_URL.p2h}/GetDataP2HDetails`;
+const API_DETAIL_URL = `${API_BASE_URL.onedh}/GetDataP2HDetails`;
 
 type DetailItem = {
   id: string;
@@ -119,11 +119,11 @@ const P2HDetailScreen = ({route}) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
-      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
+      <SafeAreaView style={[styles.container]}>
         <FlatList
           data={detail}
           keyExtractor={item => String(item.id)}

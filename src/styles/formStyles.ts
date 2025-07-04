@@ -11,7 +11,7 @@ export const formStyles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 24,
     textAlign: 'center',
-    color: '#1E90FF',
+    color: '#2463EB',
   },
   inputGroup: {
     marginBottom: 16,
@@ -32,7 +32,7 @@ export const formStyles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   submitButton: {
-    backgroundColor: '#1E90FF',
+    backgroundColor: '#2463EB',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,

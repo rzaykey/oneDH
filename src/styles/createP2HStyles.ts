@@ -2,6 +2,38 @@ import {StyleSheet} from 'react-native';
 
 export const createP2HStyles = StyleSheet.create({
   container: {flex: 1, paddingHorizontal: 12},
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    marginVertical: 10,
+  },
+  refreshButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 6,
+    borderRadius: 12,
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  statusText: {
+    fontWeight: '600',
+  },
   title: {
     fontWeight: 'bold',
     fontSize: 20,

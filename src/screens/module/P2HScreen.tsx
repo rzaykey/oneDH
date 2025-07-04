@@ -72,10 +72,10 @@ const P2HScreen = ({navigation}: any) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>P2H - Pemeriksaan Harian Kendaraan</Text>
         <FlatList

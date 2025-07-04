@@ -20,8 +20,8 @@ export default function TabNavigator() {
         tabBarStyle: [
           styles.tabBar,
           {
-            height: 66 + insets.bottom,
-            paddingBottom: insets.bottom > 0 ? insets.bottom : 12,
+            height: 60,
+            // paddingBottom: insets.bottom > 0 ? insets.bottom : 1,
           },
         ],
         tabBarShowLabel: false,
@@ -68,7 +68,7 @@ const TabIcon = ({icon, label, focused}: TabIconProps) => (
   <View style={styles.tabIconWrap}>
     <Icon
       name={icon}
-      size={26}
+      size={20}
       color={focused ? '#1E90FF' : '#AAB2BD'}
       style={styles.tabIcon}
     />

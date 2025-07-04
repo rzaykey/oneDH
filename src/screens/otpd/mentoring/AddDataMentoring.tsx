@@ -325,7 +325,10 @@ const AddDataMentoring = ({route}) => {
         const response = await axios.get(
           `${API_BASE_URL.mop}/getEmployeeOperator?q=${text}`,
         );
-        arr = response.data || [];
+        arr = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+
         await AsyncStorage.setItem(
           'mentoring_operator_search',
           JSON.stringify(arr),
@@ -618,7 +621,7 @@ const AddDataMentoring = ({route}) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#2463EB" />
       </View>
     );
   }
@@ -626,10 +629,10 @@ const AddDataMentoring = ({route}) => {
   // --- UI ---
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <ScrollView
         style={{flex: 1}}
         contentContainerStyle={{paddingBottom: 40}}
@@ -676,7 +679,7 @@ const AddDataMentoring = ({route}) => {
                 alignItems: 'center',
                 marginBottom: 8,
               }}>
-              <ActivityIndicator size="small" color="#1E90FF" />
+              <ActivityIndicator size="small" color="#2463EB" />
               <Text style={{marginLeft: 6, fontSize: 13}}>
                 Mengirim data offline...
               </Text>

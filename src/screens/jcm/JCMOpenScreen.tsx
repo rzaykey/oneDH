@@ -10,29 +10,14 @@ import {
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import dayjs from 'dayjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
+import {JCMItem} from '../../navigation/types';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
-import {isAdminHSE} from '../../utils/role';
-
-interface P2HItem {
-  id: number;
-  no_unit: string;
-  site: string;
-  model: string;
-  namapengemudi: string;
-  jdeno: string;
-  tanggal: string;
-  hmkm: string;
-  fuel_permit: string;
-  sticker_permit: string;
-  keterangan?: string;
-}
 
 interface BadgeProps {
   label: string;
@@ -43,10 +28,11 @@ interface InfoEmptyProps {
   message?: string;
 }
 
-const API_URL = `${API_BASE_URL.onedh}/GetDataP2H`;
+const API_URL = `${API_BASE_URL.onedh}/GetJCMData`;
+const API_URL_VALIDASI = `${API_BASE_URL.onedh}/JCMValidation`;
 
-const P2HHistoryScreen: React.FC = () => {
-  const [history, setHistory] = useState<P2HItem[]>([]);
+const JCMOpenScreen: React.FC = () => {
+  const [history, setHistory] = useState<JCMItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,31 +42,31 @@ const P2HHistoryScreen: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const {roles, user, activeSite} = useSiteContext();
-
-  const canViewAll = isAdminHSE(roles, user, activeSite);
+  const {user, activeSite} = useSiteContext();
 
   useEffect(() => {
-    fetchHistory();
-  }, [activeSite, user?.jdeno, canViewAll]);
+    fetchHistory(false, 1); // awal muat
+  }, [activeSite, user?.jdeno]);
 
   useEffect(() => {
-    setPage(1);
-    fetchHistory();
+    fetchHistory(false, 1); // saat limit berubah
   }, [limit]);
 
-  const fetchHistory = async (isLoadMore = false) => {
-    if (isLoadMore) setIsLoadingMore(true);
-    else {
+  const fetchHistory = async (isLoadMore = false, forcedPage?: number) => {
+    if (isLoadMore) {
+      if (isLoadingMore || !hasMore) return;
+      setIsLoadingMore(true);
+    } else {
       setLoading(true);
       setError(null);
       setHasMore(true);
     }
 
-    const currentPage = isLoadMore ? page + 1 : 1;
+    const currentPage = isLoadMore ? page + 1 : forcedPage ?? 1;
 
     const params = new URLSearchParams({
       page: String(currentPage),
@@ -105,24 +91,18 @@ const P2HHistoryScreen: React.FC = () => {
       });
 
       const json = await response.json();
-
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');
         setHistory([]);
       } else {
-        let data: P2HItem[] = json.data || [];
+        const data: JCMItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
-
-        if (!canViewAll && user?.jdeno) {
-          data = data.filter(item => item.jdeno === user.jdeno);
-        }
-
         if (isLoadMore) {
           setHistory(prev => [...prev, ...data]);
           setPage(currentPage);
         } else {
           setHistory(data);
-          setPage(1);
+          setPage(currentPage);
         }
 
         setTotalPages(totalPagesFromApi);
@@ -140,61 +120,151 @@ const P2HHistoryScreen: React.FC = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchHistory();
+    fetchHistory(false, 1);
   };
 
-  const renderItem = ({item}: {item: P2HItem}) => (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.83}
-      onPress={() =>
-        navigation.navigate('P2HDetail', {
-          fid_p2h: item.id,
-          unit: item.no_unit,
-          driver: item.namapengemudi,
-          tanggal: item.tanggal,
-        })
-      }>
-      <View style={styles.headerRow}>
-        <Text style={styles.unitText}>{item.no_unit}</Text>
-        <Text style={styles.siteLabel}>{item.site}</Text>
-      </View>
-      <Text style={styles.modelText}>{item.model}</Text>
-      <View style={styles.row}>
-        <Icon name="person-circle-outline" size={17} color="#4886E3" />
-        <Text style={styles.driverName}>
-          {item.namapengemudi}
-          {item.jdeno === user?.jdeno ? ' (Punya Anda)' : ''}
-        </Text>
-      </View>
-      <View style={styles.rowSpace}>
-        <Text style={styles.labelInfo}>
-          <Icon name="calendar-outline" size={15} color="#999" />{' '}
-          {dayjs(item.tanggal).format('DD MMM YYYY')}
-        </Text>
-        <Text style={styles.hmkm}>{item.hmkm} HM/KM</Text>
-      </View>
-      <View style={styles.badgeRow}>
-        <Badge
-          label={`Fuel: ${item.fuel_permit}`}
-          color={item.fuel_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-        <Badge
-          label={`Sticker: ${item.sticker_permit}`}
-          color={item.sticker_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-      </View>
-      {item.keterangan && (
-        <View style={styles.keteranganRow}>
-          <Text style={styles.ketLabel}>Keterangan: </Text>
-          <Text style={styles.ketValue}>{item.keterangan}</Text>
+  const handleKirimValidasi = async (id: number, validated: boolean) => {
+    try {
+      const cache = await AsyncStorage.getItem('loginCache');
+      const token = cache && JSON.parse(cache)?.token;
+
+      if (!token) {
+        alert('Session habis. Silakan login ulang.');
+        return;
+      }
+
+      const response = await fetch(API_URL_VALIDASI, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id, // ID dari pekerjaan
+          validated, // true untuk validasi, false untuk unvalidasi
+        }),
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        alert(json?.message || 'Gagal memproses validasi.');
+      } else {
+        alert(validated ? 'Berhasil divalidasi.' : 'Berhasil di-unvalidasi.');
+        fetchHistory(false, page); // Refresh list
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan saat menghubungi server.');
+    }
+  };
+
+  const renderItem = ({item}: {item: JCMItem}) => {
+    const isExpanded = expandedId === Number(item.id);
+    const isValidated = item.validate_status?.toLowerCase() === 'valid';
+    const isInvalid = item.validate_status?.toLowerCase() === 'invalid';
+    const isDisabledUnvalidButton = isInvalid || isValidated; // hanya disable jika VALID
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.83}
+        onPress={() => setExpandedId(isExpanded ? null : Number(item.id))}>
+        {/* Header Section */}
+        <View style={styles.headerRow}>
+          <Text style={styles.unitText}>{item.unitno}</Text>
+          <Text style={styles.siteLabel}>
+            {item.wono} - {item.wo_task_no}
+          </Text>
         </View>
-      )}
-    </TouchableOpacity>
-  );
+
+        {/* Task Description */}
+        <Text style={styles.modelText}>{item.task_desc}</Text>
+
+        {/* Mekanik Info */}
+        <View style={styles.row}>
+          <Icon name="person-circle-outline" size={17} color="#4886E3" />
+          <Text style={styles.driverName}>
+            {item.nama_mekanik} - {item.jde_mekanik}
+          </Text>
+        </View>
+
+        {/* Tanggal & Waktu */}
+        <View style={styles.rowSpace}>
+          <Text style={styles.labelInfo}>
+            Mulai: {item.tanggal_mulai} {item.waktu_mulai}
+          </Text>
+          <Text style={styles.labelInfo}>
+            Selesai: {item.tanggal_selesai} {item.waktu_selesai}
+          </Text>
+        </View>
+
+        {/* Badges */}
+        <View style={styles.badgeRow}>
+          <Badge label={`Durasi: ${item.durasi}`} color="#2196F3" />
+          <Badge label={`Status: ${item.status}`} color="#4CAF50" />
+        </View>
+
+        {/* Extra Info */}
+        <View style={styles.rowSpace}>
+          <Text style={styles.labelInfo}>
+            Pengawas: {item.nama_pengawas} - {item.jde_pengawas}
+          </Text>
+          <Text style={styles.labelInfo}>Validasi: {item.validate_status}</Text>
+        </View>
+        {/* Expanded Details */}
+        {isExpanded && (
+          <>
+            {/* Remark Section */}
+            <View style={styles.keteranganRow}>
+              <Text style={styles.ketLabel}>Remark:</Text>
+              <Text style={styles.ketValue} numberOfLines={0}>
+                {item.remark || '-'}
+              </Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              {/* Tombol Validasi */}
+              <TouchableOpacity
+                onPress={() => handleKirimValidasi(Number(item.id), true)}
+                disabled={isValidated} // ❌ Tidak bisa validasi lagi kalau sudah valid
+                style={[
+                  styles.actionButton,
+                  {backgroundColor: isValidated ? '#ccc' : '#4CAF50'},
+                ]}>
+                <Text style={styles.buttonText}>
+                  {isValidated ? 'Sudah Valid' : 'Validasi'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Tombol Unvalidasi */}
+              <TouchableOpacity
+                onPress={() => handleKirimValidasi(Number(item.id), false)}
+                disabled={isDisabledUnvalidButton} // ✅ tombol tetap aktif jika status = invalid atau kosong
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: isDisabledUnvalidButton
+                      ? '#ccc'
+                      : '#F44336',
+                  },
+                ]}>
+                <Text style={styles.buttonText}>
+                  {isValidated
+                    ? 'Sudah Valid'
+                    : isInvalid
+                    ? 'Unvalidasi'
+                    : 'Unvalidasi'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const InfoEmpty: React.FC<InfoEmptyProps> = ({
-    message = 'Data kosong/belum ada pemeriksaan P2H.',
+    message = 'Data kosong/belum ada pengerjaan dari mekanik.',
   }) => (
     <View style={styles.emptyWrap}>
       <Icon
@@ -205,7 +275,7 @@ const P2HHistoryScreen: React.FC = () => {
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
-        Silakan lakukan pemeriksaan P2H dan data akan muncul di sini.
+        Silakan pastikan mekanik input pekerjaan dan data akan muncul di sini.
       </Text>
     </View>
   );
@@ -234,7 +304,7 @@ const P2HHistoryScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 20}}
           />
-          <Text style={styles.title}>Riwayat Pemeriksaan P2H</Text>
+          <Text style={styles.title}>Data Semua JCM</Text>
         </View>
 
         <View style={styles.limitPickerWrap}>
@@ -261,11 +331,11 @@ const P2HHistoryScreen: React.FC = () => {
         <View style={styles.searchContainer}>
           <Icon name="search-outline" size={20} color="#888" />
           <TextInput
-            placeholder="Cari unit / driver..."
+            placeholder="Cari wo / mekanik..."
             placeholderTextColor="#0f0f0f"
             value={search}
             onChangeText={text => setSearch(text)}
-            onSubmitEditing={() => fetchHistory()}
+            onSubmitEditing={() => fetchHistory(false, 1)}
             style={styles.searchInput}
             returnKeyType="search"
           />
@@ -273,7 +343,7 @@ const P2HHistoryScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => {
                 setSearch('');
-                fetchHistory();
+                fetchHistory(false, 1);
               }}>
               <Icon name="close-circle" size={20} color="#888" />
             </TouchableOpacity>
@@ -308,9 +378,7 @@ const P2HHistoryScreen: React.FC = () => {
                   colors={['#4886E3']}
                 />
               }
-              onEndReached={() => {
-                if (hasMore && !isLoadingMore) fetchHistory(true);
-              }}
+              onEndReached={() => fetchHistory(true)}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
                 isLoadingMore ? (
@@ -325,4 +393,4 @@ const P2HHistoryScreen: React.FC = () => {
   );
 };
 
-export default P2HHistoryScreen;
+export default JCMOpenScreen;

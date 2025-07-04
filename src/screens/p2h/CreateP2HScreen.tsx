@@ -106,75 +106,73 @@ const CreateP2HScreen = ({navigation}) => {
     restoreDraftOrLogin();
   }, [activeSite]);
 
-  // ==== 2. Fetch master data ====
-  useEffect(() => {
-    const fetchMasters = async () => {
-      setLoadingMaster(true);
-      try {
-        const isConnected = (await NetInfo.fetch()).isConnected;
-        let modelData = [],
-          questionData = [],
-          deptData = [];
-        if (isConnected) {
-          try {
-            const modelRes = await fetch(`${API_BASE_URL.p2h}/GetModel`);
-            const modelJson = await modelRes.json();
-            modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
-            if (modelData.length > 0)
-              await AsyncStorage.setItem(
-                'master_model',
-                JSON.stringify(modelData),
-              );
-          } catch {
-            const m = await AsyncStorage.getItem('master_model');
-            modelData = m ? JSON.parse(m) : [];
-          }
-
-          try {
-            const qRes = await fetch(`${API_BASE_URL.p2h}/MasterQuestion`);
-            const qJson = await qRes.json();
-            questionData = Array.isArray(qJson.data) ? qJson.data : [];
-            if (questionData.length > 0)
-              await AsyncStorage.setItem(
-                'master_questions',
-                JSON.stringify(questionData),
-              );
-          } catch {
-            const q = await AsyncStorage.getItem('master_questions');
-            questionData = q ? JSON.parse(q) : [];
-          }
-
-          try {
-            const dRes = await fetch(`${API_BASE_URL.p2h}/GetDept`);
-            const dJson = await dRes.json();
-            deptData = Array.isArray(dJson.data) ? dJson.data : [];
-            if (deptData.length > 0)
-              await AsyncStorage.setItem(
-                'master_dept',
-                JSON.stringify(deptData),
-              );
-          } catch {
-            const d = await AsyncStorage.getItem('master_dept');
-            deptData = d ? JSON.parse(d) : [];
-          }
-        } else {
+  const fetchMasters = async () => {
+    setLoadingMaster(true);
+    try {
+      const isConnected = (await NetInfo.fetch()).isConnected;
+      let modelData = [],
+        questionData = [],
+        deptData = [];
+      if (isConnected) {
+        try {
+          const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`);
+          const modelJson = await modelRes.json();
+          modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
+          if (modelData.length > 0)
+            await AsyncStorage.setItem(
+              'master_model',
+              JSON.stringify(modelData),
+            );
+        } catch {
           const m = await AsyncStorage.getItem('master_model');
           modelData = m ? JSON.parse(m) : [];
+        }
+
+        try {
+          const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`);
+          const qJson = await qRes.json();
+          questionData = Array.isArray(qJson.data) ? qJson.data : [];
+          if (questionData.length > 0)
+            await AsyncStorage.setItem(
+              'master_questions',
+              JSON.stringify(questionData),
+            );
+        } catch {
           const q = await AsyncStorage.getItem('master_questions');
           questionData = q ? JSON.parse(q) : [];
+        }
+
+        try {
+          const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`);
+          const dJson = await dRes.json();
+          deptData = Array.isArray(dJson.data) ? dJson.data : [];
+          if (deptData.length > 0)
+            await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
+        } catch {
           const d = await AsyncStorage.getItem('master_dept');
           deptData = d ? JSON.parse(d) : [];
         }
-        setModelList(modelData);
-        setQuestionList(questionData);
-        setDeptList(deptData);
-      } catch (err) {
-        setModelList([]);
-        setQuestionList([]);
-        setDeptList([]);
+      } else {
+        const m = await AsyncStorage.getItem('master_model');
+        modelData = m ? JSON.parse(m) : [];
+        const q = await AsyncStorage.getItem('master_questions');
+        questionData = q ? JSON.parse(q) : [];
+        const d = await AsyncStorage.getItem('master_dept');
+        deptData = d ? JSON.parse(d) : [];
       }
-      setLoadingMaster(false);
-    };
+      setModelList(modelData);
+      setQuestionList(questionData);
+      setDeptList(deptData);
+    } catch (err) {
+      setModelList([]);
+      setQuestionList([]);
+      setDeptList([]);
+    }
+    setLoadingMaster(false);
+  };
+
+  // ==== 2. Fetch master data ====
+  useEffect(() => {
     fetchMasters();
   }, [activeSite]);
 
@@ -197,7 +195,7 @@ const CreateP2HScreen = ({navigation}) => {
           OFFLINE_SUBMIT_KEY,
           '/StoreP2H',
           undefined,
-          API_BASE_URL.p2h,
+          API_BASE_URL.onedh,
         ).then(() => {
           refreshQueueCount();
           setSyncing(false);
@@ -211,13 +209,9 @@ const CreateP2HScreen = ({navigation}) => {
   // ==== 4. Save draft setiap perubahan ====
   useEffect(() => {
     const saveDraft = async () => {
-      const deviceInfoJson = JSON.stringify({
-        systemName: await DeviceInfo.getSystemName(),
-        systemVersion: await DeviceInfo.getSystemVersion(),
-        appVersion: await DeviceInfo.getVersion(),
-        buildNumber: await DeviceInfo.getBuildNumber(),
-        deviceId: await DeviceInfo.getDeviceId(),
-      });
+      const type = DeviceInfo.getSystemName();
+      const version = DeviceInfo.getVersion();
+      const build = DeviceInfo.getBuildNumber();
       const draft = {
         nounit,
         model,
@@ -230,7 +224,7 @@ const CreateP2HScreen = ({navigation}) => {
         inlineRadioOptions,
         stickerCommissioning,
         stickerFuelPermit,
-        device_info: deviceInfoJson,
+        device_info: `(${type})(${build})(${version})`,
       };
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     };
@@ -335,13 +329,10 @@ const CreateP2HScreen = ({navigation}) => {
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
     // Ambil info device
-    const deviceInfo = {
-      systemName: await DeviceInfo.getSystemName(),
-      systemVersion: await DeviceInfo.getSystemVersion(),
-      deviceId: await DeviceInfo.getDeviceId(),
-      appVersion: await DeviceInfo.getVersion(),
-      buildNumber: await DeviceInfo.getBuildNumber(),
-    };
+
+    const type = DeviceInfo.getSystemName();
+    const version = DeviceInfo.getVersion();
+    const build = DeviceInfo.getBuildNumber();
 
     const payload = {
       nounit,
@@ -357,7 +348,7 @@ const CreateP2HScreen = ({navigation}) => {
       Sticker: stickerFuelPermit,
       tanggal: `${tanggal} ${jam}`,
       keterangan,
-      device_info: JSON.stringify(deviceInfo),
+      device_info: `(${type})(${build})(${version})`,
     };
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
@@ -382,7 +373,7 @@ const CreateP2HScreen = ({navigation}) => {
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
-      const response = await fetch(`${API_BASE_URL.p2h}/StoreP2H`, {
+      const response = await fetch(`${API_BASE_URL.onedh}/StoreP2H`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -408,7 +399,7 @@ const CreateP2HScreen = ({navigation}) => {
             OFFLINE_SUBMIT_KEY,
             '/StoreP2H',
             undefined,
-            API_BASE_URL.p2h,
+            API_BASE_URL.onedh,
           );
           await refreshQueueCount();
           setSyncing(false);
@@ -444,7 +435,7 @@ const CreateP2HScreen = ({navigation}) => {
         ]}>
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={{marginTop: 12}}>Memuat data master...</Text>
+          <Text style={{marginTop: 12}}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -452,11 +443,11 @@ const CreateP2HScreen = ({navigation}) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
-      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
+      <SafeAreaView style={[styles.container]}>
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
           <Text style={styles.title}>Form Pemeriksaan P2H</Text>
 
@@ -482,7 +473,7 @@ const CreateP2HScreen = ({navigation}) => {
                       OFFLINE_SUBMIT_KEY,
                       '/StoreP2H',
                       undefined,
-                      API_BASE_URL.p2h,
+                      API_BASE_URL.onedh,
                     );
                     await refreshQueueCount();
                     setSyncing(false);
@@ -511,35 +502,47 @@ const CreateP2HScreen = ({navigation}) => {
             </View>
           )}
 
-          <View style={{padding: 1, alignItems: 'center'}}>
+          <View style={styles.rowContainer}>
+            {/* Tombol Refresh */}
+            <TouchableOpacity
+              style={[styles.refreshButton, loadingMaster && {opacity: 0.6}]}
+              onPress={fetchMasters}
+              disabled={loadingMaster}>
+              <Text style={styles.refreshButtonText}>
+                {loadingMaster ? 'Loading...' : 'Refresh Data'}
+              </Text>
+            </TouchableOpacity>
+            {loadingMaster && (
+              <ActivityIndicator
+                size="small"
+                color="#4F46E5"
+                style={{marginTop: 10}}
+              />
+            )}
+
+            {/* Status Koneksi */}
             <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                padding: 6,
-                backgroundColor: isConnected ? '#dcfce7' : '#fee2e2',
-                borderRadius: 12,
-                marginBottom: 8,
-              }}>
+              style={[
+                styles.statusContainer,
+                {backgroundColor: isConnected ? '#dcfce7' : '#fee2e2'},
+              ]}>
               <View
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: isConnected ? '#22c55e' : '#ef4444',
-                  marginRight: 8,
-                }}
+                style={[
+                  styles.statusIndicator,
+                  {backgroundColor: isConnected ? '#22c55e' : '#ef4444'},
+                ]}
               />
               <Text
-                style={{
-                  color: isConnected ? '#166534' : '#991b1b',
-                  fontWeight: '600',
-                }}>
+                style={[
+                  styles.statusText,
+                  {color: isConnected ? '#166534' : '#991b1b'},
+                ]}>
                 {isConnected ? 'Online' : 'Offline'}
                 {syncing && isConnected ? ' • Sinkronisasi...' : ''}
               </Text>
             </View>
           </View>
+
           {/* CARD: Informasi Unit */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informasi Unit</Text>
@@ -572,7 +575,7 @@ const CreateP2HScreen = ({navigation}) => {
             />
             {modelList.length === 0 && (
               <Text style={{color: 'red', marginBottom: 10}}>
-                Belum ada data model. Silakan refresh master.
+                Belum ada data model. Silakan refresh data.
               </Text>
             )}
             <Text style={styles.label}>HM</Text>
@@ -621,7 +624,7 @@ const CreateP2HScreen = ({navigation}) => {
             />
             {deptList.length === 0 && (
               <Text style={{color: 'red', marginBottom: 10}}>
-                Belum ada departemen. Silakan refresh master.
+                Belum ada departemen. Silakan refresh data.
               </Text>
             )}
           </View>
@@ -631,7 +634,7 @@ const CreateP2HScreen = ({navigation}) => {
             <Text style={styles.cardTitle}>Checklist Pemeriksaan</Text>
             {checklistQuestions.length === 0 && (
               <Text style={{color: 'red', marginBottom: 10}}>
-                Belum ada pertanyaan. Silakan refresh master.
+                Belum ada pertanyaan. Silakan refresh data.
               </Text>
             )}
             {checklistQuestions.map(q => (

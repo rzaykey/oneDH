@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -6,11 +6,12 @@ import {
   TouchableOpacity,
   View,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import {mopStyles} from '../../styles/mopStyles';
+import {mopStyles as styles} from '../../styles/mopStyles';
 import {
   getModulePermit,
   canAdd,
@@ -20,12 +21,36 @@ import {
   PermitType,
 } from '../../utils/permit';
 import {useSiteContext} from '../../context/SiteContext';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {cacheMopMasters} from '../../utils/cacheMopMasters'; // path disesuaikan
+import {getSession} from '../../utils/auth';
+import {useFocusEffect} from '@react-navigation/native';
 
 const mentoringForms = [
-  {label: 'Form Digger', unitType: 'DIGGER', icon: 'cog', unitTypeId: 3},
-  {label: 'Form Hauler', unitType: 'HAULER', icon: 'cog', unitTypeId: 4},
-  {label: 'Form Bulldozer', unitType: 'BULLDOZER', icon: 'cog', unitTypeId: 2},
-  {label: 'Form Grader', unitType: 'GRADER', icon: 'cog', unitTypeId: 5},
+  {
+    label: 'Form Digger',
+    unitType: 'DIGGER',
+    icon: 'construct-outline',
+    unitTypeId: 3,
+  },
+  {
+    label: 'Form Hauler',
+    unitType: 'HAULER',
+    icon: 'construct-outline',
+    unitTypeId: 4,
+  },
+  {
+    label: 'Form Bulldozer',
+    unitType: 'BULLDOZER',
+    icon: 'construct-outline',
+    unitTypeId: 2,
+  },
+  {
+    label: 'Form Grader',
+    unitType: 'GRADER',
+    icon: 'construct-outline',
+    unitTypeId: 5,
+  },
 ];
 
 const sectionConfig = [
@@ -35,6 +60,7 @@ const sectionConfig = [
       {
         icon: 'folder-open-outline',
         label: 'Lihat Data Mentoring',
+        desc: 'Melihat daftar mentoring yang telah diinput',
         screen: 'Data',
         action: 'read',
         module: 'MOP',
@@ -42,20 +68,21 @@ const sectionConfig = [
       {
         icon: 'add-circle-outline',
         label: 'Tambah Data Mentoring',
-        screen: '', // akan pakai custom handler
+        desc: 'Menambahkan data baru berdasarkan tipe unit',
+        screen: '',
         action: 'add',
         module: 'MOP',
         customAction: 'openMentoringFormPicker',
       },
     ],
   },
-  // ...section lain tetap
   {
     section: 'Daily Activity',
     items: [
       {
         icon: 'calendar-outline',
         label: 'Lihat Daily Activity',
+        desc: 'Lihat riwayat aktivitas harian operator',
         screen: 'DailyActivity',
         action: 'read',
         module: 'MOP',
@@ -63,6 +90,7 @@ const sectionConfig = [
       {
         icon: 'add-circle-outline',
         label: 'Tambah Daily Activity',
+        desc: 'Input aktivitas operator per hari',
         screen: 'AddDailyActivity',
         action: 'add',
         module: 'MOP',
@@ -75,6 +103,7 @@ const sectionConfig = [
       {
         icon: 'timer-outline',
         label: 'Lihat Train Hours',
+        desc: 'Lihat jam pelatihan operator',
         screen: 'TrainHours',
         action: 'read',
         module: 'MOP',
@@ -82,6 +111,7 @@ const sectionConfig = [
       {
         icon: 'add-circle-outline',
         label: 'Tambah Train Hours',
+        desc: 'Input jam pelatihan operator',
         screen: 'AddTrainHours',
         action: 'add',
         module: 'MOP',
@@ -94,6 +124,7 @@ const sectionConfig = [
       {
         icon: 'construct-outline',
         label: 'Data MOP',
+        desc: 'Lihat data performa operator',
         screen: 'Mop',
         action: 'read',
         module: 'MOP',
@@ -113,8 +144,9 @@ const MOPScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const {activeSite, roles} = useSiteContext();
   const [showMentoringFormPicker, setShowMentoringFormPicker] = useState(false);
+  const insets = useSafeAreaInsets();
+  const [loadingMaster, setLoadingMaster] = useState(false);
 
-  // Ambil permit dari context
   const permit: PermitType = getModulePermit(roles, activeSite ?? '', 'MOP');
 
   const handleMentoringFormPress = () => setShowMentoringFormPicker(true);
@@ -129,46 +161,87 @@ const MOPScreen: React.FC = () => {
     });
   };
 
+  const handleRefreshMaster = async () => {
+    setLoadingMaster(true);
+    try {
+      const session = await getSession();
+      const token = session?.token;
+
+      if (token) {
+        await cacheMopMasters(token);
+        console.log('🔄 Master MOP berhasil di-refresh manual');
+        alert('Data master berhasil di-refresh ✅');
+      } else {
+        console.warn('⚠️ Token tidak ditemukan untuk refresh manual');
+      }
+    } catch (err) {
+      console.error('❌ Gagal refresh data master:', err?.message || err);
+      alert('Gagal refresh data master ❌');
+    } finally {
+      setLoadingMaster(false);
+    }
+  };
+
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
-      <SafeAreaView style={mopStyles.safeArea}>
-        <ScrollView
-          contentContainerStyle={mopStyles.container}
-          showsVerticalScrollIndicator={false}>
-          <Text style={mopStyles.title}>Mine Operator Performance</Text>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
+      <SafeAreaView
+        style={[styles.safeArea, {paddingTop: insets.top}]}
+        pointerEvents={loadingMaster ? 'none' : 'auto'}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Mine Operator Performance</Text>
+          <TouchableOpacity
+            onPress={handleRefreshMaster}
+            disabled={loadingMaster}
+            style={[
+              styles.refreshButton,
+              loadingMaster && styles.refreshButtonDisabled,
+            ]}>
+            {loadingMaster ? (
+              <>
+                <ActivityIndicator
+                  size="small"
+                  color="#FFF"
+                  style={styles.refreshSpinner}
+                />
+                <Text style={styles.refreshText}>Merefresh...</Text>
+              </>
+            ) : (
+              <Text style={styles.refreshText}>🔄 Refresh Data Master</Text>
+            )}
+          </TouchableOpacity>
+
           {sectionConfig.map(section => (
             <View key={section.section}>
-              <Text style={mopStyles.section}>{section.section}</Text>
+              <Text style={styles.section}>{section.section}</Text>
               {section.items
                 .filter(item => actionChecker[item.action](permit))
                 .map(item => (
                   <TouchableOpacity
                     key={item.label}
-                    style={mopStyles.button}
+                    style={styles.menuCard}
                     activeOpacity={0.85}
                     onPress={() =>
                       item.customAction === 'openMentoringFormPicker'
                         ? handleMentoringFormPress()
                         : item.screen && navigation.navigate(item.screen)
                     }>
-                    <Icon
-                      name={item.icon}
-                      size={24}
-                      color="#1E90FF"
-                      style={{marginRight: 10}}
-                    />
-                    <Text style={mopStyles.buttonText}>{item.label}</Text>
+                    <View style={styles.iconCircle}>
+                      <Icon name={item.icon} size={24} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.menuInfo}>
+                      <Text style={styles.menuLabel}>{item.label}</Text>
+                      <Text style={styles.menuDesc}>{item.desc}</Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
             </View>
           ))}
         </ScrollView>
 
-        {/* Modal Pilihan Form Mentoring */}
         <Modal
           visible={showMentoringFormPicker}
           transparent

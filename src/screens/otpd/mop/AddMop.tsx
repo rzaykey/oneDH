@@ -66,7 +66,8 @@ const AddDailyActivity = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const getSession = async () => {
-    const token = await AsyncStorage.getItem('userToken');
+    const loginCache = await AsyncStorage.getItem('loginCache');
+    const token = loginCache ? JSON.parse(loginCache).token : null;
     const role = await AsyncStorage.getItem('userRole');
     const userString = await AsyncStorage.getItem('userData');
     const user = userString ? JSON.parse(userString) : null;
@@ -112,14 +113,17 @@ const AddDailyActivity = () => {
           const selectedKpi = kpiData[0].value;
           setFormData(prev => ({...prev, kpi_type: selectedKpi}));
 
-          const activityResp = await axios.get(`${API_BASE_URL.mop}/getActivity`, {
-            headers: {Authorization: `Bearer ${token}`},
-            params: {
-              kpi: selectedKpi,
-              role,
-              site,
+          const activityResp = await axios.get(
+            `${API_BASE_URL.mop}/getActivity`,
+            {
+              headers: {Authorization: `Bearer ${token}`},
+              params: {
+                kpi: selectedKpi,
+                role,
+                site,
+              },
             },
-          });
+          );
 
           const actData = activityResp.data.map(act => ({
             label: act.activity,
@@ -218,7 +222,8 @@ const AddDailyActivity = () => {
     }
 
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      const token = loginCache ? JSON.parse(loginCache).token : null;
       if (!token) {
         Alert.alert('Error', 'Token tidak ditemukan. Silakan login ulang.');
         return;

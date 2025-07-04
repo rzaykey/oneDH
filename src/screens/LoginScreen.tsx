@@ -20,6 +20,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import {useSiteContext} from '../context/SiteContext';
 import DeviceInfo from 'react-native-device-info';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -102,10 +103,10 @@ const LoginScreen = ({navigation}: Props) => {
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 0}}
-      style={[styles.container, {paddingBottom: insets.bottom}]}>
+      colors={['#FFBE00', '#B9DCEB']}
+      style={{flex: 1}}
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{flex: 1}}
@@ -179,9 +180,11 @@ const LoginScreen = ({navigation}: Props) => {
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => setShowPassword(v => !v)}>
-            <Text style={{color: '#888', fontSize: 16}}>
-              {showPassword ? '🙈' : '👁️'}
-            </Text>
+            <Icon
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color="#888"
+            />
           </TouchableOpacity>
         </View>
         {errors.pass ? (

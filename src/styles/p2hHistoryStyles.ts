@@ -20,7 +20,7 @@ export const p2hHistoryStyles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: '#1E90FF',
+    color: '#2463EB',
     marginVertical: 0, // <-- hilangkan, sudah cukup di headerWrap
     textAlign: 'center', // supaya teksnya juga rata tengah
   },
@@ -51,7 +51,7 @@ export const p2hHistoryStyles = StyleSheet.create({
   unitText: {
     fontWeight: 'bold',
     fontSize: 15,
-    color: '#1E90FF',
+    color: '#2463EB',
   },
   siteLabel: {
     backgroundColor: '#e3eafe',
@@ -129,6 +129,9 @@ export const p2hHistoryStyles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
     marginLeft: 2,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    maxWidth: '100%', // pastikan tidak melebihi container
   },
   emptyWrap: {
     alignItems: 'center',
@@ -138,7 +141,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     paddingHorizontal: 26,
   },
   emptyText: {
-    color: '#176B87', // Lebih readable di white/gradient
+    color: '#2463EB', // Lebih readable di white/gradient
     fontWeight: 'bold',
     fontSize: 17,
     textAlign: 'center',
@@ -197,5 +200,132 @@ export const p2hHistoryStyles = StyleSheet.create({
   limitTextActive: {
     color: '#2563eb',
     fontWeight: 'bold',
+  },
+  extraInfo: {
+    marginTop: 8,
+    paddingLeft: 8,
+  },
+
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+
+  actionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 4,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+
+  closeButton: {
+    backgroundColor: '#FF5722',
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  modalButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    marginHorizontal: 10,
+    borderRadius: 6,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 8,
+    minHeight: 60,
+    marginBottom: 10,
+    textAlignVertical: 'top', // penting untuk multiline
+  },
+  modalDateText: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  statusOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 6,
+    gap: 8,
+  },
+  statusOption: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#fff',
+  },
+  statusOptionSelected: {
+    borderColor: '#2563eb',
+    backgroundColor: '#dbeafe',
+  },
+  statusOptionText: {
+    color: '#333',
+  },
+  statusOptionTextSelected: {
+    color: '#2563eb',
+    fontWeight: 'bold',
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10, // jika React Native versi >= 0.71
+    marginBottom: 12,
+  },
+  dateTimeBox: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
   },
 });

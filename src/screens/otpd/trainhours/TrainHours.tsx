@@ -219,21 +219,70 @@ export default function TrainHoursScreen() {
     );
   };
 
+  const handleDelete = useCallback(
+    async (id: number) => {
+      if (!isConnected) {
+        Alert.alert('Offline', 'Hapus hanya tersedia saat online.');
+        return;
+      }
+      try {
+        const loginCache = await AsyncStorage.getItem('loginCache');
+        const token = loginCache ? JSON.parse(loginCache).token : null;
+        if (!token) return Alert.alert('Sesi Habis', 'Silakan login kembali.');
+        Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
+          {text: 'Batal', style: 'cancel'},
+          {
+            text: 'Hapus',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const res = await fetch(
+                  `${API_BASE_URL.mop}/trainHours/${id}/delete`,
+                  {
+                    method: 'DELETE',
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      'Content-Type': 'application/json',
+                      Accept: 'application/json',
+                    },
+                  },
+                );
+                const text = await res.text();
+                const json = JSON.parse(text);
+                if (json.success) {
+                  Alert.alert('Sukses', json.message);
+                  fetchDataAutoSync(true);
+                } else {
+                  Alert.alert('Gagal', json.message || 'Gagal menghapus data.');
+                }
+              } catch (err) {
+                Alert.alert('Error', 'Terjadi kesalahan saat menghapus.');
+              }
+            },
+          },
+        ]);
+      } catch (err) {
+        Alert.alert('Error', 'Terjadi kesalahan.');
+      }
+    },
+    [fetchDataAutoSync, isConnected],
+  );
+
   // Loading Spinner
   if (loading && !refreshing) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#2463EB" />
       </SafeAreaView>
     );
   }
 
   return (
     <LinearGradient
-      colors={['#FFD700', '#1E90FF']}
+      colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{x: 2, y: 2}}
+      end={{x: 1, y: 0}}>
       <SafeAreaView
         style={[
           {
@@ -272,7 +321,7 @@ export default function TrainHoursScreen() {
                 setPage(1);
               }}
               style={styles.picker}
-              dropdownIconColor="#1E90FF"
+              dropdownIconColor="#2463EB"
               mode="dropdown">
               {pageSizeOptions.map(size => (
                 <Picker.Item key={size} label={size.toString()} value={size} />
@@ -376,6 +425,15 @@ export default function TrainHoursScreen() {
                         style={styles.editButton}
                         onPress={() => handleEdit(item)}>
                         <Text style={styles.actionButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.deleteButton,
+                          !isConnected && {opacity: 0.4},
+                        ]}
+                        onPress={() => handleDelete(item.id)}
+                        disabled={!isConnected}>
+                        <Text style={styles.actionButtonText}>Hapus</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
