@@ -25,6 +25,7 @@ import {
 } from '../utils/offlineQueueHelper';
 import API_BASE_URL from '../config';
 import NetInfo from '@react-native-community/netinfo';
+import Toast from 'react-native-toast-message';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
 
@@ -145,12 +146,34 @@ const DashboardScreen: React.FC = () => {
             (session.role || session.roles || []).map((r: any) => r.code_site),
           ),
         ];
+        Toast.show({
+          type: 'success',
+          text1: 'Ganti Site',
+          text2: 'Silakan pilih lokasi baru.',
+          position: 'top',
+          visibilityTime: 2000,
+          topOffset: 50,
+        });
         navigation.replace('SitePicker', {sites: siteList});
       } else {
-        alert('Data login tidak ditemukan.');
+        Toast.show({
+          type: 'error',
+          text1: 'Data Tidak Ditemukan',
+          text2: 'Data login tidak tersedia. Silakan login ulang.',
+          position: 'top',
+          visibilityTime: 2500,
+          topOffset: 50,
+        });
       }
     } catch {
-      alert('Gagal mengambil data site.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal mengambil data site. Coba lagi nanti.',
+        position: 'top',
+        visibilityTime: 2500,
+        topOffset: 50,
+      });
     }
   };
 
@@ -158,9 +181,26 @@ const DashboardScreen: React.FC = () => {
     setRefreshingMaster(true);
     try {
       await cacheAllMasterData();
-      Alert.alert('Berhasil', 'Master data berhasil diperbarui.');
+
+      // ✅ Toast sukses
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil',
+        text2: 'Master data berhasil diperbarui.',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
     } catch (err) {
-      Alert.alert('Gagal', 'Gagal refresh master data, cek koneksi.');
+      // ❌ Toast gagal
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal refresh master data. Cek koneksi internet.',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: 50,
+      });
     } finally {
       setRefreshingMaster(false);
     }
@@ -174,13 +214,38 @@ const DashboardScreen: React.FC = () => {
     setRoles([]);
     setSites([]);
     setUser(null);
+
+    // ✅ Tampilkan notifikasi logout
+    Toast.show({
+      type: 'success',
+      text1: 'Berhasil Logout',
+      text2: 'Sampai jumpa lagi!',
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 50,
+    });
+
     navigation.replace('Login');
   };
 
   // Site chip (highlight active, bisa tap)
-  const SiteChip: React.FC<{site: string}> = ({site}) => (
+
+  const handleSiteSelect = (site: string) => {
+    setActiveSite(site);
+    Toast.show({
+      type: 'success',
+      text1: 'Site Dipilih',
+      text2: `Kamu memilih site: ${site}`,
+    });
+  };
+
+  const SiteChip: React.FC<{
+    site: string;
+    activeSite: string;
+    onPress: (site: string) => void;
+  }> = ({site, activeSite, onPress}) => (
     <TouchableOpacity
-      onPress={() => setActiveSite(site)}
+      onPress={() => onPress(site)}
       style={[styles.siteChip, activeSite === site && styles.siteChipActive]}>
       <Text
         style={[
@@ -204,7 +269,7 @@ const DashboardScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <View style={styles.container}>
@@ -261,7 +326,13 @@ const DashboardScreen: React.FC = () => {
                   <FlatList
                     data={sites}
                     keyExtractor={s => s}
-                    renderItem={({item}) => <SiteChip site={item} />}
+                    renderItem={({item}) => (
+                      <SiteChip
+                        site={item}
+                        activeSite={activeSite}
+                        onPress={handleSiteSelect}
+                      />
+                    )}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{alignItems: 'center'}}

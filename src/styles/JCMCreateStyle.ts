@@ -204,4 +204,17 @@ export const JCMCreateStyle = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
+  refreshButton: {
+    padding: 10,
+    backgroundColor: '#2563eb',
+    borderRadius: 6,
+    marginHorizontal: 24, // biar konsisten dengan tombol lain
+    margin: 5,
+  },
+  refreshButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

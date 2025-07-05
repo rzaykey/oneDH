@@ -128,4 +128,30 @@ export const createP2HStyles = StyleSheet.create({
   radioButton2Active: {backgroundColor: '#2463EB'},
   radioText2: {color: '#2463EB', fontWeight: '700'},
   radioText2Active: {color: '#fff'},
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280', // abu-abu soft
+    fontWeight: '500',
+  },
+  content: {
+    alignItems: 'center',
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#6b7280', // lighter gray
+  },
+  containerLoading: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

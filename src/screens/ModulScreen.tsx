@@ -13,7 +13,7 @@ const CARD_SIZE = (Dimensions.get('window').width - 54) / 2;
 const MODULE_TO_SCREEN: Record<string, string> = {
   P2H: 'P2HScreen',
   JCM: 'JCMScreen',
-  // MOP: 'MOPScreen',
+  MOP: 'MOPScreen',
 };
 
 const iconForModule = (mod: string) => {
@@ -69,7 +69,7 @@ const ModuleScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView
         style={[

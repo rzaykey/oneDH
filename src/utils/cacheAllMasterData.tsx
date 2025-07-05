@@ -18,7 +18,7 @@ export const cacheAllMasterData = async () => {
     const token = loginCache ? JSON.parse(loginCache).token || '' : '';
 
     await cacheOnedhMasters(token);
-    // await cacheMopMasters(token);
+    await cacheMopMasters(token);
 
     await AsyncStorage.setItem('cache_master_last', String(now));
     console.log('✅ Master data cached (all)');

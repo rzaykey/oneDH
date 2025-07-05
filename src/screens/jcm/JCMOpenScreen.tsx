@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
+  Image,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -18,6 +19,7 @@ import {JCMItem} from '../../navigation/types';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
+import Toast from 'react-native-toast-message';
 
 interface BadgeProps {
   label: string;
@@ -79,8 +81,14 @@ const JCMOpenScreen: React.FC = () => {
       const token = cache && JSON.parse(cache)?.token;
 
       if (!token) {
-        setError('Session habis. Silakan login ulang.');
+        const message = 'Session habis. Silakan login ulang.';
+        setError(message);
         setHistory([]);
+        Toast.show({
+          type: 'error',
+          text1: 'Session Expired',
+          text2: message,
+        });
         setLoading(false);
         setIsLoadingMore(false);
         return;
@@ -91,12 +99,20 @@ const JCMOpenScreen: React.FC = () => {
       });
 
       const json = await response.json();
+
       if (!response.ok) {
-        setError(json?.message || 'Gagal mengambil data.');
+        const errorMsg = json?.message || 'Gagal mengambil data.';
+        setError(errorMsg);
         setHistory([]);
+        Toast.show({
+          type: 'error',
+          text1: 'Fetch Error',
+          text2: errorMsg,
+        });
       } else {
         const data: JCMItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
+
         if (isLoadMore) {
           setHistory(prev => [...prev, ...data]);
           setPage(currentPage);
@@ -107,10 +123,25 @@ const JCMOpenScreen: React.FC = () => {
 
         setTotalPages(totalPagesFromApi);
         setHasMore(currentPage < totalPagesFromApi);
+
+        // Optional: Show success toast if needed
+        if (!isLoadMore) {
+          Toast.show({
+            type: 'success',
+            text1: 'Data Diperbarui',
+            text2: `Menampilkan halaman ${totalPagesFromApi}`,
+          });
+        }
       }
     } catch (err) {
-      setError('Tidak dapat terhubung ke server.');
+      const errorMsg = 'Tidak dapat terhubung ke server.';
+      setError(errorMsg);
       if (!isLoadMore) setHistory([]);
+      Toast.show({
+        type: 'error',
+        text1: 'Network Error',
+        text2: errorMsg,
+      });
     }
 
     setLoading(false);
@@ -129,7 +160,11 @@ const JCMOpenScreen: React.FC = () => {
       const token = cache && JSON.parse(cache)?.token;
 
       if (!token) {
-        alert('Session habis. Silakan login ulang.');
+        Toast.show({
+          type: 'error',
+          text1: 'Session Expired',
+          text2: 'Session habis. Silakan login ulang.',
+        });
         return;
       }
 
@@ -144,16 +179,31 @@ const JCMOpenScreen: React.FC = () => {
           validated, // true untuk validasi, false untuk unvalidasi
         }),
       });
+
       const json = await response.json();
 
       if (!response.ok) {
-        alert(json?.message || 'Gagal memproses validasi.');
+        Toast.show({
+          type: 'error',
+          text1: 'Validasi Gagal',
+          text2: json?.message || 'Gagal memproses validasi.',
+        });
       } else {
-        alert(validated ? 'Berhasil divalidasi.' : 'Berhasil di-unvalidasi.');
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil',
+          text2: validated
+            ? 'Data berhasil divalidasi.'
+            : 'Validasi dibatalkan.',
+        });
         fetchHistory(false, page); // Refresh list
       }
     } catch (error) {
-      alert('Terjadi kesalahan saat menghubungi server.');
+      Toast.show({
+        type: 'error',
+        text1: 'Server Error',
+        text2: 'Terjadi kesalahan saat menghubungi server.',
+      });
     }
   };
 
@@ -267,11 +317,14 @@ const JCMOpenScreen: React.FC = () => {
     message = 'Data kosong/belum ada pengerjaan dari mekanik.',
   }) => (
     <View style={styles.emptyWrap}>
-      <Icon
-        name="file-tray-outline"
-        size={56}
-        color="#c9c9c9"
-        style={{marginBottom: 6}}
+      <Image
+        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        style={{
+          width: 240,
+          height: 240,
+          marginBottom: 12,
+          resizeMode: 'contain',
+        }}
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
@@ -294,7 +347,7 @@ const JCMOpenScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={[styles.container]}>
         <View style={styles.headerWrap}>

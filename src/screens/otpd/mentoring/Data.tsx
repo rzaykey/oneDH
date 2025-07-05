@@ -10,12 +10,11 @@ import {
   Alert,
   UIManager,
   Platform,
-  ToastAndroid,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {tabelStyles as styles} from '../../../styles/tabelStyles';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList, MentoringData} from '../../../navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,6 +23,7 @@ import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import NetInfo from '@react-native-community/netinfo';
 import API_BASE_URL from '../../../config';
+import Toast from 'react-native-toast-message';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android') {
@@ -77,23 +77,21 @@ export default function Data() {
       setSyncing(true);
       try {
         if (!isConnected) {
-          // OFFLINE: ambil cache
           const cache = await AsyncStorage.getItem('cached_mentoring_data');
           setData(cache ? JSON.parse(cache) : []);
-          setLoading(false);
-          setRefreshing(false);
-          setSyncing(false);
+          Toast.show({
+            type: 'info',
+            text1: 'Mode Offline',
+            text2: 'Data dimuat dari cache 📦',
+          });
           return;
         }
 
-        // ONLINE: Cek last_update
         const summary = await getSummary();
         const lastUpdate = summary?.last_update || '';
         const localUpdate = await AsyncStorage.getItem('mentoring_last_update');
 
-        // Jika ada update, atau force refresh
         if (forceServer || (lastUpdate && lastUpdate !== localUpdate)) {
-          // Fetch baru!
           const res = await fetch(`${API_BASE_URL.mop}/mentoring-data`);
           const json = await res.json();
           const arr = Array.isArray(json) ? json : json.data || [];
@@ -103,14 +101,29 @@ export default function Data() {
             JSON.stringify(arr),
           );
           await AsyncStorage.setItem('mentoring_last_update', lastUpdate || '');
+
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil Sinkronisasi ✅',
+            text2: 'Data mentoring berhasil diperbarui',
+          });
         } else {
-          // Tidak ada perubahan, load dari cache saja
           const cache = await AsyncStorage.getItem('cached_mentoring_data');
           setData(cache ? JSON.parse(cache) : []);
+          Toast.show({
+            type: 'info',
+            text1: 'Tidak Ada Perubahan',
+            text2: 'Data sudah versi terbaru',
+          });
         }
       } catch (err) {
         const cache = await AsyncStorage.getItem('cached_mentoring_data');
         setData(cache ? JSON.parse(cache) : []);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Memuat Data ❌',
+          text2: 'Terjadi kesalahan saat sinkronisasi',
+        });
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -130,14 +143,6 @@ export default function Data() {
     }
     return () => interval && clearInterval(interval);
   }, [fetchDataAutoSync, isConnected]);
-
-  // Force Refresh button
-  const handleForceRefresh = async () => {
-    setSyncing(true);
-    await fetchDataAutoSync(true);
-    setSyncing(false);
-    ToastAndroid.show('Data di-refresh dari server!', ToastAndroid.SHORT);
-  };
 
   // Pull to refresh (swipe down)
   const onRefresh = () => {
@@ -176,51 +181,71 @@ export default function Data() {
   const handleDelete = useCallback(
     async (id: number) => {
       if (!isConnected || syncing) {
-        Alert.alert(
-          'Offline',
-          'Hapus hanya tersedia saat online & tidak sedang sync.',
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Offline',
+          text2: 'Hapus hanya tersedia saat online & tidak sedang sync.',
+        });
         return;
       }
-      try {
-        const loginCache = await AsyncStorage.getItem('loginCache');
-        const token = loginCache ? JSON.parse(loginCache).token : null;
-        if (!token) return Alert.alert('Sesi Habis', 'Silakan login kembali.');
-        Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
-          {text: 'Batal', style: 'cancel'},
-          {
-            text: 'Hapus',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                const res = await fetch(
-                  `${API_BASE_URL.mop}/mentoring/${id}/delete`,
-                  {
-                    method: 'DELETE',
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      'Content-Type': 'application/json',
-                      Accept: 'application/json',
-                    },
-                  },
-                );
-                const text = await res.text();
-                const json = JSON.parse(text);
-                if (json.success) {
-                  Alert.alert('Sukses', json.message);
-                  fetchDataAutoSync(true);
-                } else {
-                  Alert.alert('Gagal', json.message || 'Gagal menghapus data.');
-                }
-              } catch (err) {
-                Alert.alert('Error', 'Terjadi kesalahan saat menghapus.');
-              }
-            },
-          },
-        ]);
-      } catch (err) {
-        Alert.alert('Error', 'Terjadi kesalahan.');
+
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      const token = loginCache ? JSON.parse(loginCache).token : null;
+      if (!token) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sesi Habis',
+          text2: 'Silakan login kembali.',
+        });
+        return;
       }
+
+      Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
+        {text: 'Batal', style: 'cancel'},
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await fetch(
+                `${API_BASE_URL.mop}/mentoring/${id}/delete`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                  },
+                },
+              );
+
+              const text = await res.text();
+              const json = JSON.parse(text);
+
+              if (json.success) {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Berhasil Dihapus ✅',
+                  text2: json.message || 'Data berhasil dihapus.',
+                });
+                fetchDataAutoSync(true);
+              } else {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Gagal Menghapus ❌',
+                  text2: json.message || 'Terjadi kesalahan saat menghapus.',
+                });
+              }
+            } catch (err) {
+              Toast.show({
+                type: 'error',
+                text1: 'Gagal Menghapus',
+                text2: 'Terjadi kesalahan saat menghapus data.',
+              });
+            }
+          },
+        },
+      ]);
     },
     [fetchDataAutoSync, isConnected, syncing],
   );
@@ -257,9 +282,16 @@ export default function Data() {
   // Loader
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#2463EB" />
-        <Text style={{marginTop: 12}}>Memuat data...</Text>
+      <SafeAreaView
+        style={[
+          styles.containerLoading,
+          {paddingTop: insets.top, paddingBottom: insets.bottom},
+        ]}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.titleLoading}>Memuat data...</Text>
+          <Text style={styles.subtitle}>Mohon tunggu sebentar</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -269,7 +301,7 @@ export default function Data() {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1, marginVertical: 18}}>
         <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>

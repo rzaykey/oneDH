@@ -22,6 +22,7 @@ import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import API_BASE_URL from '../../../config';
 import LinearGradient from 'react-native-linear-gradient';
+import Toast from 'react-native-toast-message';
 import NetInfo from '@react-native-community/netinfo';
 
 // Aktifkan LayoutAnimation Android
@@ -72,6 +73,7 @@ const EditDailyActivity = ({route}) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Online/offline
   useEffect(() => {
@@ -109,7 +111,16 @@ const EditDailyActivity = ({route}) => {
             `${API_BASE_URL.mop}/dayActivities/${id}/edit`,
           );
           const rawData = res.data?.data;
-          if (!rawData) return Alert.alert('Error', 'Data tidak ditemukan');
+
+          if (!rawData) {
+            Toast.show({
+              type: 'error',
+              text1: 'Data Tidak Ditemukan',
+              text2: 'Data tidak tersedia di server.',
+            });
+            return;
+          }
+
           setFormData({
             jde_no: rawData.jde_no || '',
             employee_name: rawData.employee_name || '',
@@ -122,13 +133,23 @@ const EditDailyActivity = ({route}) => {
             total_hour: String(rawData.total_hour || ''),
           });
           setUnitValue(rawData.unit_detail || '');
-          if (rawData.date_activity)
+          if (rawData.date_activity) {
             setSelectedDate(new Date(rawData.date_activity));
+          }
+
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil Memuat',
+            text2: 'Data detail berhasil dimuat dari server.',
+          });
         } catch {
-          Alert.alert('Error', 'Gagal mengambil data detail dari server.');
+          Toast.show({
+            type: 'error',
+            text1: 'Gagal Mengambil Data',
+            text2: 'Terjadi kesalahan saat memuat data dari server.',
+          });
         }
       } else {
-        // OFFLINE: ambil dari cache index
         const cache = await AsyncStorage.getItem('cached_daily_activity_list');
         if (cache) {
           const arr = JSON.parse(cache);
@@ -146,23 +167,129 @@ const EditDailyActivity = ({route}) => {
               total_hour: String(rawData.total_hour || ''),
             });
             setUnitValue(rawData.unit_detail || '');
-            if (rawData.date_activity)
+            if (rawData.date_activity) {
               setSelectedDate(new Date(rawData.date_activity));
+            }
+
+            Toast.show({
+              type: 'info',
+              text1: 'Mode Offline',
+              text2: 'Data diambil dari cache.',
+            });
           } else {
-            Alert.alert(
-              'Offline',
-              'Data tidak ditemukan di cache. Silakan online dulu.',
-            );
+            Toast.show({
+              type: 'error',
+              text1: 'Data Tidak Ditemukan',
+              text2: 'Data tidak tersedia di cache offline.',
+            });
           }
         } else {
-          Alert.alert(
-            'Offline',
-            'Cache kosong. Silakan online untuk ambil data.',
-          );
+          Toast.show({
+            type: 'error',
+            text1: 'Cache Kosong',
+            text2: 'Tidak ada data offline. Silakan online terlebih dahulu.',
+          });
         }
       }
+
       setLoading(false);
     };
+
+    fetchData();
+  }, [id, isConnected]);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      if (isConnected) {
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL.mop}/dayActivities/${id}/edit`,
+          );
+          const rawData = res.data?.data;
+
+          if (!rawData) {
+            Toast.show({
+              type: 'error',
+              text1: 'Data Tidak Ditemukan',
+              text2: 'Data tidak tersedia di server.',
+            });
+            return;
+          }
+
+          setFormData({
+            jde_no: rawData.jde_no || '',
+            employee_name: rawData.employee_name || '',
+            site: rawData.site || '',
+            date_activity: rawData.date_activity || '',
+            kpi_type: rawData.kpi_type || '',
+            activity: rawData.activity || '',
+            unit_detail: rawData.unit_detail || '',
+            total_participant: String(rawData.total_participant || ''),
+            total_hour: String(rawData.total_hour || ''),
+          });
+          setUnitValue(rawData.unit_detail || '');
+          if (rawData.date_activity) {
+            setSelectedDate(new Date(rawData.date_activity));
+          }
+
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil Memuat',
+            text2: 'Data detail berhasil dimuat dari server.',
+          });
+        } catch {
+          Toast.show({
+            type: 'error',
+            text1: 'Gagal Mengambil Data',
+            text2: 'Terjadi kesalahan saat memuat data dari server.',
+          });
+        }
+      } else {
+        const cache = await AsyncStorage.getItem('cached_daily_activity_list');
+        if (cache) {
+          const arr = JSON.parse(cache);
+          const rawData = arr.find(item => String(item.id) === String(id));
+          if (rawData) {
+            setFormData({
+              jde_no: rawData.jde_no || '',
+              employee_name: rawData.employee_name || '',
+              site: rawData.site || '',
+              date_activity: rawData.date_activity || '',
+              kpi_type: rawData.kpi_type || '',
+              activity: rawData.activity || '',
+              unit_detail: rawData.unit_detail || '',
+              total_participant: String(rawData.total_participant || ''),
+              total_hour: String(rawData.total_hour || ''),
+            });
+            setUnitValue(rawData.unit_detail || '');
+            if (rawData.date_activity) {
+              setSelectedDate(new Date(rawData.date_activity));
+            }
+
+            Toast.show({
+              type: 'info',
+              text1: 'Mode Offline',
+              text2: 'Data diambil dari cache.',
+            });
+          } else {
+            Toast.show({
+              type: 'error',
+              text1: 'Data Tidak Ditemukan',
+              text2: 'Data tidak tersedia di cache offline.',
+            });
+          }
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Cache Kosong',
+            text2: 'Tidak ada data offline. Silakan online terlebih dahulu.',
+          });
+        }
+      }
+
+      setLoading(false);
+    };
+
     fetchData();
   }, [id, isConnected]);
 
@@ -207,10 +334,14 @@ const EditDailyActivity = ({route}) => {
   // Submit update (PUT)
   const handleSubmit = async () => {
     if (!isConnected) {
-      Alert.alert('Offline', 'Edit hanya bisa disimpan ketika online.');
+      Toast.show({
+        type: 'error',
+        text1: 'Mode Offline',
+        text2: 'Edit hanya bisa dilakukan saat online.',
+      });
       return;
     }
-    // Validasi
+
     const requiredFields = [
       'jde_no',
       'employee_name',
@@ -222,38 +353,55 @@ const EditDailyActivity = ({route}) => {
       'total_participant',
       'total_hour',
     ];
+
     for (const field of requiredFields) {
       if (!formData[field]) {
-        Alert.alert('Validasi Gagal', `Field "${field}" wajib diisi.`);
+        Toast.show({
+          type: 'error',
+          text1: 'Validasi Gagal',
+          text2: `Field "${field}" wajib diisi.`,
+        });
         return;
       }
     }
+
     if (!Number.isInteger(Number(formData.activity))) {
-      Alert.alert('Validasi Gagal', 'Activity ID tidak valid.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Activity ID harus berupa angka.',
+      });
       return;
     }
-    const payload = {
-      edit_id: Number(id),
-      edit_jde: formData.jde_no,
-      edit_name: formData.employee_name,
-      edit_site: formData.site,
-      edit_date: formData.date_activity,
-      edit_kpi: formData.kpi_type,
-      edit_activity: Number(formData.activity),
-      edit_unit_detail: Number(formData.unit_detail),
-      edit_jml_peserta: Number(formData.total_participant),
-      edit_total_hour: Number(formData.total_hour),
-    };
+
+    setSubmitting(true); // Start loading
+
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
       if (!token) {
-        Alert.alert('Error', 'Token tidak ditemukan. Silakan login ulang.');
+        Toast.show({
+          type: 'error',
+          text1: 'Autentikasi Gagal',
+          text2: 'Token tidak ditemukan. Silakan login ulang.',
+        });
         return;
       }
+
       const response = await axios.put(
         `${API_BASE_URL.mop}/dayActivities/${id}/update`,
-        payload,
+        {
+          edit_id: Number(id),
+          edit_jde: formData.jde_no,
+          edit_name: formData.employee_name,
+          edit_site: formData.site,
+          edit_date: formData.date_activity,
+          edit_kpi: formData.kpi_type,
+          edit_activity: Number(formData.activity),
+          edit_unit_detail: Number(formData.unit_detail),
+          edit_jml_peserta: Number(formData.total_participant),
+          edit_total_hour: Number(formData.total_hour),
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -262,24 +410,31 @@ const EditDailyActivity = ({route}) => {
           },
         },
       );
+
       if (response.data.success) {
-        Alert.alert(
-          'Sukses',
-          response.data.message || 'Data berhasil disimpan',
-        );
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: response.data.message || 'Data berhasil disimpan.',
+        });
         navigation.navigate('DailyActivity');
       } else {
-        Alert.alert('Gagal', response.data.message || 'Gagal menyimpan data');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: response.data.message || 'Gagal menyimpan data.',
+        });
       }
     } catch (error) {
-      if (error.response?.data?.errors) {
-        const messages = Object.values(error.response.data.errors)
-          .flat()
-          .join('\n');
-        Alert.alert('Validasi Gagal', messages);
-      } else {
-        Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data');
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Kesalahan',
+        text2:
+          error.response?.data?.message ||
+          'Terjadi kesalahan saat menyimpan data.',
+      });
+    } finally {
+      setSubmitting(false); // End loading
     }
   };
 
@@ -302,7 +457,7 @@ const EditDailyActivity = ({route}) => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <KeyboardAwareScrollView
@@ -440,7 +595,21 @@ const EditDailyActivity = ({route}) => {
           </CollapsibleCard>
           {/* Simpan */}
           <View style={{marginTop: 24}}>
-            <Button title="Simpan" onPress={handleSubmit} />
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={submitting}
+              style={{
+                backgroundColor: submitting ? '#888' : '#2463EB',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}>
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={{color: '#fff', fontWeight: 'bold'}}>Simpan</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </KeyboardAwareScrollView>
       </SafeAreaView>

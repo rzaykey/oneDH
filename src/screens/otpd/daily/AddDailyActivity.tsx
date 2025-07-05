@@ -300,7 +300,7 @@ const AddDailyActivity = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <View style={{flex: 1}}>
         <KeyboardAwareScrollView

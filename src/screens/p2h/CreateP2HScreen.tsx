@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
 import LinearGradient from 'react-native-linear-gradient';
 import DeviceInfo from 'react-native-device-info';
+import Toast from 'react-native-toast-message';
 
 import {
   addQueueOffline,
@@ -113,16 +114,18 @@ const CreateP2HScreen = ({navigation}) => {
       let modelData = [],
         questionData = [],
         deptData = [];
+
       if (isConnected) {
         try {
           const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`);
           const modelJson = await modelRes.json();
           modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
-          if (modelData.length > 0)
+          if (modelData.length > 0) {
             await AsyncStorage.setItem(
               'master_model',
               JSON.stringify(modelData),
             );
+          }
         } catch {
           const m = await AsyncStorage.getItem('master_model');
           modelData = m ? JSON.parse(m) : [];
@@ -132,11 +135,12 @@ const CreateP2HScreen = ({navigation}) => {
           const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`);
           const qJson = await qRes.json();
           questionData = Array.isArray(qJson.data) ? qJson.data : [];
-          if (questionData.length > 0)
+          if (questionData.length > 0) {
             await AsyncStorage.setItem(
               'master_questions',
               JSON.stringify(questionData),
             );
+          }
         } catch {
           const q = await AsyncStorage.getItem('master_questions');
           questionData = q ? JSON.parse(q) : [];
@@ -146,8 +150,9 @@ const CreateP2HScreen = ({navigation}) => {
           const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`);
           const dJson = await dRes.json();
           deptData = Array.isArray(dJson.data) ? dJson.data : [];
-          if (deptData.length > 0)
+          if (deptData.length > 0) {
             await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
+          }
         } catch {
           const d = await AsyncStorage.getItem('master_dept');
           deptData = d ? JSON.parse(d) : [];
@@ -160,14 +165,32 @@ const CreateP2HScreen = ({navigation}) => {
         const d = await AsyncStorage.getItem('master_dept');
         deptData = d ? JSON.parse(d) : [];
       }
+
       setModelList(modelData);
       setQuestionList(questionData);
       setDeptList(deptData);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil Refresh Data',
+        text2: isConnected
+          ? 'Data master berhasil diperbarui dari server'
+          : 'Tidak ada koneksi. Menggunakan data lokal.',
+        position: 'top',
+      });
     } catch (err) {
       setModelList([]);
       setQuestionList([]);
       setDeptList([]);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Memuat Data',
+        text2: 'Terjadi kesalahan saat mengambil data master',
+        position: 'top',
+      });
     }
+
     setLoadingMaster(false);
   };
 
@@ -288,12 +311,54 @@ const CreateP2HScreen = ({navigation}) => {
 
   // ==== 7. Validasi form ====
   function isFormValid() {
-    if (!nounit) return 'No. Unit wajib diisi!';
-    if (!model) return 'Model Unit wajib dipilih!';
-    if (!KM) return 'HM wajib diisi!';
-    if (!section) return 'Section wajib diisi!';
-    if (!site) return 'Site wajib diisi!';
-    if (!dept) return 'Departemen wajib dipilih!';
+    if (!nounit) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'No. Unit wajib diisi!',
+      });
+      return false;
+    }
+    if (!model) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Model Unit wajib dipilih!',
+      });
+      return false;
+    }
+    if (!KM) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'HM wajib diisi!',
+      });
+      return false;
+    }
+    if (!section) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Section wajib diisi!',
+      });
+      return false;
+    }
+    if (!site) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Site wajib diisi!',
+      });
+      return false;
+    }
+    if (!dept) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Departemen wajib dipilih!',
+      });
+      return false;
+    }
     const checklistQuestions = questionList.filter(
       q => String(q.id) !== '27' && String(q.id) !== '28',
     );
@@ -301,11 +366,31 @@ const CreateP2HScreen = ({navigation}) => {
       checklistQuestions.length > 0 &&
       checklistQuestions.some(q => !inlineRadioOptions[q.id])
     ) {
-      return 'Semua checklist wajib diisi!';
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Semua checklist wajib diisi!',
+      });
+      return false;
     }
-    if (!stickerCommissioning) return 'Stiker Commisioning wajib dipilih!';
-    if (!stickerFuelPermit) return 'Stiker Fuel Permit wajib dipilih!';
-    return '';
+    if (!stickerCommissioning) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Stiker Commisioning wajib dipilih!',
+      });
+      return false;
+    }
+    if (!stickerFuelPermit) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validasi Gagal',
+        text2: 'Stiker Fuel Permit wajib dipilih!',
+      });
+      return false;
+    }
+
+    return true;
   }
 
   // ==== 8. Checklist handler ====
@@ -314,12 +399,12 @@ const CreateP2HScreen = ({navigation}) => {
   }, []);
 
   // ==== 9. Submit ====
+
   const handleSubmit = async () => {
-    const errorMsg = isFormValid();
-    if (errorMsg) {
-      Alert.alert('Validasi', errorMsg);
+    if (!isFormValid()) {
       return;
     }
+
     setLoading(true);
 
     const checklistQuestions = questionList.filter(
@@ -328,7 +413,6 @@ const CreateP2HScreen = ({navigation}) => {
     const jawabanChecklist = checklistQuestions.map(
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
-    // Ambil info device
 
     const type = DeviceInfo.getSystemName();
     const version = DeviceInfo.getVersion();
@@ -350,6 +434,7 @@ const CreateP2HScreen = ({navigation}) => {
       keterangan,
       device_info: `(${type})(${build})(${version})`,
     };
+
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -357,18 +442,19 @@ const CreateP2HScreen = ({navigation}) => {
       setLoading(false);
       await removeDraft();
       resetForm();
-      Alert.alert(
-        'Offline',
-        'Data disimpan ke antrian offline. Akan dikirim otomatis saat online!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.replace('P2HMyHistory'),
-          },
-        ],
-      );
+
+      Toast.show({
+        type: 'info',
+        text1: 'Offline',
+        text2:
+          'Data disimpan ke antrian offline. Akan dikirim otomatis saat online!',
+        position: 'top',
+      });
+
+      navigation.replace('P2HMyHistory');
       return;
     }
+
     // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
@@ -381,12 +467,12 @@ const CreateP2HScreen = ({navigation}) => {
         },
         body: JSON.stringify(payload),
       });
+
       const data = await response.json();
       setLoading(false);
 
       if (response.ok && data.status === true) {
         await removeDraft();
-        // ✅ SIMPAN SECTION DAN DEPT TERAKHIR
         await AsyncStorage.setItem('last_section', section);
         await AsyncStorage.setItem('last_dept', dept);
         await AsyncStorage.setItem('last_nounit', nounit);
@@ -404,18 +490,31 @@ const CreateP2HScreen = ({navigation}) => {
           await refreshQueueCount();
           setSyncing(false);
         }
-        Alert.alert('Sukses', data.message || 'P2H berhasil disimpan!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.replace('P2HMyHistory'),
-          },
-        ]);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: data.message || 'P2H berhasil disimpan!',
+          position: 'top',
+        });
+
+        navigation.replace('P2HMyHistory');
       } else {
-        Alert.alert('Gagal', data.message || 'Gagal mengirim data!');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: data.message || 'Gagal mengirim data!',
+          position: 'top',
+        });
       }
     } catch (err) {
       setLoading(false);
-      Alert.alert('Error', 'Gagal mengirim data. Periksa koneksi atau server!');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Gagal mengirim data. Periksa koneksi atau server!',
+        position: 'top',
+      });
     }
   };
 
@@ -430,12 +529,13 @@ const CreateP2HScreen = ({navigation}) => {
     return (
       <SafeAreaView
         style={[
-          styles.container,
+          styles.containerLoading,
           {paddingTop: insets.top, paddingBottom: insets.bottom},
         ]}>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View style={styles.content}>
           <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={{marginTop: 12}}>Loading...</Text>
+          <Text style={styles.title}>Memuat data...</Text>
+          <Text style={styles.subtitle}>Mohon tunggu sebentar</Text>
         </View>
       </SafeAreaView>
     );
@@ -445,7 +545,7 @@ const CreateP2HScreen = ({navigation}) => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={[styles.container]}>
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>

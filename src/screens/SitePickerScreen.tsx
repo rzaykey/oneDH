@@ -5,6 +5,7 @@ import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {sitePickerStyles as styles} from '../styles/sitePickerStyles';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSiteContext} from '../context/SiteContext';
+import Toast from 'react-native-toast-message';
 
 const SitePickerScreen = () => {
   const navigation = useNavigation();
@@ -15,7 +16,17 @@ const SitePickerScreen = () => {
   const sites = route.params?.sites || [];
 
   const handlePickSite = site => {
-    setActiveSite(site); // Update context!
+    setActiveSite(site);
+
+    Toast.show({
+      type: 'success',
+      text1: 'Site Dipilih',
+      text2: `Lokasi aktif: ${site}`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 50,
+    });
+
     navigation.replace('MainApp'); // atau Dashboard
   };
 
@@ -23,7 +34,7 @@ const SitePickerScreen = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
         <View style={styles.inner}>

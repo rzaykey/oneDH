@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import {pickerSelectStyles} from '../../../styles/pickerSelectStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import API_BASE_URL from '../../../config';
+import Toast from 'react-native-toast-message';
 
 // Enable LayoutAnimation untuk Android
 if (Platform.OS === 'android') {
@@ -98,16 +99,22 @@ const EditDataMentoring = ({route}) => {
         const res = await axios.get(`${API_BASE_URL.mop}/mentoring/${id}/edit`);
         const {header, model_unit, unit, indicators, details} =
           res.data?.data || {};
+
         setModelUnitRaw(model_unit || []);
         setUnitRaw(unit || []);
         setIndicators(indicators || {});
         setEditableDetails(details || []);
 
         if (!header) {
-          alert('Data header tidak ditemukan');
+          Toast.show({
+            type: 'error',
+            text1: 'Data Tidak Ditemukan ❌',
+            text2: 'Data header tidak ditemukan.',
+          });
           setLoading(false);
           return;
         }
+
         setHeaderData(header);
         setOperatorJDE(header.operator_jde);
         setOperatorName(header.operator_name);
@@ -116,11 +123,13 @@ const EditDataMentoring = ({route}) => {
 
         if (header.date_mentoring)
           setDateMentoring(new Date(header.date_mentoring.split(' ')[0]));
+
         if (header.start_time) {
           const [sh, sm] = header.start_time.split(':').map(Number);
           const now = new Date();
           setStartTime(new Date(now.setHours(sh, sm, 0, 0)));
         }
+
         if (header.end_time) {
           const [eh, em] = header.end_time.split(':').map(Number);
           const now = new Date();
@@ -142,30 +151,60 @@ const EditDataMentoring = ({route}) => {
         setArea(header.area || '');
       } catch (error) {
         console.error('Fetch data error:', error);
-        alert('Gagal mengambil data');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Mengambil Data ❌',
+          text2: 'Terjadi kesalahan saat memuat data mentoring.',
+        });
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [id]);
 
   // === Search Operator Handler ===
-  const searchOperator = async text => {
+  const searchTimeout = useRef(null);
+  const abortControllerRef = useRef(null);
+
+  const searchOperator = text => {
     setOperatorQuery(text);
     setShowResults(true);
-    if (text.length >= 2) {
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL.mop}/getEmployeeOperator?q=${text}`,
-        );
-        setSearchResults(response.data);
-      } catch (error) {
-        console.error('Gagal mencari operator:', error);
-      }
-    } else {
+
+    // Reset results kalau kurang dari 2 karakter
+    if (text.length < 2) {
       setSearchResults([]);
+      return;
     }
+
+    // Debounce input: batalkan timer sebelumnya
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        // Batalkan request sebelumnya (jika masih berjalan)
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const res = await axios.get(
+          `${API_BASE_URL.mop}/getEmployeeOperator?q=${text}`,
+          {signal: controller.signal},
+        );
+        setSearchResults(res.data);
+      } catch (error) {
+        if (axios.isCancel(error) || error.name === 'CanceledError') {
+          console.log('Request dibatalkan');
+        } else {
+          console.error('❌ Gagal mencari operator:', error.message);
+        }
+      }
+    }, 300); // delay 300ms setelah user berhenti ngetik
   };
 
   // === Pilih Operator dari hasil search ===
@@ -457,26 +496,25 @@ const EditDataMentoring = ({route}) => {
         },
       );
       if (response.data.success) {
-        alert('Data mentoring berhasil diperbarui!');
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Data mentoring berhasil diperbarui!',
+        });
         navigation.goBack();
       } else {
         throw new Error(response.data.message || 'Gagal memperbarui data');
       }
     } catch (error) {
       console.error('Submission error:', error);
-      if (error.response?.status === 401) {
-        // // INI yang penting: hanya hapus loginCache
-        // await AsyncStorage.removeItem('loginCache');
-        // alert('Sesi telah berakhir. Silakan login kembali.');
-        // navigation.reset({index: 0, routes: [{name: 'Login'}]});
-      } else {
-        Alert.alert(
-          'Error',
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2:
           error.response?.data?.message ||
-            error.message ||
-            'Terjadi kesalahan saat mengupdate data',
-        );
-      }
+          error.message ||
+          'Terjadi kesalahan saat mengupdate data',
+      });
     } finally {
       setLoading(false);
     }
@@ -503,7 +541,7 @@ const EditDataMentoring = ({route}) => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <KeyboardAvoidingView
         style={{flex: 1}}

@@ -279,6 +279,24 @@ export const editDataStyles = StyleSheet.create({
     backgroundColor: '#fff',
     lineHeight: 24, // pastikan cukup besar
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  clearButton: {
+    marginLeft: 12,
+    backgroundColor: '#FF3B30',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });
 export const operatorDropdownBox = {
   position: 'absolute',

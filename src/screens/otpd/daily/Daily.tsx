@@ -25,6 +25,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import API_BASE_URL from '../../../config';
 import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
+import Toast from 'react-native-toast-message';
 
 const pageSizeOptions = [5, 10, 50, 100];
 
@@ -96,18 +97,22 @@ export default function Daily() {
             'cached_daily_activity_list',
           );
           setData(cache ? JSON.parse(cache) : []);
-          setLoading(false);
-          setRefreshing(false);
+          Toast.show({
+            type: 'info',
+            text1: 'Mode Offline',
+            text2: 'Menggunakan data terakhir yang tersimpan.',
+          });
           return;
         }
 
         // Ambil summary dari server
         const {max_id: serverMaxId, last_update: serverLastUpdate} =
           await getServerSummary();
+
         const localMaxId = await AsyncStorage.getItem('daily_max_id');
         const localLastUpdate = await AsyncStorage.getItem('daily_last_update');
 
-        // Kalau ada perubahan, fetch ulang
+        // Jika data berubah atau dipaksa refresh
         if (
           forceServer ||
           localMaxId !== serverMaxId ||
@@ -116,6 +121,7 @@ export default function Daily() {
           const res = await fetch(`${API_BASE_URL.mop}/apiDayActAll`);
           const json = await res.json();
           const arr = Array.isArray(json) ? json : json.data || [];
+
           setData(arr);
           await AsyncStorage.setItem(
             'cached_daily_activity_list',
@@ -126,21 +132,34 @@ export default function Daily() {
             'daily_last_update',
             serverLastUpdate || '',
           );
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil Sinkronisasi ✅',
+            text2: 'Data daily activity berhasil diperbarui dari server.',
+          });
         } else {
-          // Tidak ada perubahan, cukup pakai cache
           const cache = await AsyncStorage.getItem(
             'cached_daily_activity_list',
           );
           setData(cache ? JSON.parse(cache) : []);
+          Toast.show({
+            type: 'info',
+            text1: 'Tidak Ada Perubahan',
+            text2: 'Data sudah sesuai dengan server.',
+          });
         }
-        setLoading(false);
-        setRefreshing(false);
-        setIsSyncing(false);
       } catch (e) {
         const cache = await AsyncStorage.getItem('cached_daily_activity_list');
         setData(cache ? JSON.parse(cache) : []);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Sinkronisasi ❌',
+          text2: 'Terjadi kesalahan saat mengambil data dari server.',
+        });
+      } finally {
         setLoading(false);
         setRefreshing(false);
+        setIsSyncing(false);
       }
     },
     [isConnected],
@@ -204,13 +223,9 @@ export default function Daily() {
     return found ? found.label : id;
   }
 
-  // Pull to refresh (cache only)
   const onRefresh = () => {
     setRefreshing(true);
-    AsyncStorage.getItem('cached_daily_activity_list').then(cache => {
-      setData(cache ? JSON.parse(cache) : []);
-      setRefreshing(false);
-    });
+    fetchDataAutoSync(true);
   };
 
   // Expand/collapse
@@ -238,13 +253,26 @@ export default function Daily() {
   const handleDelete = useCallback(
     async (id: number) => {
       if (!isConnected) {
-        Alert.alert('Offline', 'Hapus hanya tersedia saat online.');
+        Toast.show({
+          type: 'error',
+          text1: 'Offline',
+          text2: 'Hapus hanya tersedia saat online.',
+        });
         return;
       }
+
       try {
         const loginCache = await AsyncStorage.getItem('loginCache');
         const token = loginCache ? JSON.parse(loginCache).token : null;
-        if (!token) return Alert.alert('Sesi Habis', 'Silakan login kembali.');
+        if (!token) {
+          Toast.show({
+            type: 'error',
+            text1: 'Sesi Habis',
+            text2: 'Silakan login kembali.',
+          });
+          return;
+        }
+
         Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
           {text: 'Batal', style: 'cancel'},
           {
@@ -265,20 +293,37 @@ export default function Daily() {
                 );
                 const text = await res.text();
                 const json = JSON.parse(text);
+
                 if (json.success) {
-                  Alert.alert('Sukses', json.message);
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Berhasil Dihapus ✅',
+                    text2: json.message || 'Data berhasil dihapus.',
+                  });
                   fetchDataAutoSync(true);
                 } else {
-                  Alert.alert('Gagal', json.message || 'Gagal menghapus data.');
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Gagal Menghapus ❌',
+                    text2: json.message || 'Terjadi kesalahan.',
+                  });
                 }
               } catch (err) {
-                Alert.alert('Error', 'Terjadi kesalahan saat menghapus.');
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error',
+                  text2: 'Terjadi kesalahan saat menghapus.',
+                });
               }
             },
           },
         ]);
       } catch (err) {
-        Alert.alert('Error', 'Terjadi kesalahan.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Terjadi kesalahan.',
+        });
       }
     },
     [fetchDataAutoSync, isConnected],
@@ -315,8 +360,16 @@ export default function Daily() {
   // Loading Spinner
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#2463EB" />
+      <SafeAreaView
+        style={[
+          styles.containerLoading,
+          {paddingTop: insets.top, paddingBottom: insets.bottom},
+        ]}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.titleLoading}>Memuat data...</Text>
+          <Text style={styles.subtitle}>Mohon tunggu sebentar</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -326,7 +379,7 @@ export default function Daily() {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <View style={{flex: 1, paddingHorizontal: 8, paddingTop: 20}}>

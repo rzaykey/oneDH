@@ -90,4 +90,42 @@ export const mopStyles = StyleSheet.create({
   refreshSpinner: {
     marginRight: 8,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    width: 300,
+    elevation: 3,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 12,
+    color: '#2d3748',
+  },
+  modalItem: {
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 4,
+  },
+  modalIcon: {
+    marginRight: 10,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#1a202c',
+  },
+  modalCancel: {
+    color: '#e74c3c',
+    marginTop: 14,
+  },
 });

@@ -10,7 +10,6 @@ import {
   Alert,
   UIManager,
   Platform,
-  ToastAndroid,
   AppState,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
@@ -27,6 +26,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import API_BASE_URL from '../../../config';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import Toast from 'react-native-toast-message';
 import NetInfo from '@react-native-community/netinfo';
 
 // Aktifkan animasi layout Android
@@ -90,11 +90,14 @@ export default function TrainHoursScreen() {
         if (!isConnected) {
           const cache = await AsyncStorage.getItem('cached_trainhours_list');
           setData(cache ? JSON.parse(cache) : []);
-          setLoading(false);
-          setRefreshing(false);
-          setIsSyncing(false);
+          Toast.show({
+            type: 'info',
+            text1: 'Mode Offline',
+            text2: 'Menggunakan data terakhir yang tersimpan.',
+          });
           return;
         }
+
         // Ambil summary dari server
         const {max_id: serverMaxId, last_update: serverLastUpdate} =
           await getServerSummary();
@@ -102,7 +105,7 @@ export default function TrainHoursScreen() {
         const localLastUpdate = await AsyncStorage.getItem(
           'trainhours_last_update',
         );
-        // Kalau ada perubahan, fetch ulang
+
         if (
           forceServer ||
           localMaxId !== serverMaxId ||
@@ -121,17 +124,30 @@ export default function TrainHoursScreen() {
             'trainhours_last_update',
             serverLastUpdate || '',
           );
+
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil Sinkronisasi ✅',
+            text2: 'Data Train Hours berhasil diperbarui dari server.',
+          });
         } else {
-          // Tidak ada perubahan, cukup pakai cache
           const cache = await AsyncStorage.getItem('cached_trainhours_list');
           setData(cache ? JSON.parse(cache) : []);
+          Toast.show({
+            type: 'info',
+            text1: 'Tidak Ada Perubahan',
+            text2: 'Data sudah sesuai dengan server.',
+          });
         }
-        setLoading(false);
-        setRefreshing(false);
-        setIsSyncing(false);
       } catch (e) {
         const cache = await AsyncStorage.getItem('cached_trainhours_list');
         setData(cache ? JSON.parse(cache) : []);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Sinkronisasi ❌',
+          text2: 'Terjadi kesalahan saat mengambil data.',
+        });
+      } finally {
         setLoading(false);
         setRefreshing(false);
         setIsSyncing(false);
@@ -157,19 +173,10 @@ export default function TrainHoursScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, fetchDataAutoSync]);
 
-  // Manual force refresh
-  const handleForceRefresh = async () => {
-    await fetchDataAutoSync(true);
-    ToastAndroid.show('Data di-refresh dari server!', ToastAndroid.SHORT);
-  };
-
   // Pull-to-refresh: cache only
   const onRefresh = () => {
     setRefreshing(true);
-    AsyncStorage.getItem('cached_trainhours_list').then(cache => {
-      setData(cache ? JSON.parse(cache) : []);
-      setRefreshing(false);
-    });
+    fetchDataAutoSync(true);
   };
 
   // Expand/collapse
@@ -228,7 +235,11 @@ export default function TrainHoursScreen() {
       try {
         const loginCache = await AsyncStorage.getItem('loginCache');
         const token = loginCache ? JSON.parse(loginCache).token : null;
-        if (!token) return Alert.alert('Sesi Habis', 'Silakan login kembali.');
+        if (!token) {
+          Alert.alert('Sesi Habis', 'Silakan login kembali.');
+          return;
+        }
+
         Alert.alert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?', [
           {text: 'Batal', style: 'cancel'},
           {
@@ -247,22 +258,41 @@ export default function TrainHoursScreen() {
                     },
                   },
                 );
+
                 const text = await res.text();
                 const json = JSON.parse(text);
+
                 if (json.success) {
-                  Alert.alert('Sukses', json.message);
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Berhasil Dihapus ✅',
+                    text2: json.message || 'Data berhasil dihapus.',
+                  });
                   fetchDataAutoSync(true);
                 } else {
-                  Alert.alert('Gagal', json.message || 'Gagal menghapus data.');
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Gagal Menghapus ❌',
+                    text2:
+                      json.message || 'Terjadi kesalahan saat menghapus data.',
+                  });
                 }
               } catch (err) {
-                Alert.alert('Error', 'Terjadi kesalahan saat menghapus.');
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error',
+                  text2: 'Terjadi kesalahan saat menghapus.',
+                });
               }
             },
           },
         ]);
       } catch (err) {
-        Alert.alert('Error', 'Terjadi kesalahan.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Terjadi kesalahan.',
+        });
       }
     },
     [fetchDataAutoSync, isConnected],
@@ -271,8 +301,16 @@ export default function TrainHoursScreen() {
   // Loading Spinner
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#2463EB" />
+      <SafeAreaView
+        style={[
+          styles.containerLoading,
+          {paddingTop: insets.top, paddingBottom: insets.bottom},
+        ]}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.titleLoading}>Memuat data...</Text>
+          <Text style={styles.subtitle}>Mohon tunggu sebentar</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -281,7 +319,7 @@ export default function TrainHoursScreen() {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView
         style={[

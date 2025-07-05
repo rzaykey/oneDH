@@ -8,14 +8,12 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  Alert,
   UIManager,
-  ToastAndroid,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {tabelStyles as styles} from '../../../styles/tabelStyles';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../navigation/types';
 import {MopData} from '../../../navigation/types';
@@ -25,6 +23,7 @@ import NetInfo from '@react-native-community/netinfo';
 import API_BASE_URL from '../../../config';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental &&
@@ -74,14 +73,19 @@ export default function Mop() {
     async (forceServer = false) => {
       setLoading(true);
       setSyncing(true);
+
       try {
         if (!isConnected) {
           // OFFLINE: ambil cache
           const cache = await AsyncStorage.getItem('cached_mop_data');
           setData(cache ? JSON.parse(cache) : []);
-          setLoading(false);
-          setRefreshing(false);
-          setSyncing(false);
+
+          Toast.show({
+            type: 'info',
+            text1: 'Offline Mode',
+            text2: 'Menampilkan data dari cache lokal.',
+          });
+
           return;
         }
 
@@ -90,23 +94,47 @@ export default function Mop() {
         const lastUpdate = summary?.last_update || '';
         const localUpdate = await AsyncStorage.getItem('mop_last_update');
 
-        // Jika ada update, atau force refresh
         if (forceServer || (lastUpdate && lastUpdate !== localUpdate)) {
           // Fetch baru!
+          Toast.show({
+            type: 'info',
+            text1: 'Sinkronisasi',
+            text2: 'Mengambil data terbaru dari server...',
+          });
+
           const res = await fetch(`${API_BASE_URL.mop}/mopData`);
           const json = await res.json();
           const arr = Array.isArray(json) ? json : json.data || [];
+
           setData(arr);
           await AsyncStorage.setItem('cached_mop_data', JSON.stringify(arr));
           await AsyncStorage.setItem('mop_last_update', lastUpdate || '');
+
+          Toast.show({
+            type: 'success',
+            text1: 'Berhasil',
+            text2: 'Data berhasil disinkronisasi.',
+          });
         } else {
-          // Tidak ada perubahan, load dari cache saja
+          // Tidak ada perubahan, load dari cache
           const cache = await AsyncStorage.getItem('cached_mop_data');
           setData(cache ? JSON.parse(cache) : []);
+
+          Toast.show({
+            type: 'info',
+            text1: 'Tidak ada perubahan',
+            text2: 'Data sudah versi terbaru.',
+          });
         }
       } catch (err) {
         const cache = await AsyncStorage.getItem('cached_mop_data');
         setData(cache ? JSON.parse(cache) : []);
+
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Sinkronisasi',
+          text2: 'Gagal mengambil data dari server. Menampilkan cache.',
+        });
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -125,14 +153,6 @@ export default function Mop() {
     }
     return () => interval && clearInterval(interval);
   }, [fetchDataAutoSync, isConnected]);
-
-  // Manual force refresh
-  const handleForceRefresh = async () => {
-    setSyncing(true);
-    await fetchDataAutoSync(true);
-    setSyncing(false);
-    ToastAndroid.show('Data di-refresh dari server!', ToastAndroid.SHORT);
-  };
 
   // Pull to refresh (swipe down)
   const onRefresh = () => {
@@ -177,9 +197,16 @@ export default function Mop() {
   // Loader awal
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#2463EB" />
-        <Text style={{marginTop: 12}}>Memuat data...</Text>
+      <SafeAreaView
+        style={[
+          styles.containerLoading,
+          {paddingTop: insets.top, paddingBottom: insets.bottom},
+        ]}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.titleLoading}>Memuat data...</Text>
+          <Text style={styles.subtitle}>Mohon tunggu sebentar</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -188,7 +215,7 @@ export default function Mop() {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView
         style={{

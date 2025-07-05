@@ -21,6 +21,7 @@ import NetInfo from '@react-native-community/netinfo';
 import {useSiteContext} from '../context/SiteContext';
 import DeviceInfo from 'react-native-device-info';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -45,7 +46,7 @@ const LoginScreen = ({navigation}: Props) => {
 
     setLoading(true);
     const payload = {
-      jdeno: username.trim(), // sesuai API-mu
+      jdeno: username.trim(),
       password: password.trim(),
     };
 
@@ -60,7 +61,6 @@ const LoginScreen = ({navigation}: Props) => {
 
       // ---- PENYESUAIAN DENGAN JSON BARU ----
       if (response.ok && data.status === 'success' && data.token) {
-        // Simpan SEMUA data yang didapatkan
         await AsyncStorage.setItem(
           'loginCache',
           JSON.stringify({
@@ -68,14 +68,45 @@ const LoginScreen = ({navigation}: Props) => {
             name: data.name,
             email: data.email,
             dataEmp: data.dataEmp,
-            roles: data.role, // array, ini KUNCI FILTER dashboard
+            roles: data.role,
           }),
         );
         await refreshContext();
-        // **Redirect ke AuthLoadingScreen**
+        Toast.show({
+          type: 'success',
+          text1: 'Login Berhasil',
+          text2: `Selamat datang, ${data.name || 'User'}!`,
+          position: 'top',
+          visibilityTime: 2000,
+          topOffset: 50,
+        });
         navigation.replace('AuthLoading');
       } else {
-        Alert.alert('Login gagal', data.message || 'Cek username & password');
+        let errorTitle = 'Login Gagal';
+        let errorMessage = 'Terjadi kesalahan yang tidak diketahui.';
+
+        if (data?.pesan) {
+          // ✅ pesan dari API (seperti: "Password / Username Salah")
+          errorMessage = data.pesan;
+        } else if (data?.message) {
+          // fallback jika key-nya `message`
+          errorMessage = data.message;
+        } else if (!data.token) {
+          errorMessage = 'Token login tidak ditemukan. Hubungi tim support.';
+        } else if (!response.ok) {
+          // terakhir: jika memang response tidak oke dan tidak ada pesan dari server
+          errorMessage =
+            'Koneksi ke server gagal. Periksa koneksi internet Anda.';
+        }
+
+        Toast.show({
+          type: 'error',
+          text1: errorTitle,
+          text2: errorMessage,
+          position: 'top',
+          visibilityTime: 3000,
+          topOffset: 50,
+        });
       }
     } catch (error) {
       Alert.alert('Error', 'Tidak dapat terhubung ke server');
@@ -87,8 +118,7 @@ const LoginScreen = ({navigation}: Props) => {
   useEffect(() => {
     const getVersion = async () => {
       const version = await DeviceInfo.getVersion();
-      const build = await DeviceInfo.getBuildNumber();
-      setAppVersion(`v${build} (${version})`);
+      setAppVersion(`${version}`);
     };
     getVersion();
   }, []);
@@ -105,7 +135,7 @@ const LoginScreen = ({navigation}: Props) => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

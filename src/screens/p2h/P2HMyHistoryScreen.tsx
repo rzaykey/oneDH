@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
+  Image,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -204,11 +205,14 @@ const P2HHistoryScreen: React.FC = () => {
     message = 'Data kosong/belum ada pemeriksaan P2H.',
   }) => (
     <View style={styles.emptyWrap}>
-      <Icon
-        name="file-tray-outline"
-        size={56}
-        color="#c9c9c9"
-        style={{marginBottom: 6}}
+      <Image
+        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        style={{
+          width: 240,
+          height: 240,
+          marginBottom: 12,
+          resizeMode: 'contain',
+        }}
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
@@ -231,7 +235,7 @@ const P2HHistoryScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={[styles.container]}>
         <View style={styles.headerWrap}>

@@ -13,7 +13,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select';
 import {useSiteContext} from '../../context/SiteContext';
 import API_BASE_URL from '../../config';
-import NetInfo from '@react-native-community/netinfo';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import LinearGradient from 'react-native-linear-gradient';
 import DeviceInfo from 'react-native-device-info';
@@ -26,8 +25,10 @@ import {JCMCreateStyle as styles} from '../../styles/JCMCreateStyle';
 import {fetchWithCachePerKey} from '../../utils/fetchWithCachePerKey'; // path sesuai
 import {fetchWithCache} from '../../utils/fetchWithCache';
 import {v4 as uuidv4} from 'uuid';
-import Icon from 'react-native-vector-icons/FontAwesome'; // atau Feather, MaterialIcons, dsb.
 import 'react-native-get-random-values';
+import Toast from 'react-native-toast-message';
+import NetInfo from '@react-native-community/netinfo';
+import {useFocusEffect} from '@react-navigation/native';
 
 const DRAFT_KEY = 'draft_p2h_form';
 const OFFLINE_SUBMIT_KEY = 'offline_submit_jcm';
@@ -68,6 +69,114 @@ const CreateJCMcreen = ({navigation}) => {
   const [showTanggalPicker, setShowTanggalPicker] = useState(false);
   const [showJamPicker, setShowJamPicker] = useState(false);
 
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable) {
+        console.log('🌐 Online detected, refreshing data...');
+        refreshAll(); // panggil refresh manual
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    Toast.show({
+      type: 'info',
+      text1: 'Menyegarkan data...',
+      position: 'top',
+      autoHide: true,
+      visibilityTime: 1000,
+    });
+
+    try {
+      const headers = await getAuthHeader();
+
+      // Units
+      const unitsRes = await fetchWithCache('cache_units', API_URL_MU, headers);
+      const formattedUnits = unitsRes.data.map(unit => ({
+        label: unit.plant_no,
+        value: unit.plant_no,
+      }));
+      setUnitList(formattedUnits);
+
+      // Group Task
+      const groupRes = await fetchWithCache(
+        'cache_group_task',
+        API_URL_GGT,
+        headers,
+      );
+      const formattedGroups = groupRes.data.map(item => ({
+        label: item.group_task,
+        value: item.group_task,
+      }));
+      setGroupTaskList(formattedGroups);
+
+      // Supervisor
+      if (selectedUnit) {
+        const supRes = await fetchWithCache(
+          'cache_supervisor',
+          API_URL_GS,
+          headers,
+        );
+        const formattedSup = supRes.data.map(item => ({
+          label: item.name,
+          value: item.jdeno,
+        }));
+        setSupervisorList(formattedSup);
+        setSelectedSupervisor(null);
+      }
+
+      // WO
+      if (selectedUnit) {
+        const woRes = await fetchWithCachePerKey(
+          'cache_wo',
+          selectedUnit,
+          `${API_URL_GWU}${selectedUnit}`,
+          headers,
+        );
+        const formattedWO = woRes.data.map(wo => ({
+          label: `${wo.work_order} - ${wo.wo_type}`,
+          value: wo.work_order,
+        }));
+        setWoList(formattedWO);
+        setSelectedWO(null);
+      }
+
+      // Assignment
+      if (selectedGroupTask) {
+        const asgRes = await fetchWithCachePerKey(
+          'cache_assignment',
+          selectedGroupTask,
+          `${API_URL_GTA}${selectedGroupTask}`,
+          headers,
+        );
+        const formattedAsg = asgRes.data.map(item => ({
+          label: item.task,
+          value: item.id,
+        }));
+        setAssignmentList(formattedAsg);
+        setSelectedAssignment(null);
+      }
+
+      setLoadingMaster(false);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Data berhasil diperbarui',
+      });
+    } catch (error) {
+      console.error('Error saat refreshAll:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal memuat data',
+        text2: 'Pastikan koneksi internet stabil.',
+      });
+    }
+  }, [selectedUnit, selectedGroupTask]);
+
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
@@ -87,159 +196,162 @@ const CreateJCMcreen = ({navigation}) => {
     refreshQueueCount();
   }, [refreshQueueCount]);
 
-  useEffect(() => {
-    if (selectedUnit) {
-      const fetchSupervisor = async () => {
-        try {
-          const headers = await getAuthHeader();
-          const json = await fetchWithCache(
-            'cache_supervisor',
-            `${API_URL_GS}`,
-            headers,
-          );
-          const formatted = json.data.map(item => ({
-            label: item.name,
-            value: item.jdeno,
-          }));
-          setSupervisorList(formatted);
-          setSelectedSupervisor(null);
-        } catch (error) {
-          console.error('Error fetching supervisor:', error);
-        }
-      };
-      fetchSupervisor();
-    } else {
-      setSupervisorList([]);
-      setSelectedSupervisor(null);
-    }
-  }, [selectedUnit]);
+  const refreshAllMasterData = useCallback(async () => {
+    try {
+      const headers = await getAuthHeader();
 
-  useEffect(() => {
-    const fetchUnits = async () => {
-      try {
-        const headers = await getAuthHeader();
-        const json = await fetchWithCache('cache_units', API_URL_MU, headers);
+      // 1. Units
+      const unitsRes = await fetchWithCache('cache_units', API_URL_MU, headers);
+      const formattedUnits = unitsRes.data.map(unit => ({
+        label: unit.plant_no,
+        value: unit.plant_no,
+      }));
+      setUnitList(formattedUnits);
 
-        const formatted = json.data.map(unit => ({
-          label: unit.plant_no,
-          value: unit.plant_no,
-        }));
-        setUnitList(formatted);
-      } catch (error) {
-        console.error('Error fetching unit:', error);
-      }
-    };
+      // 2. Group Task
+      const groupRes = await fetchWithCache(
+        'cache_group_task',
+        API_URL_GGT,
+        headers,
+      );
+      const formattedGroups = groupRes.data.map(item => ({
+        label: item.group_task,
+        value: item.group_task,
+      }));
+      setGroupTaskList(formattedGroups);
 
-    const fetchGroupTask = async () => {
-      try {
-        const headers = await getAuthHeader();
-        const json = await fetchWithCache(
-          'cache_group_task',
-          API_URL_GGT,
+      // 3. Supervisor (jika ada unit)
+      if (selectedUnit) {
+        const supRes = await fetchWithCache(
+          'cache_supervisor',
+          API_URL_GS,
           headers,
         );
-
-        const formatted = json.data.map(item => ({
-          label: item.group_task,
-          value: item.group_task,
+        const formattedSup = supRes.data.map(item => ({
+          label: item.name,
+          value: item.jdeno,
         }));
-        setGroupTaskList(formatted);
-      } catch (error) {
-        console.error('Error fetching group task:', error);
+        setSupervisorList(formattedSup);
+        setSelectedSupervisor(null);
       }
-    };
 
-    fetchUnits();
-    fetchGroupTask();
-    setLoadingMaster(false);
-  }, []);
+      // 4. WO (jika ada unit)
+      if (selectedUnit) {
+        const woRes = await fetchWithCachePerKey(
+          'cache_wo',
+          selectedUnit,
+          `${API_URL_GWU}${selectedUnit}`,
+          headers,
+        );
+        const formattedWO = woRes.data.map(wo => ({
+          label: `${wo.work_order} - ${wo.wo_type}`,
+          value: wo.work_order,
+        }));
+        setWoList(formattedWO);
+        setSelectedWO(null);
+      }
 
-  // Dependent dropdown: WO
-  useEffect(() => {
-    if (selectedUnit) {
-      const fetchWO = async () => {
-        try {
-          const headers = await getAuthHeader();
-          const json = await fetchWithCachePerKey(
-            'cache_wo', // prefix
-            selectedUnit, // dynamic key
-            `${API_URL_GWU}${selectedUnit}`,
-            headers,
-          );
+      // 5. Assignment (jika ada group task)
+      if (selectedGroupTask) {
+        const asgRes = await fetchWithCachePerKey(
+          'cache_assignment',
+          selectedGroupTask,
+          `${API_URL_GTA}${selectedGroupTask}`,
+          headers,
+        );
+        const formattedAsg = asgRes.data.map(item => ({
+          label: item.task,
+          value: item.id,
+        }));
+        setAssignmentList(formattedAsg);
+        setSelectedAssignment(null);
+      }
 
-          const formatted = json.data.map(wo => ({
-            label: `${wo.work_order} - ${wo.wo_type}`,
-            value: wo.work_order,
-          }));
-          setWoList(formatted);
-          setSelectedWO(null);
-        } catch (error) {
-          console.error('Error fetching WO:', error);
-        }
-      };
-
-      fetchWO();
-    } else {
-      setWoList([]);
-      setSelectedWO(null);
+      Toast.show({
+        type: 'success',
+        text1: 'Data berhasil diperbarui',
+      });
+    } catch (err) {
+      console.error('refreshAllMasterData error:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal refresh data',
+        text2: 'Cek koneksi internet atau ulangi.',
+      });
+    } finally {
+      setLoadingMaster(false);
     }
-  }, [selectedUnit]);
+  }, [selectedUnit, selectedGroupTask]);
 
-  // Dependent dropdown: Assignment
+  // 🔄 Saat koneksi kembali online
   useEffect(() => {
-    if (selectedGroupTask) {
-      const fetchAssignment = async () => {
-        try {
-          const headers = await getAuthHeader();
-          const json = await fetchWithCachePerKey(
-            'cache_assignment',
-            selectedGroupTask,
-            `${API_URL_GTA}${selectedGroupTask}`,
-            headers,
-          );
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable) {
+        console.log('📶 Online, auto-refresh master data');
+        refreshAllMasterData();
+      }
+    });
+    return () => unsubscribe();
+  }, [refreshAllMasterData]);
 
-          const formatted = json.data.map(item => ({
-            label: item.task,
-            value: item.id,
-          }));
-          setAssignmentList(formatted);
-          setSelectedAssignment(null);
-        } catch (error) {
-          console.error('Error fetching assignment:', error);
-        }
-      };
-
-      fetchAssignment();
-    } else {
-      setAssignmentList([]);
-      setSelectedAssignment(null);
-    }
-  }, [selectedGroupTask]);
+  // 🔄 Saat screen difokuskan
+  useFocusEffect(
+    useCallback(() => {
+      console.log('👁️ Screen focused, refresh master data');
+      refreshAllMasterData();
+    }, [refreshAllMasterData]),
+  );
 
   const handleClearOfflineCache = async () => {
     try {
       await AsyncStorage.removeItem(OFFLINE_SUBMIT_KEY);
       await refreshQueueCount();
-      Alert.alert('Sukses', 'Data offline berhasil dihapus.');
+
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil Hapus Cache',
+        text2: 'Data offline berhasil dihapus dari penyimpanan.',
+        position: 'top',
+      });
+
+      console.log('Offline cache cleared successfully.');
     } catch (error) {
       console.error('Gagal menghapus cache offline:', error);
-      Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus cache.');
+
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Hapus Cache',
+        text2: 'Terjadi kesalahan saat menghapus data offline.',
+        position: 'top',
+      });
     }
   };
 
   const handleSubmit = async () => {
-    if (
-      !selectedWO ||
-      !selectedSupervisor ||
-      !selectedAssignment ||
-      !selectedUnit ||
-      !selectedGroupTask
-    ) {
-      Alert.alert('Error', 'Mohon lengkapi semua field yang diperlukan.');
+    if (loading) return; // mencegah double submit
+    setLoading(true); // mulai loading
+
+    console.log('✅ handleSubmit DIPANGGIL');
+
+    const missingFields = [];
+
+    if (!selectedUnit) missingFields.push('Unit');
+    if (!selectedWO) missingFields.push('WO');
+    if (!selectedGroupTask) missingFields.push('Group Task');
+    if (!selectedAssignment) missingFields.push('Assignment');
+    if (!selectedSupervisor) missingFields.push('Supervisor');
+
+    if (missingFields.length > 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Field belum lengkap',
+        text2: `Harap isi: ${missingFields.join(', ')}`,
+      });
+      setLoading(false); // hentikan loading
       return;
     }
 
-    let dataSubmit: any = {}; // ✅ Deklarasi di luar try
+    let dataSubmit = {};
 
     try {
       const tanggalStr = tanggal.toISOString().split('T')[0];
@@ -249,14 +361,19 @@ const CreateJCMcreen = ({navigation}) => {
       const parsed = JSON.parse(cache);
       const jdeno = parsed?.dataEmp?.jdeno;
 
+      if (!jdeno) {
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Data pengguna tidak ditemukan.',
+        });
+        setLoading(false);
+        return;
+      }
+
       const selectedAssignmentObj = assignmentList.find(
         item => item.value === selectedAssignment,
       );
-
-      if (!jdeno) {
-        Alert.alert('Error', 'Data pengguna tidak ditemukan.');
-        return;
-      }
 
       const type = DeviceInfo.getSystemName();
       const version = DeviceInfo.getVersion();
@@ -265,7 +382,7 @@ const CreateJCMcreen = ({navigation}) => {
       dataSubmit = {
         id: uuidv4(),
         wono: selectedWO,
-        jdeno: jdeno,
+        jdeno,
         tanggal: tanggalStr,
         jam: jamStr,
         unitNo: selectedUnit,
@@ -277,6 +394,7 @@ const CreateJCMcreen = ({navigation}) => {
       };
 
       const headers = await getAuthHeader();
+
       const response = await fetch(
         `${API_BASE_URL.onedh}/CreateTaskAssignment`,
         {
@@ -287,20 +405,26 @@ const CreateJCMcreen = ({navigation}) => {
       );
 
       if (response.ok) {
-        Alert.alert('Sukses', 'Job Card berhasil disubmit!');
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Job Card berhasil disubmit!',
+        });
+        setLoading(false);
         navigation.goBack();
       } else {
         let resJson = {};
         let rawMessage = '';
+
         try {
           const text = await response.text();
           try {
             resJson = JSON.parse(text);
           } catch (jsonErr) {
-            console.warn('Gagal parsing JSON dari response.text():', jsonErr);
+            console.warn('❗ Gagal parsing JSON:', jsonErr);
           }
         } catch (err) {
-          console.warn('Gagal membaca response:', err);
+          console.warn('❗ Gagal membaca response:', err);
         }
 
         rawMessage = resJson?.message || 'Terjadi kesalahan saat submit.';
@@ -313,32 +437,46 @@ const CreateJCMcreen = ({navigation}) => {
               'Silahkan clossing pekerjaan anda dimenu Riwayat Pekerjaan Saya',
             ))
         ) {
-          Alert.alert('Gagal', rawMessage);
+          Toast.show({
+            type: 'error',
+            text1: 'Gagal',
+            text2: rawMessage,
+          });
+          setLoading(false);
           return;
         }
 
         await addQueueOffline(OFFLINE_SUBMIT_KEY, dataSubmit);
         await refreshQueueCount();
-        Alert.alert(
-          'Offline',
-          'Tidak bisa submit ke server. Data disimpan untuk dikirim nanti.',
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Offline',
+          text2: 'Data disimpan dan akan dikirim saat online.',
+        });
       }
     } catch (error) {
-      console.warn('Error saat submit:', error.message);
+      console.warn('❗ Error saat submit:', error);
       try {
         await addQueueOffline(OFFLINE_SUBMIT_KEY, dataSubmit);
         await refreshQueueCount();
-        Alert.alert(
-          'Offline',
-          'Tidak bisa mengirim data sekarang. Data disimpan ke antrian.',
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Offline',
+          text2: 'Tidak bisa mengirim data. Disimpan ke antrian.',
+        });
       } catch (queueErr) {
-        console.error('Gagal menyimpan ke queue:', queueErr);
-        Alert.alert('Gagal', 'Tidak bisa menyimpan data ke antrian offline.');
+        console.error('❌ Gagal menyimpan ke queue:', queueErr);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Tidak bisa menyimpan data ke antrian offline.',
+        });
       }
     }
+
+    setLoading(false); // pastikan ini dipanggil di akhir
   };
+
   const confirmClearOfflineCache = () => {
     Alert.alert('Konfirmasi', 'Yakin ingin menghapus semua data offline?', [
       {text: 'Batal', style: 'cancel'},
@@ -366,6 +504,9 @@ const CreateJCMcreen = ({navigation}) => {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.title}>Form Job Card Mechanic</Text>
+          <TouchableOpacity onPress={refreshAll} style={styles.refreshButton}>
+            <Text style={styles.refreshButtonText}>🔄 Refresh Data</Text>
+          </TouchableOpacity>
 
           {/* === Offline Queue Action Buttons === */}
           {queueCount > 0 && (

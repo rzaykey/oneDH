@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -11,7 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import {mopStyles as styles} from '../../styles/mopStyles';
+import {mopStyles} from '../../styles/mopStyles';
 import {
   getModulePermit,
   canAdd,
@@ -24,7 +24,7 @@ import {useSiteContext} from '../../context/SiteContext';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {cacheMopMasters} from '../../utils/cacheMopMasters'; // path disesuaikan
 import {getSession} from '../../utils/auth';
-import {useFocusEffect} from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 const mentoringForms = [
   {
@@ -170,13 +170,26 @@ const MOPScreen: React.FC = () => {
       if (token) {
         await cacheMopMasters(token);
         console.log('🔄 Master MOP berhasil di-refresh manual');
-        alert('Data master berhasil di-refresh ✅');
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil',
+          text2: 'Data master berhasil di-refresh ✅',
+        });
       } else {
         console.warn('⚠️ Token tidak ditemukan untuk refresh manual');
+        Toast.show({
+          type: 'error',
+          text1: 'Token tidak ditemukan',
+          text2: 'Gagal melakukan refresh data master.',
+        });
       }
     } catch (err) {
       console.error('❌ Gagal refresh data master:', err?.message || err);
-      alert('Gagal refresh data master ❌');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal refresh data master ❌',
+      });
     } finally {
       setLoadingMaster(false);
     }
@@ -186,55 +199,56 @@ const MOPScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView
-        style={[styles.safeArea, {paddingTop: insets.top}]}
+        style={[mopStyles.safeArea, {paddingTop: insets.top}]}
         pointerEvents={loadingMaster ? 'none' : 'auto'}>
-        <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>Mine Operator Performance</Text>
+        <ScrollView contentContainerStyle={mopStyles.container}>
+          <Text style={mopStyles.title}>Mine Operator Performance</Text>
+
           <TouchableOpacity
             onPress={handleRefreshMaster}
             disabled={loadingMaster}
             style={[
-              styles.refreshButton,
-              loadingMaster && styles.refreshButtonDisabled,
+              mopStyles.refreshButton,
+              loadingMaster && mopStyles.refreshButtonDisabled,
             ]}>
             {loadingMaster ? (
               <>
                 <ActivityIndicator
                   size="small"
                   color="#FFF"
-                  style={styles.refreshSpinner}
+                  style={mopStyles.refreshSpinner}
                 />
-                <Text style={styles.refreshText}>Merefresh...</Text>
+                <Text style={mopStyles.refreshText}>Merefresh...</Text>
               </>
             ) : (
-              <Text style={styles.refreshText}>🔄 Refresh Data Master</Text>
+              <Text style={mopStyles.refreshText}>🔄 Refresh Data Master</Text>
             )}
           </TouchableOpacity>
 
           {sectionConfig.map(section => (
             <View key={section.section}>
-              <Text style={styles.section}>{section.section}</Text>
+              <Text style={mopStyles.section}>{section.section}</Text>
               {section.items
                 .filter(item => actionChecker[item.action](permit))
                 .map(item => (
                   <TouchableOpacity
                     key={item.label}
-                    style={styles.menuCard}
+                    style={mopStyles.menuCard}
                     activeOpacity={0.85}
                     onPress={() =>
                       item.customAction === 'openMentoringFormPicker'
                         ? handleMentoringFormPress()
                         : item.screen && navigation.navigate(item.screen)
                     }>
-                    <View style={styles.iconCircle}>
+                    <View style={mopStyles.iconCircle}>
                       <Icon name={item.icon} size={24} color="#FFFFFF" />
                     </View>
-                    <View style={styles.menuInfo}>
-                      <Text style={styles.menuLabel}>{item.label}</Text>
-                      <Text style={styles.menuDesc}>{item.desc}</Text>
+                    <View style={mopStyles.menuInfo}>
+                      <Text style={mopStyles.menuLabel}>{item.label}</Text>
+                      <Text style={mopStyles.menuDesc}>{item.desc}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -247,56 +261,26 @@ const MOPScreen: React.FC = () => {
           transparent
           animationType="fade"
           onRequestClose={() => setShowMentoringFormPicker(false)}>
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgba(0,0,0,0.3)',
-            }}>
-            <View
-              style={{
-                backgroundColor: '#fff',
-                borderRadius: 12,
-                padding: 24,
-                width: 300,
-                elevation: 3,
-                alignItems: 'center',
-              }}>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: 18,
-                  marginBottom: 12,
-                  color: '#2d3748',
-                }}>
-                Pilih Form Mentoring
-              </Text>
+          <View style={mopStyles.modalOverlay}>
+            <View style={mopStyles.modalContainer}>
+              <Text style={mopStyles.modalTitle}>Pilih Form Mentoring</Text>
               {mentoringForms.map(item => (
                 <TouchableOpacity
                   key={item.unitType}
-                  style={{
-                    paddingVertical: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                    marginBottom: 4,
-                  }}
+                  style={mopStyles.modalItem}
                   onPress={() => handleFormSelect(item)}>
                   <Icon
                     name={item.icon}
                     size={20}
                     color="#6366f1"
-                    style={{marginRight: 10}}
+                    style={mopStyles.modalIcon}
                   />
-                  <Text style={{fontSize: 16, color: '#1a202c'}}>
-                    {item.label}
-                  </Text>
+                  <Text style={mopStyles.modalItemText}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
                 onPress={() => setShowMentoringFormPicker(false)}>
-                <Text style={{color: '#e74c3c', marginTop: 14}}>Batal</Text>
+                <Text style={mopStyles.modalCancel}>Batal</Text>
               </TouchableOpacity>
             </View>
           </View>

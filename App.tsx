@@ -13,6 +13,7 @@ import {createAsyncStoragePersister} from '@tanstack/query-async-storage-persist
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import {SiteProvider} from './src/context/SiteContext';
+import Toast from 'react-native-toast-message';
 
 // Context providers
 import {OfflineQueueProvider} from './src/utils/OfflineQueueContext';
@@ -52,6 +53,7 @@ const AppInitWrapper = () => {
       <SafeAreaProvider>
         <NavigationContainer>
           <AppNavigator />
+          <Toast />
         </NavigationContainer>
       </SafeAreaProvider>
     </SiteProvider>

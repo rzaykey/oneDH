@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -22,6 +23,7 @@ import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
 import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan paket ini sudah diinstall
 import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
+import Toast from 'react-native-toast-message';
 
 interface BadgeProps {
   label: string;
@@ -118,6 +120,13 @@ const JCMHistoryScreen: React.FC = () => {
 
         setTotalPages(totalPagesFromApi);
         setHasMore(currentPage < totalPagesFromApi);
+        if (!isLoadMore) {
+          Toast.show({
+            type: 'success',
+            text1: 'Data Diperbarui',
+            text2: `Menampilkan halaman ${totalPagesFromApi}`,
+          });
+        }
       }
     } catch (err) {
       setError('Tidak dapat terhubung ke server.');
@@ -184,7 +193,7 @@ const JCMHistoryScreen: React.FC = () => {
         id,
         jde,
         wono,
-        wotaskno, // ✅ perbaikan: sebelumnya sempat typo jadi wotaksno
+        wotaskno,
         ddlstatus,
         tanggal,
         jam,
@@ -204,34 +213,45 @@ const JCMHistoryScreen: React.FC = () => {
         res = JSON.parse(text);
       } catch (e) {
         console.error('Bukan JSON, ini HTML:', text);
-        Alert.alert('Error', 'Terjadi kesalahan di server. Coba lagi nanti.');
+        Toast.show({
+          type: 'error',
+          text1: 'Server Error',
+          text2: 'Terjadi kesalahan di server. Coba lagi nanti.',
+        });
         return;
       }
 
       if (response.ok && res?.status !== false) {
-        Alert.alert(
-          'Sukses',
-          `${res.pesan || 'JCM berhasil ditutup.'}\n\nINOUT: ${
-            res.inout
-          }\nID: ${res.lastID}`,
-        );
-        setShowCloseModal(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil Menutup JCM',
+          text2: res.pesan || 'JCM berhasil ditutup.',
+        });
 
-        // Refresh data otomatis setelah submit
-        fetchHistory(false, 1);
+        setShowCloseModal(false);
+        fetchHistory(false, 1); // Refresh
       } else {
         if (res?.message === 'JDE Tidak Sama Dengan Job Card') {
-          Alert.alert(
-            'Gagal',
-            'JDE yang Anda kirim tidak sesuai dengan job card.',
-          );
+          Toast.show({
+            type: 'error',
+            text1: 'Validasi Gagal',
+            text2: 'JDE yang Anda kirim tidak sesuai dengan job card.',
+          });
         } else {
-          Alert.alert('Gagal', res?.message || 'Terjadi kesalahan.');
+          Toast.show({
+            type: 'error',
+            text1: 'Gagal Menutup JCM',
+            text2: res?.message || 'Terjadi kesalahan.',
+          });
         }
       }
     } catch (err) {
       console.error('Submit Close JCM error:', err);
-      Alert.alert('Error', 'Gagal mengirim data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Gagal mengirim data.',
+      });
     }
   };
 
@@ -309,11 +329,14 @@ const JCMHistoryScreen: React.FC = () => {
     message = 'Data kosong/belum ada melakukan pekerjaan.',
   }) => (
     <View style={styles.emptyWrap}>
-      <Icon
-        name="file-tray-outline"
-        size={56}
-        color="#c9c9c9"
-        style={{marginBottom: 6}}
+      <Image
+        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        style={{
+          width: 240,
+          height: 240,
+          marginBottom: 12,
+          resizeMode: 'contain',
+        }}
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
@@ -336,7 +359,7 @@ const JCMHistoryScreen: React.FC = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={[styles.container]}>
         <View style={styles.headerWrap}>

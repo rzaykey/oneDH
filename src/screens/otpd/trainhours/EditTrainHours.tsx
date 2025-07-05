@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import API_BASE_URL from '../../../config';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Aktifkan animasi layout di Android
@@ -91,6 +92,8 @@ const EditTrainHours = () => {
   const [allCodeUnitArr, setAllCodeUnitArr] = useState([]);
   const [codeOptions, setCodeOptions] = useState([]);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [batchOptions, setBatchOptions] = useState([
     {label: 'Batch 1', value: 'Batch 1'},
@@ -142,24 +145,31 @@ const EditTrainHours = () => {
       try {
         const {token, user, site} = await getSession();
         if (!token || !user) {
-          Alert.alert('Error', 'Session habis. Silakan login ulang.');
+          Toast.show({
+            type: 'error',
+            text1: 'Sesi habis',
+            text2: 'Silakan login ulang.',
+          });
           return;
         }
-        // Ambil master data
+
+        // Start loading
+        setLoading(true);
+
         const master = await axios.get(
           `${API_BASE_URL.mop}/trainHours/create`,
           {
             headers: {Authorization: `Bearer ${token}`},
           },
         );
-        // Ambil data detail
+
         const detail = await axios.get(`${API_BASE_URL.mop}/trainHours/${id}`, {
           headers: {Authorization: `Bearer ${token}`},
         });
 
         if (cancel) return;
 
-        // Mapping dropdown options
+        // Mapping dropdown
         const typeUnitArr = (master.data.data.typeUnit || []).map(item => ({
           label: item.class,
           value: String(item.id),
@@ -187,13 +197,14 @@ const EditTrainHours = () => {
         }));
         setTrainingTypeOptions(kpiArr);
 
-        // Set data edit
+        // Set data form edit
         if (detail.data.status) {
           const d = detail.data.data;
-          // Cari value training_type berdasar ID
+
           const selectedTraining = kpiArr.find(
             item => String(item.value) === String(d.training_type),
           );
+
           setTrainingTypeValue(
             selectedTraining ? selectedTraining.value : null,
           );
@@ -202,7 +213,7 @@ const EditTrainHours = () => {
             jde_no: d.jde_no || '',
             employee_name: d.employee_name || '',
             position: d.position || '',
-            training_type: selectedTraining ? selectedTraining.value : '', // (ID)
+            training_type: selectedTraining ? selectedTraining.value : '',
             unit_class: d.unit_class ? String(d.unit_class) : '',
             unit_type: d.unit_type ? String(d.unit_type) : '',
             code: d.code ? String(d.code) : '',
@@ -216,7 +227,6 @@ const EditTrainHours = () => {
             date_activity: d.date_activity ? d.date_activity.split(' ')[0] : '',
           });
 
-          // Filter dropdown sesuai data edit
           setFilteredClassUnitOptions(
             classUnitArr.filter(
               item => String(item.class) === String(d.unit_type),
@@ -228,13 +238,25 @@ const EditTrainHours = () => {
             ),
           );
         } else {
-          Alert.alert('Error', detail.data.message || 'Gagal ambil data.');
+          Toast.show({
+            type: 'error',
+            text1: 'Gagal',
+            text2: detail.data.message || 'Gagal ambil data.',
+          });
         }
       } catch (error) {
-        Alert.alert('Error', 'Terjadi kesalahan saat ambil data awal');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Terjadi kesalahan saat ambil data awal.',
+        });
+      } finally {
+        if (!cancel) setLoading(false);
       }
     };
+
     fetchData();
+
     return () => {
       cancel = true;
     };
@@ -306,12 +328,15 @@ const EditTrainHours = () => {
   };
 
   // Validasi dan submit update ke backend
+
   const handleSubmit = async () => {
+    setIsSubmitting(true);
+
     const requiredFields = [
       'jde_no',
       'employee_name',
       'position',
-      'training_type', // wajib id KPI
+      'training_type',
       'unit_class',
       'unit_type',
       'code',
@@ -324,22 +349,37 @@ const EditTrainHours = () => {
       'site',
       'date_activity',
     ];
+
     for (const field of requiredFields) {
       if (!formData[field]) {
-        Alert.alert(
-          'Validasi Gagal',
-          `Field "${field.replace('_', ' ')}" wajib diisi.`,
-        );
+        Toast.show({
+          type: 'error',
+          text1: 'Validasi Gagal',
+          text2: `Field "${field.replace('_', ' ')}" wajib diisi.`,
+        });
+        setIsSubmitting(false);
         return;
       }
     }
+
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
       if (!token) {
-        Alert.alert('Error', 'Token tidak ditemukan. Silakan login ulang.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Token tidak ditemukan. Silakan login ulang.',
+        });
+        setIsSubmitting(false);
         return;
       }
+
+      Toast.show({
+        type: 'info',
+        text1: 'Mohon tunggu',
+        text2: 'Sedang menyimpan data...',
+      });
 
       const response = await axios.put(
         `${API_BASE_URL.mop}/trainHours/${id}`,
@@ -352,24 +392,40 @@ const EditTrainHours = () => {
           },
         },
       );
+
       if (response.data.status) {
-        Alert.alert(
-          'Sukses',
-          response.data.message || 'Data berhasil diupdate',
-        );
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil',
+          text2: response.data.message || 'Data berhasil diupdate',
+        });
         navigation.navigate('TrainHours');
       } else {
-        Alert.alert('Gagal', response.data.message || 'Gagal update data');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: response.data.message || 'Gagal update data',
+        });
       }
     } catch (error) {
       if (error.response?.data?.errors) {
         const messages = Object.values(error.response.data.errors)
           .flat()
           .join('\n');
-        Alert.alert('Validasi Gagal', messages);
+        Toast.show({
+          type: 'error',
+          text1: 'Validasi Gagal',
+          text2: messages,
+        });
       } else {
-        Alert.alert('Error', 'Terjadi kesalahan saat update data');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Terjadi kesalahan saat update data',
+        });
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -378,7 +434,7 @@ const EditTrainHours = () => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <View style={{flex: 1, paddingBottom: insets.bottom}}>
         <KeyboardAwareScrollView
@@ -580,7 +636,13 @@ const EditTrainHours = () => {
           </CollapsibleCard>
 
           {/* Tombol submit update */}
-          <Button title="Update" onPress={handleSubmit} />
+          <View style={{marginTop: 24}}>
+            <Button
+              title={isSubmitting ? 'Memproses...' : 'Update'}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            />
+          </View>
         </KeyboardAwareScrollView>
       </View>
     </LinearGradient>

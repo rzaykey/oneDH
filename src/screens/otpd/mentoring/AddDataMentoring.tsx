@@ -24,6 +24,7 @@ import API_BASE_URL from '../../../config';
 import NetInfo from '@react-native-community/netinfo';
 import LinearGradient from 'react-native-linear-gradient';
 import DropDownPicker from 'react-native-dropdown-picker';
+import Toast from 'react-native-toast-message';
 
 import {addQueueOffline} from '../../../utils/offlineQueueHelper';
 import {OfflineQueueContext} from '../../../utils/OfflineQueueContext';
@@ -346,9 +347,17 @@ const AddDataMentoring = ({route}) => {
   const handleClear = async () => {
     try {
       await AsyncStorage.removeItem('mentoring_queue_offline');
-      Alert.alert('Sukses', 'Antrian offline mentoring sudah dihapus.');
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil',
+        text2: 'Antrian offline mentoring sudah dihapus.',
+      });
     } catch (err) {
-      Alert.alert('Gagal', 'Tidak bisa menghapus cache offline.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Tidak bisa menghapus cache offline.',
+      });
     }
   };
 
@@ -516,6 +525,7 @@ const AddDataMentoring = ({route}) => {
 
   // --- SUBMIT (OFFLINE FIRST)
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -546,6 +556,7 @@ const AddDataMentoring = ({route}) => {
             : 0;
         return {totalYScore, averagePoint};
       };
+
       const observasi = calcPoints('observasi');
       const mentoring = calcPoints('mentoring');
       const payload = {
@@ -576,18 +587,23 @@ const AddDataMentoring = ({route}) => {
           is_mentoring: detail.is_mentoring,
           note_observasi: detail.note_observasi || '',
         })),
-        id_local: Date.now() + '_' + Math.random().toString(36).slice(2, 10), // anti duplikat lokal
+        id_local: Date.now() + '_' + Math.random().toString(36).slice(2, 10),
       };
 
       if (!isConnected) {
         await addQueueOffline(MENTORING_QUEUE_KEY, payload);
         await AsyncStorage.removeItem('mentoring_editable_details_temp');
-        Alert.alert('Berhasil (Offline)', 'Data akan dikirim saat online.');
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil (Offline)',
+          text2: 'Data akan dikirim saat online.',
+        });
         navigation.goBack();
         return;
       }
 
       if (!token) throw new Error('Sesi habis, login kembali');
+
       const response = await axios.post(
         `${API_BASE_URL.mop}/mentoring/store`,
         payload,
@@ -599,19 +615,26 @@ const AddDataMentoring = ({route}) => {
           },
         },
       );
+
       if (response.data.success) {
         await AsyncStorage.removeItem('mentoring_editable_details_temp');
-        Alert.alert('Sukses', 'Data mentoring berhasil ditambahkan!');
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Data mentoring berhasil ditambahkan!',
+        });
         if (navigation.canGoBack()) navigation.goBack();
         else navigation.navigate('FullDashboard');
       } else {
         throw new Error(response.data.message || 'Gagal menambah data');
       }
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || error.message || 'Terjadi kesalahan',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2:
+          error.response?.data?.message || error.message || 'Terjadi kesalahan',
+      });
     } finally {
       setLoading(false);
       setIsSubmitting(false);
@@ -631,7 +654,7 @@ const AddDataMentoring = ({route}) => {
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
       style={{flex: 1}}
-      start={{x: 2, y: 2}}
+      start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <ScrollView
         style={{flex: 1}}
@@ -639,6 +662,11 @@ const AddDataMentoring = ({route}) => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
           <Text style={styles.title}>Tambah Data Mentoring {unitType}</Text>
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+              <Text style={styles.clearButtonText}>Clear Cache</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Status Offline Queue & Push Manual */}
           {mentoringQueueCount > 0 && (

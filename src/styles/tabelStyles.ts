@@ -164,4 +164,32 @@ export const tabelStyles = {
     alignItems: 'center',
     marginRight: 13,
   },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280', // abu-abu soft
+    fontWeight: '500',
+  },
+  content: {
+    alignItems: 'center',
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#6b7280', // lighter gray
+  },
+  containerLoading: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  titleLoading: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: 18,
+    color: '#2463EB',
+    textAlign: 'center',
+    marginVertical: 18,
+  },
 };
