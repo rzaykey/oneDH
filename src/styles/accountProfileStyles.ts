@@ -86,4 +86,18 @@ export const accountProfileStyles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  updatePasswordButton: {
+    marginTop: 16,
+    backgroundColor: '#4F46E5',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  updatePasswordText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 });

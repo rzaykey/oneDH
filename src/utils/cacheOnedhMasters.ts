@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API_BASE_URL from '../config';
 
-export const cacheOnedhMasters = async (token: string) => {
+export const cacheOnedhMasters = async (headers: Record<string, string>) => {
   try {
     const requests = [
       {
@@ -31,18 +31,17 @@ export const cacheOnedhMasters = async (token: string) => {
 
     for (const req of requests) {
       try {
-        const resp = await axios.get(req.url, {
-          headers: {Authorization: `Bearer ${token}`},
-        });
+        const resp = await axios.get(req.url, {headers});
         await AsyncStorage.setItem(
           req.key,
           JSON.stringify(resp.data?.data || []),
         );
+        console.log(`✅ Berhasil cache ${req.label}`);
       } catch (e) {
-        console.log(`Gagal cache ${req.label}:`, e?.message || e);
+        console.log(`❌ Gagal cache ${req.label}:`, e?.message || e);
       }
     }
   } catch (err) {
-    console.log('Error cacheOnedhMasters:', err?.message || err);
+    console.log('❌ Error di cacheOnedhMasters:', err?.message || err);
   }
 };

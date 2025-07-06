@@ -20,7 +20,6 @@ import NetInfo from '@react-native-community/netinfo';
 import LinearGradient from 'react-native-linear-gradient';
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-toast-message';
-
 import {
   addQueueOffline,
   pushOfflineQueue,
@@ -62,7 +61,17 @@ const CreateP2HScreen = ({navigation}) => {
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [formLocked, setFormLocked] = useState(false);
 
+  const getAuthHeader = async () => {
+    const cache = await AsyncStorage.getItem('loginCache');
+    const token = cache && JSON.parse(cache)?.token;
+    if (!token) throw new Error('Token tidak ditemukan!');
+    return {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  };
   // ==== 1. Restore draft ATAU ambil dari loginCache ====
   useEffect(() => {
     const restoreDraftOrLogin = async () => {
@@ -76,7 +85,9 @@ const CreateP2HScreen = ({navigation}) => {
           setSection(data.section || '');
           setDept(data.dept || '');
           setSite(data.site || '');
-          setTanggal(data.tanggal || dayjs().format('YYYY-MM-DD'));
+          setTanggal(
+            data.tanggal?.trim() ? data.tanggal : dayjs().format('YYYY-MM-DD'),
+          );
           setKeterangan(data.keterangan || '');
           setInlineRadioOptions(data.inlineRadioOptions || {});
           setStickerCommissioning(data.stickerCommissioning || 'Berlaku');
@@ -109,76 +120,96 @@ const CreateP2HScreen = ({navigation}) => {
 
   const fetchMasters = async () => {
     setLoadingMaster(true);
-    try {
-      const isConnected = (await NetInfo.fetch()).isConnected;
-      let modelData = [],
-        questionData = [],
-        deptData = [];
 
-      if (isConnected) {
+    let modelData = [],
+      questionData = [],
+      deptData = [];
+
+    try {
+      const netState = await NetInfo.fetch();
+      const isOnline = netState.isConnected;
+
+      if (isOnline) {
         try {
-          const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`);
+          const headers = await getAuthHeader();
+
+          // === Fetch Model ===
+          const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`, {
+            headers,
+          });
           const modelJson = await modelRes.json();
           modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
+
           if (modelData.length > 0) {
             await AsyncStorage.setItem(
               'master_model',
               JSON.stringify(modelData),
             );
           }
-        } catch {
-          const m = await AsyncStorage.getItem('master_model');
-          modelData = m ? JSON.parse(m) : [];
-        }
 
-        try {
-          const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`);
+          // === Fetch Questions ===
+          const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`, {
+            headers,
+          });
           const qJson = await qRes.json();
           questionData = Array.isArray(qJson.data) ? qJson.data : [];
+
           if (questionData.length > 0) {
             await AsyncStorage.setItem(
               'master_questions',
               JSON.stringify(questionData),
             );
           }
-        } catch {
-          const q = await AsyncStorage.getItem('master_questions');
-          questionData = q ? JSON.parse(q) : [];
-        }
 
-        try {
-          const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`);
+          // === Fetch Dept ===
+          const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`, {
+            headers,
+          });
           const dJson = await dRes.json();
           deptData = Array.isArray(dJson.data) ? dJson.data : [];
+
           if (deptData.length > 0) {
             await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
           }
-        } catch {
+        } catch (err) {
+          console.warn('⚠️ Gagal fetch online, fallback ke local:', err);
+
+          const m = await AsyncStorage.getItem('master_model');
+          modelData = m ? JSON.parse(m) : [];
+
+          const q = await AsyncStorage.getItem('master_questions');
+          questionData = q ? JSON.parse(q) : [];
+
           const d = await AsyncStorage.getItem('master_dept');
           deptData = d ? JSON.parse(d) : [];
         }
       } else {
+        // === Offline: langsung ambil dari cache ===
         const m = await AsyncStorage.getItem('master_model');
         modelData = m ? JSON.parse(m) : [];
+
         const q = await AsyncStorage.getItem('master_questions');
         questionData = q ? JSON.parse(q) : [];
+
         const d = await AsyncStorage.getItem('master_dept');
         deptData = d ? JSON.parse(d) : [];
       }
 
+      // === Update State ke UI ===
       setModelList(modelData);
       setQuestionList(questionData);
       setDeptList(deptData);
 
       Toast.show({
         type: 'success',
-        text1: 'Berhasil Refresh Data',
-        text2: isConnected
-          ? 'Data master berhasil diperbarui dari server'
-          : 'Tidak ada koneksi. Menggunakan data lokal.',
+        text1: 'Berhasil Memuat Data',
+        text2: netState.isConnected
+          ? 'Data master diperbarui dari server.'
+          : 'Offline. Menggunakan data lokal.',
         position: 'top',
       });
     } catch (err) {
+      console.error('❌ fetchMasters error:', err);
       setModelList([]);
       setQuestionList([]);
       setDeptList([]);
@@ -186,7 +217,7 @@ const CreateP2HScreen = ({navigation}) => {
       Toast.show({
         type: 'error',
         text1: 'Gagal Memuat Data',
-        text2: 'Terjadi kesalahan saat mengambil data master',
+        text2: 'Terjadi kesalahan saat mengambil data master.',
         position: 'top',
       });
     }
@@ -253,6 +284,7 @@ const CreateP2HScreen = ({navigation}) => {
     };
     saveDraft();
   }, [
+    formLocked,
     nounit,
     model,
     KM,
@@ -267,34 +299,23 @@ const CreateP2HScreen = ({navigation}) => {
   ]);
 
   // ==== 5. Reset form ====
-  const resetForm = async () => {
-    setNoUnit('');
-    setModel('');
-    setKM('');
-    setSection('');
-    setDept('');
-    // Ambil site & model dari loginCache setelah reset
-    const loginCache = await AsyncStorage.getItem('loginCache');
-    if (loginCache) {
-      const cache = JSON.parse(loginCache);
-      setSite(cache.dataEmp?.site || activeSite || '');
-      setModel(cache.dataEmp?.model || '');
+  const resetForm = async (keepUnitInfo = true) => {
+    if (!keepUnitInfo) {
+      setNoUnit('');
+      setModel('');
+      setSection('');
       setDept('');
     } else {
-      setSite('');
-      setModel('');
-      setDept('');
+      // Restore dari last_*
+      const lastSection = await AsyncStorage.getItem('last_section');
+      const lastDept = await AsyncStorage.getItem('last_dept');
+      const lastNoUnit = await AsyncStorage.getItem('last_nounit');
+      const lastModel = await AsyncStorage.getItem('last_model');
+      setSection(lastSection || '');
+      setDept(lastDept || '');
+      setNoUnit(lastNoUnit || '');
+      setModel(lastModel || '');
     }
-
-    // ✅ Tambahan penting: restore last_section dan last_dept
-    const lastSection = await AsyncStorage.getItem('last_section');
-    const lastDept = await AsyncStorage.getItem('last_dept');
-    const lastNoUnit = await AsyncStorage.getItem('last_nounit');
-    const lastModel = await AsyncStorage.getItem('last_model');
-    setSection(lastSection || '');
-    setDept(lastDept || '');
-    setNoUnit(lastNoUnit || '');
-    setModel(lastModel || '');
 
     setTanggal(dayjs().format('YYYY-MM-DD'));
     setJam(dayjs().format('HH:mm'));
@@ -302,6 +323,26 @@ const CreateP2HScreen = ({navigation}) => {
     setInlineRadioOptions({});
     setStickerCommissioning('Berlaku');
     setStickerFuelPermit('Berlaku');
+
+    // 👉 Simpan ulang draft baru
+    const type = DeviceInfo.getSystemName();
+    const version = DeviceInfo.getVersion();
+    const build = DeviceInfo.getBuildNumber();
+    const draft = {
+      nounit,
+      model,
+      KM: '',
+      section,
+      dept,
+      site,
+      tanggal: dayjs().format('YYYY-MM-DD'),
+      keterangan: '',
+      inlineRadioOptions: {},
+      stickerCommissioning: 'Berlaku',
+      stickerFuelPermit: 'Berlaku',
+      device_info: `(${type})(${build})(${version})`,
+    };
+    await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   };
 
   // ==== 6. Hapus draft ====
@@ -398,6 +439,14 @@ const CreateP2HScreen = ({navigation}) => {
     setInlineRadioOptions(prev => ({...prev, [id]: value}));
   }, []);
 
+  const getFinalTanggalDanJam = () => {
+    const now = new Date();
+    const finalTanggal = tanggal?.trim()
+      ? tanggal
+      : now.toISOString().split('T')[0];
+
+    return `${finalTanggal}`;
+  };
   // ==== 9. Submit ====
 
   const handleSubmit = async () => {
@@ -430,7 +479,7 @@ const CreateP2HScreen = ({navigation}) => {
       inlineRadioOptions: jawabanChecklist,
       Berlaku: stickerCommissioning,
       Sticker: stickerFuelPermit,
-      tanggal: `${tanggal} ${jam}`,
+      tanggal: getFinalTanggalDanJam(),
       keterangan,
       device_info: `(${type})(${build})(${version})`,
     };
@@ -478,7 +527,11 @@ const CreateP2HScreen = ({navigation}) => {
         await AsyncStorage.setItem('last_nounit', nounit);
         await AsyncStorage.setItem('last_model', model);
 
-        resetForm();
+        // 🧹 Optional: Hapus manual kalau kamu simpan keterangan, tanggal, dll secara terpisah
+        await AsyncStorage.removeItem('tanggal');
+        await AsyncStorage.removeItem('keterangan');
+        await AsyncStorage.removeItem('inlineRadioOptions');
+        resetForm(true);
         if (isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
@@ -517,6 +570,11 @@ const CreateP2HScreen = ({navigation}) => {
       });
     }
   };
+  useEffect(() => {
+    if (!tanggal?.trim()) {
+      setTanggal(dayjs().format('YYYY-MM-DD'));
+    }
+  }, []);
 
   // ==== 10. Render ====
   const stickerCommissioningQ = questionList.find(q => String(q.id) === '27');
@@ -846,39 +904,17 @@ const CreateP2HScreen = ({navigation}) => {
             <TouchableOpacity
               style={[styles.input, {justifyContent: 'center'}]}
               onPress={() => setShowDate(true)}>
-              <Text>{tanggal}</Text>
+              <Text>{tanggal || dayjs().format('YYYY-MM-DD')}</Text>
             </TouchableOpacity>
             {showDate && (
               <DateTimePicker
-                value={dayjs(tanggal).toDate()}
+                value={dayjs(tanggal || dayjs().format('YYYY-MM-DD')).toDate()}
                 mode="date"
                 display="default"
                 onChange={(event, selectedDate) => {
                   setShowDate(false);
                   if (selectedDate) {
                     setTanggal(dayjs(selectedDate).format('YYYY-MM-DD'));
-                  }
-                }}
-              />
-            )}
-
-            {/* TIME PICKER */}
-            {/* <Text style={styles.label}>Jam</Text> */}
-            {/* <TouchableOpacity
-              style={[styles.input, {justifyContent: 'center'}]}
-              onPress={() => setShowTime(true)}>
-              <Text>{jam}</Text>
-            </TouchableOpacity> */}
-            {showTime && (
-              <DateTimePicker
-                value={dayjs(jam, 'HH:mm').toDate()}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={(event, selectedTime) => {
-                  setShowTime(false);
-                  if (selectedTime) {
-                    setJam(dayjs(selectedTime).format('HH:mm'));
                   }
                 }}
               />

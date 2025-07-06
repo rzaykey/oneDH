@@ -234,6 +234,17 @@ const LoginScreen = ({navigation}: Props) => {
             <Text style={styles.buttonText}>Masuk</Text>
           )}
         </TouchableOpacity>
+        <View style={{marginTop: 20, alignItems: 'center'}}>
+          <Text style={{color: '#333'}}>
+            Jika anda LS dan Belum terdaftar silahkan
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={{color: '#0066cc', fontWeight: 'bold'}}>
+              Daftar Disini
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={{textAlign: 'center', marginTop: 12, color: '#333'}}>
           App Version: {appVersion}
         </Text>

@@ -4,7 +4,9 @@ import {RootStackParamList} from './types';
 
 // Import semua screens yang kamu gunakan
 import AuthLoadingScreen from '../screens/AuthLoadingScreen';
+import UpdatePassword from '../screens/UpdatePasswordScreen';
 import LoginScreen from '../screens/LoginScreen';
+import Register from '../screens/RegisterScreen';
 // import FullDashboard from '../screens/FullDashboard';
 // import AdminDashboard from '../screens/AdminDashboard';
 // import TrainerDashboard from '../screens/TrainerDashboard';
@@ -44,6 +46,12 @@ const AppNavigator = () => (
     <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="SitePicker" component={SitePickerScreen} />
+    <Stack.Screen
+      name="UpdatePassword"
+      component={UpdatePassword}
+      options={{title: 'Update Password'}}
+    />
+    <Stack.Screen name="Register" component={Register} />
     <Stack.Screen name="MainApp" component={TabNavigator} />
     <Stack.Screen name="MOPScreen" component={MOPScreen} />
 

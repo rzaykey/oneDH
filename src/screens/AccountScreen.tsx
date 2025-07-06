@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import {accountProfileStyles as styles} from '../styles/accountProfileStyles';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import {Platform} from 'react-native'; // tambahkan kalau belum
 
 const AccountProfileScreen = ({navigation}) => {
@@ -26,7 +27,11 @@ const AccountProfileScreen = ({navigation}) => {
         const cacheStr = await AsyncStorage.getItem('loginCache');
         if (cacheStr) setProfile(JSON.parse(cacheStr));
       } catch (e) {
-        Alert.alert('Error', 'Gagal memuat data profil!');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Memuat Profil',
+          text2: 'Coba periksa koneksi atau cache data',
+        });
       }
       setLoading(false);
     };
@@ -131,6 +136,14 @@ const AccountProfileScreen = ({navigation}) => {
                   <Text style={styles.infoLabel}>Position:</Text>{' '}
                   {profile?.dataEmp?.position}
                 </Text>
+                {/* ✅ Tambahkan tombol Update Password */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('UpdatePassword')}
+                  style={styles.updatePasswordButton}>
+                  <Text style={styles.updatePasswordText}>
+                    🔒 Update Password
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.rolesCard}>
