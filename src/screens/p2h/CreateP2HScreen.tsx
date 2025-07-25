@@ -118,7 +118,7 @@ const CreateP2HScreen = ({navigation}) => {
     restoreDraftOrLogin();
   }, [activeSite]);
 
-  const fetchMasters = async () => {
+  const fetchMasters = async (forceRefresh = false) => {
     setLoadingMaster(true);
 
     let modelData = [],
@@ -126,86 +126,103 @@ const CreateP2HScreen = ({navigation}) => {
       deptData = [];
 
     try {
+      // Ambil cache dulu
+      const modelCache = await AsyncStorage.getItem('master_model');
+      const questionCache = await AsyncStorage.getItem('master_questions');
+      const deptCache = await AsyncStorage.getItem('master_dept');
+
+      const hasCache =
+        modelCache &&
+        questionCache &&
+        deptCache &&
+        JSON.parse(modelCache).length > 0 &&
+        JSON.parse(questionCache).length > 0 &&
+        JSON.parse(deptCache).length > 0;
+
+      if (hasCache && !forceRefresh) {
+        // ✅ Gunakan data cache
+        modelData = JSON.parse(modelCache);
+        questionData = JSON.parse(questionCache);
+        deptData = JSON.parse(deptCache);
+
+        setModelList(modelData);
+        setQuestionList(questionData);
+        setDeptList(deptData);
+
+        Toast.show({
+          type: 'info',
+          text1: 'Data Master',
+          text2: 'Menggunakan data lokal dari cache.',
+          position: 'top',
+        });
+
+        setLoadingMaster(false);
+        return;
+      }
+
+      // ❗ Cache tidak lengkap atau user paksa refresh
       const netState = await NetInfo.fetch();
       const isOnline = netState.isConnected;
 
-      if (isOnline) {
-        try {
-          const headers = await getAuthHeader();
+      if (!isOnline) {
+        Toast.show({
+          type: 'error',
+          text1: 'Offline',
+          text2: 'Tidak dapat memuat ulang. Gunakan data lokal.',
+          position: 'top',
+        });
 
-          // === Fetch Model ===
-          const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`, {
-            headers,
-          });
-          const modelJson = await modelRes.json();
-          modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
+        modelData = modelCache ? JSON.parse(modelCache) : [];
+        questionData = questionCache ? JSON.parse(questionCache) : [];
+        deptData = deptCache ? JSON.parse(deptCache) : [];
 
-          if (modelData.length > 0) {
-            await AsyncStorage.setItem(
-              'master_model',
-              JSON.stringify(modelData),
-            );
-          }
-
-          // === Fetch Questions ===
-          const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`, {
-            headers,
-          });
-          const qJson = await qRes.json();
-          questionData = Array.isArray(qJson.data) ? qJson.data : [];
-
-          if (questionData.length > 0) {
-            await AsyncStorage.setItem(
-              'master_questions',
-              JSON.stringify(questionData),
-            );
-          }
-
-          // === Fetch Dept ===
-          const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`, {
-            headers,
-          });
-          const dJson = await dRes.json();
-          deptData = Array.isArray(dJson.data) ? dJson.data : [];
-
-          if (deptData.length > 0) {
-            await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
-          }
-        } catch (err) {
-          console.warn('⚠️ Gagal fetch online, fallback ke local:', err);
-
-          const m = await AsyncStorage.getItem('master_model');
-          modelData = m ? JSON.parse(m) : [];
-
-          const q = await AsyncStorage.getItem('master_questions');
-          questionData = q ? JSON.parse(q) : [];
-
-          const d = await AsyncStorage.getItem('master_dept');
-          deptData = d ? JSON.parse(d) : [];
-        }
-      } else {
-        // === Offline: langsung ambil dari cache ===
-        const m = await AsyncStorage.getItem('master_model');
-        modelData = m ? JSON.parse(m) : [];
-
-        const q = await AsyncStorage.getItem('master_questions');
-        questionData = q ? JSON.parse(q) : [];
-
-        const d = await AsyncStorage.getItem('master_dept');
-        deptData = d ? JSON.parse(d) : [];
+        setModelList(modelData);
+        setQuestionList(questionData);
+        setDeptList(deptData);
+        setLoadingMaster(false);
+        return;
       }
 
-      // === Update State ke UI ===
+      const headers = await getAuthHeader();
+
+      // === Fetch Model ===
+      const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`, {headers});
+      const modelJson = await modelRes.json();
+      modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
+      if (modelData.length > 0) {
+        await AsyncStorage.setItem('master_model', JSON.stringify(modelData));
+      }
+
+      // === Fetch Questions ===
+      const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`, {
+        headers,
+      });
+      const qJson = await qRes.json();
+      questionData = Array.isArray(qJson.data) ? qJson.data : [];
+      if (questionData.length > 0) {
+        await AsyncStorage.setItem(
+          'master_questions',
+          JSON.stringify(questionData),
+        );
+      }
+
+      // === Fetch Dept ===
+      const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers});
+      const dJson = await dRes.json();
+      deptData = Array.isArray(dJson.data) ? dJson.data : [];
+      if (deptData.length > 0) {
+        await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
+      }
+
+      // ✅ Update state
       setModelList(modelData);
       setQuestionList(questionData);
       setDeptList(deptData);
 
       Toast.show({
         type: 'success',
-        text1: 'Berhasil Memuat Data',
-        text2: netState.isConnected
-          ? 'Data master diperbarui dari server.'
-          : 'Offline. Menggunakan data lokal.',
+        text1: 'Data Diperbarui',
+        text2: 'Berhasil mengambil data dari server.',
         position: 'top',
       });
     } catch (err) {
@@ -282,6 +299,7 @@ const CreateP2HScreen = ({navigation}) => {
       };
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     };
+
     saveDraft();
   }, [
     formLocked,
@@ -299,14 +317,13 @@ const CreateP2HScreen = ({navigation}) => {
   ]);
 
   // ==== 5. Reset form ====
-  const resetForm = async (keepUnitInfo = true) => {
+  const resetForm = async (keepUnitInfo = true, resetTanggalDibuat = false) => {
     if (!keepUnitInfo) {
       setNoUnit('');
       setModel('');
       setSection('');
       setDept('');
     } else {
-      // Restore dari last_*
       const lastSection = await AsyncStorage.getItem('last_section');
       const lastDept = await AsyncStorage.getItem('last_dept');
       const lastNoUnit = await AsyncStorage.getItem('last_nounit');
@@ -324,7 +341,6 @@ const CreateP2HScreen = ({navigation}) => {
     setStickerCommissioning('Berlaku');
     setStickerFuelPermit('Berlaku');
 
-    // 👉 Simpan ulang draft baru
     const type = DeviceInfo.getSystemName();
     const version = DeviceInfo.getVersion();
     const build = DeviceInfo.getBuildNumber();
@@ -439,16 +455,7 @@ const CreateP2HScreen = ({navigation}) => {
     setInlineRadioOptions(prev => ({...prev, [id]: value}));
   }, []);
 
-  const getFinalTanggalDanJam = () => {
-    const now = new Date();
-    const finalTanggal = tanggal?.trim()
-      ? tanggal
-      : now.toISOString().split('T')[0];
-
-    return `${finalTanggal}`;
-  };
   // ==== 9. Submit ====
-
   const handleSubmit = async () => {
     if (!isFormValid()) {
       return;
@@ -479,7 +486,7 @@ const CreateP2HScreen = ({navigation}) => {
       inlineRadioOptions: jawabanChecklist,
       Berlaku: stickerCommissioning,
       Sticker: stickerFuelPermit,
-      tanggal: getFinalTanggalDanJam(),
+      tanggal: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       keterangan,
       device_info: `(${type})(${build})(${version})`,
     };
@@ -570,6 +577,7 @@ const CreateP2HScreen = ({navigation}) => {
       });
     }
   };
+
   useEffect(() => {
     if (!tanggal?.trim()) {
       setTanggal(dayjs().format('YYYY-MM-DD'));
@@ -900,7 +908,7 @@ const CreateP2HScreen = ({navigation}) => {
             <Text style={styles.cardTitle}>Lainnya</Text>
 
             {/* DATE PICKER */}
-            <Text style={styles.label}>Tanggal</Text>
+            {/* <Text style={styles.label}>Tanggal</Text>
             <TouchableOpacity
               style={[styles.input, {justifyContent: 'center'}]}
               onPress={() => setShowDate(true)}>
@@ -918,7 +926,7 @@ const CreateP2HScreen = ({navigation}) => {
                   }
                 }}
               />
-            )}
+            )} */}
 
             <Text style={styles.label}>Keterangan</Text>
             <TextInput
