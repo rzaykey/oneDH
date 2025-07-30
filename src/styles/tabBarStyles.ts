@@ -11,6 +11,7 @@ export const tabBarStyles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: {width: 0, height: -2},
     position: 'absolute',
+    bottom: 0,
     overflow: 'hidden',
     paddingTop: 5,
   },

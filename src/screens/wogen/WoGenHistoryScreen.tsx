@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
+  Modal,
   Alert,
   Image,
 } from 'react-native';
@@ -23,7 +24,6 @@ import {useSiteContext} from '../../context/SiteContext';
 import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan paket ini sudah diinstall
 import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
 import Toast from 'react-native-toast-message';
-import Modal from 'react-native-modal';
 
 interface BadgeProps {
   label: string;
@@ -34,10 +34,10 @@ interface InfoEmptyProps {
   message?: string;
 }
 
-const API_URL = `${API_BASE_URL.onedh}/ShowDataTaskAssignement`;
-const API_URL_CT = `${API_BASE_URL.onedh}/CloseTaskAssignement`;
+const API_URL = `${API_BASE_URL.onedh}/ShowOpenWOGeneral`;
+const API_URL_CT = `${API_BASE_URL.onedh}/CloseWOGen`;
 
-const JCMHistoryScreen: React.FC = () => {
+const WoGenHistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<JCMItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -102,7 +102,6 @@ const JCMHistoryScreen: React.FC = () => {
       });
 
       const json = await response.json();
-      console.log(json);
 
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');
@@ -169,20 +168,14 @@ const JCMHistoryScreen: React.FC = () => {
   }, [showCloseModal, selectedItem]);
 
   const handleSubmitCloseJCM = async ({
-    id,
-    jde,
-    wono,
-    wotaskno,
-    ddlstatus,
+    idTaskWoGen,
+    jdeno,
     tanggal,
     jam,
     remark,
   }: {
-    id: string;
-    jde: string;
-    wono: string;
-    wotaskno: string;
-    ddlstatus: string;
+    idTaskWoGen: string;
+    jdeno: string;
     tanggal: string;
     jam: string;
     remark: string;
@@ -191,11 +184,8 @@ const JCMHistoryScreen: React.FC = () => {
       const headers = await getAuthHeader();
 
       const body = {
-        id,
-        jde,
-        wono,
-        wotaskno,
-        ddlstatus,
+        idTaskWoGen,
+        jdeno,
         tanggal,
         jam,
         remark,
@@ -207,57 +197,52 @@ const JCMHistoryScreen: React.FC = () => {
         body: JSON.stringify(body),
       });
 
-      const text = await response.text();
-      let res;
+      const text = await response.text(); // ✅ Baca hanya sekali
+      let resJson: any = {};
+      let rawMessage = '';
 
       try {
-        res = JSON.parse(text);
+        resJson = JSON.parse(text);
       } catch (e) {
-        console.error('Bukan JSON, ini HTML:', text);
+        console.error('❌ Response bukan JSON, ini HTML/text:', text);
         Toast.show({
           type: 'error',
           text1: 'Server Error',
           text2: 'Terjadi kesalahan di server. Coba lagi nanti.',
-          text2NumberOfLines: 10,
         });
         return;
       }
 
-      if (response.ok && res?.status !== false) {
+      rawMessage =
+        resJson?.message || resJson?.notif || 'Terjadi kesalahan saat submit.';
+
+      if (response.ok && resJson?.status !== false) {
         Toast.show({
           type: 'success',
-          text1: 'Berhasil Menutup JCM',
-          text2: res.pesan || 'JCM berhasil ditutup.',
-          text2NumberOfLines: 10,
+          text1: 'Berhasil Menutup Pekerjaan',
+          text2: resJson.pesan || 'Pekerjaan berhasil ditutup.',
         });
 
         setShowCloseModal(false);
         fetchHistory(false, 1); // Refresh
       } else {
-        if (res?.message === 'JDE Tidak Sama Dengan Job Card') {
-          Toast.show({
-            type: 'error',
-            text1: 'Validasi Gagal',
-            text2: 'JDE yang Anda kirim tidak sesuai dengan job card.',
-            text2NumberOfLines: 10,
-          });
-        } else {
-          Toast.show({
-            type: 'error',
-            position: 'top',
-            text1: 'Gagal Menutup JCM',
-            text2: res?.message || 'Terjadi kesalahan.',
-            text2NumberOfLines: 10,
-          });
-        }
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: rawMessage,
+          text2NumberOfLines: 10,
+        });
       }
+
+      setLoading(false);
     } catch (err) {
-      console.error('Submit Close JCM error:', err);
+      console.error('❌ Submit Close Pekerjaan error:', err);
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Gagal mengirim data.',
+        text2: 'Gagal mengirim data. Cek koneksi atau coba ulangi.',
       });
+      setLoading(false);
     }
   };
 
@@ -332,7 +317,7 @@ const JCMHistoryScreen: React.FC = () => {
               setSelectedItem(item);
               setShowCloseModal(true);
             }}>
-            <Text style={styles.closeButtonText}>Close JCM</Text>
+            <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -383,7 +368,7 @@ const JCMHistoryScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 20}}
           />
-          <Text style={styles.title}>Pekerjaan JCM Saya</Text>
+          <Text style={styles.title}>Pekerjaan General Saya</Text>
         </View>
 
         <View style={styles.limitPickerWrap}>
@@ -468,16 +453,14 @@ const JCMHistoryScreen: React.FC = () => {
           </>
         )}
         <Modal
-          isVisible={showCloseModal}
-          backdropOpacity={0} // 🔥 ini menghilangkan block hitam
-          onBackdropPress={() => setShowCloseModal(false)}
-          animationIn="slideInUp"
-          animationOut="slideOutDown"
-          useNativeDriver>
+          visible={showCloseModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowCloseModal(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>
-                Konfirmasi Close JCM {selectedItem?.wono}?
+                Konfirmasi Close {selectedItem?.wono}?
               </Text>
 
               {/* Informasi Unit dan Task */}
@@ -490,28 +473,6 @@ const JCMHistoryScreen: React.FC = () => {
               <Text style={styles.modalLabel}>
                 WO Task Desc: {selectedItem?.task_desc}
               </Text>
-
-              {/* Dropdown Status */}
-              <Text style={styles.modalLabel}>Status:</Text>
-              <View style={styles.statusOptions}>
-                {['RFU', 'Pending Job', 'Pending Unit'].map(status => (
-                  <TouchableOpacity
-                    key={status}
-                    onPress={() => setDdlStatus(status)}
-                    style={[
-                      styles.statusOption,
-                      ddlStatus === status && styles.statusOptionSelected,
-                    ]}>
-                    <Text
-                      style={[
-                        styles.statusOptionText,
-                        ddlStatus === status && styles.statusOptionTextSelected,
-                      ]}>
-                      {status}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
 
               {/* Tanggal & Jam dalam Satu Row */}
               <Text style={styles.modalLabel}>Tanggal & Jam:</Text>
@@ -602,18 +563,15 @@ const JCMHistoryScreen: React.FC = () => {
                       selectedItem?.status !== ''
                     ) {
                       Alert.alert(
-                        'Tidak bisa menutup JCM',
-                        `Status saat ini adalah "${selectedItem.status}". Hanya JCM dengan status "Open" yang bisa ditutup.`,
+                        'Tidak bisa menutup Pekerjaan',
+                        `Status saat ini adalah "${selectedItem.status}". Hanya Pekerjaan dengan status "Open" yang bisa ditutup.`,
                       );
                       return;
                     }
 
                     handleSubmitCloseJCM({
-                      id: selectedItem?.id,
-                      jde: selectedItem?.jde_mekanik,
-                      wono: selectedItem?.wono,
-                      wotaskno: selectedItem?.wo_task_no,
-                      ddlstatus: ddlStatus,
+                      idTaskWoGen: selectedItem?.id,
+                      jdeno: selectedItem?.jde_mekanik,
                       tanggal: selectedDate.toISOString().split('T')[0],
                       jam: selectedDate.toTimeString().split(' ')[0],
                       remark,
@@ -636,4 +594,4 @@ const JCMHistoryScreen: React.FC = () => {
   );
 };
 
-export default JCMHistoryScreen;
+export default WoGenHistoryScreen;

@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
+import Modal from 'react-native-modal';
 import {jcmStyles as styles} from '../../styles/jcmStyles';
 
 import {
@@ -15,7 +16,6 @@ import {
   PermitType,
 } from '../../utils/permit';
 
-// Map untuk pengecekan action ke fungsi permit
 const actionChecker = {
   add: canAdd,
   edit: canEdit,
@@ -23,7 +23,6 @@ const actionChecker = {
   read: canRead,
 };
 
-// Konfigurasi menu per section
 const sectionConfig = [
   {
     section: 'JCM',
@@ -32,15 +31,17 @@ const sectionConfig = [
         label: 'Pilih Pekerjaan',
         icon: 'build-outline',
         action: 'read',
-        screen: 'CreateJCMScreen',
-        desc: 'Isi formulir pekerjaan JCM',
+        screen: 'CreateJCMScreen', // default screen
+        desc: 'Pilih pekerjaan',
+        isMulti: true,
       },
       {
         label: 'Riwayat Pekerjaan',
         icon: 'file-tray-full-outline',
         action: 'read',
-        screen: 'JCMHistoryScreen',
-        desc: 'Lihat riwayat JCM',
+        screen: 'JCMHistoryScreen', // default fallback
+        desc: 'Lihat riwayat pekerjaan',
+        isMultiHistory: true, // Tambahan
       },
     ],
   },
@@ -48,18 +49,16 @@ const sectionConfig = [
     section: 'Task Assignment',
     items: [
       {
-        label: 'Daftar JCM',
+        label: 'Validasi Task',
         icon: 'list-circle-outline',
         action: 'add',
         screen: 'JCMOpenScreen',
-        desc: 'Daftar seluruh JCM',
       },
       {
-        label: 'Validasi JCM',
+        label: 'Task Open',
         icon: 'person-add-outline',
         action: 'add',
         screen: 'JCMValidasiScreen',
-        desc: 'Hasil Validasi JCM mekanik',
       },
     ],
   },
@@ -67,6 +66,8 @@ const sectionConfig = [
 
 const JCMScreen = ({navigation}: any) => {
   const [permit, setPermit] = useState<PermitType | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalHistoryVisible, setModalHistoryVisible] = useState(false); // baru
 
   useEffect(() => {
     const loadPermit = async () => {
@@ -89,6 +90,22 @@ const JCMScreen = ({navigation}: any) => {
   }, []);
 
   if (!permit) return null;
+
+  const handleCardPress = (item: any) => {
+    if (item.isMulti) {
+      setModalVisible(true);
+    } else if (item.isMultiHistory) {
+      setModalHistoryVisible(true);
+    } else {
+      navigation.navigate(item.screen);
+    }
+  };
+
+  const handleModalNavigate = (target: string) => {
+    setModalVisible(false);
+    setModalHistoryVisible(false); // Tutup keduanya
+    navigation.navigate(target);
+  };
 
   return (
     <LinearGradient
@@ -116,7 +133,7 @@ const JCMScreen = ({navigation}: any) => {
                     key={item.label}
                     style={styles.menuCard}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate(item.screen)}>
+                    onPress={() => handleCardPress(item)}>
                     <View style={styles.iconCircle}>
                       <Icon name={item.icon} size={22} color="#FFFFFF" />
                     </View>
@@ -130,6 +147,52 @@ const JCMScreen = ({navigation}: any) => {
             );
           })}
         </ScrollView>
+
+        {/* Modal Opsi */}
+        {/* Modal Pilih Pekerjaan */}
+        <Modal
+          isVisible={modalVisible}
+          onBackdropPress={() => setModalVisible(false)}
+          useNativeDriver
+          backdropOpacity={0.3}
+          style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Pilih jenis pekerjaan</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleModalNavigate('CreateJCMScreen')}>
+              <Text style={styles.modalButtonText}>JCM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleModalNavigate('CreateWoGenScreen')}>
+              <Text style={styles.modalButtonText}>Work Order General</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
+        <Modal
+          isVisible={modalHistoryVisible}
+          onBackdropPress={() => setModalHistoryVisible(false)}
+          useNativeDriver
+          backdropOpacity={0.3}
+          style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Pilih Riwayat</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleModalNavigate('JCMHistoryScreen')}>
+              <Text style={styles.modalButtonText}>Riwayat JCM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleModalNavigate('WoGenHistoryScreen')}>
+              <Text style={styles.modalButtonText}>
+                Riwayat Work Order General
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );

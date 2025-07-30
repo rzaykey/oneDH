@@ -15,11 +15,13 @@ import {accountProfileStyles as styles} from '../styles/accountProfileStyles';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import {Platform} from 'react-native'; // tambahkan kalau belum
+import DeviceInfo from 'react-native-device-info';
 
 const AccountProfileScreen = ({navigation}) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
+  const [appVersion, setAppVersion] = useState('');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -43,6 +45,14 @@ const AccountProfileScreen = ({navigation}) => {
     if (!token) return '-';
     return token.substring(0, 6) + '...' + token.slice(-6);
   };
+
+  useEffect(() => {
+    const getVersion = async () => {
+      const version = await DeviceInfo.getVersion();
+      setAppVersion(`${version}`);
+    };
+    getVersion();
+  }, []);
 
   // Pastikan role pasti array
   let parsedRole = [];
@@ -178,6 +188,9 @@ const AccountProfileScreen = ({navigation}) => {
                   <Text style={{color: 'red'}}>Tidak ada role ditemukan.</Text>
                 )}
               </View>
+              <Text style={{textAlign: 'center', marginTop: 12, color: '#333'}}>
+                App Version: {appVersion}
+              </Text>
             </KeyboardAvoidingView>
           </ScrollView>
           {/* ✅ Tombol Logout Tetap di Bawah */}

@@ -7,6 +7,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Button,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -515,6 +516,7 @@ const CreateP2HScreen = ({navigation}) => {
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
+
       const response = await fetch(`${API_BASE_URL.onedh}/StoreP2H`, {
         method: 'POST',
         headers: {
@@ -524,22 +526,30 @@ const CreateP2HScreen = ({navigation}) => {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      let data = {};
+      let isSuccess = false;
+
+      try {
+        data = await response.json();
+        isSuccess = response.ok && data.status === true;
+      } catch (jsonErr) {
+        console.log('[JSON PARSE ERROR]', jsonErr);
+      }
+
       setLoading(false);
 
-      if (response.ok && data.status === true) {
+      if (isSuccess) {
         await removeDraft();
         await AsyncStorage.setItem('last_section', section);
         await AsyncStorage.setItem('last_dept', dept);
         await AsyncStorage.setItem('last_nounit', nounit);
         await AsyncStorage.setItem('last_model', model);
-
-        // 🧹 Optional: Hapus manual kalau kamu simpan keterangan, tanggal, dll secara terpisah
         await AsyncStorage.removeItem('tanggal');
         await AsyncStorage.removeItem('keterangan');
         await AsyncStorage.removeItem('inlineRadioOptions');
         resetForm(true);
-        if (isConnected) {
+
+        if (netState.isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
             OFFLINE_SUBMIT_KEY,
@@ -560,21 +570,51 @@ const CreateP2HScreen = ({navigation}) => {
 
         navigation.replace('P2HMyHistory');
       } else {
+        // server balas error atau parsing JSON gagal
+        await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
+        await refreshQueueCount();
+        await removeDraft();
+        resetForm();
+
         Toast.show({
-          type: 'error',
-          text1: 'Gagal',
-          text2: data.message || 'Gagal mengirim data!',
+          type: 'info',
+          text1: 'Gagal Kirim ke Server',
+          text2:
+            'Data disimpan ke antrian offline & akan dikirim otomatis saat server kembali normal.',
           position: 'top',
         });
+
+        navigation.replace('P2HMyHistory');
       }
     } catch (err) {
+      console.log('[FETCH ERROR]', err);
       setLoading(false);
+      await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
+      await refreshQueueCount();
+      await removeDraft();
+      resetForm();
+
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Gagal mengirim data. Periksa koneksi atau server!',
+        text2:
+          'Data disimpan ke antrian offline & akan dikirim saat server kembali tersedia.',
         position: 'top',
       });
+
+      navigation.replace('P2HMyHistory');
+    }
+  };
+
+  const showOfflineQueue = async () => {
+    const data = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      console.log('🗂 Offline Queue:', parsed);
+      Alert.alert('Offline Queue', JSON.stringify(parsed, null, 2));
+    } else {
+      console.log('🟢 Queue kosong');
+      Alert.alert('Queue kosong');
     }
   };
 
@@ -616,6 +656,10 @@ const CreateP2HScreen = ({navigation}) => {
       <SafeAreaView style={[styles.container]}>
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
           <Text style={styles.title}>Form Pemeriksaan P2H</Text>
+          <Button
+            title="Lihat Offline Queue"
+            onPress={() => showOfflineQueue('offline_submit_p2h')}
+          />
 
           {/* BADGE QUEUE */}
           {queueCount > 0 && (

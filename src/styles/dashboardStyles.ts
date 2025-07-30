@@ -149,7 +149,7 @@ export const dashboardStyles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'transparent', // ✅
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
   },

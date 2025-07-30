@@ -256,7 +256,7 @@ const JCMOpenScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 20}}
           />
-          <Text style={styles.title}>Data JCM Open</Text>
+          <Text style={styles.title}>Task Open</Text>
         </View>
 
         <View style={styles.limitPickerWrap}>

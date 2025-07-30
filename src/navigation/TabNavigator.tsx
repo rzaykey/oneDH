@@ -20,8 +20,8 @@ export default function TabNavigator() {
         tabBarStyle: [
           styles.tabBar,
           {
-            height: 60,
-            // paddingBottom: insets.bottom > 0 ? insets.bottom : 1,
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 1,
           },
         ],
         tabBarShowLabel: false,

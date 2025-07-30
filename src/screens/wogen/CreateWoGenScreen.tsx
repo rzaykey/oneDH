@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {
+  ScrollView,
   View,
   Text,
   TouchableOpacity,
@@ -28,33 +29,20 @@ import 'react-native-get-random-values';
 import Toast from 'react-native-toast-message';
 import NetInfo from '@react-native-community/netinfo';
 import {useFocusEffect} from '@react-navigation/native';
-import DropDownPicker from 'react-native-dropdown-picker';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
-const OFFLINE_SUBMIT_KEY = 'offline_submit_jcm';
+const OFFLINE_SUBMIT_KEY = 'offline_submit_wogen';
 
-const API_URL_MU = `${API_BASE_URL.onedh}/MasterUnit`;
-const API_URL_GWU = `${API_BASE_URL.onedh}/GetWoUnit/`;
-const API_URL_GGT = `${API_BASE_URL.onedh}/GetGroupTask`;
-const API_URL_GTA = `${API_BASE_URL.onedh}/GetTask Assignment/`;
+const API_URL_GWG = `${API_BASE_URL.onedh}/GetMasterWoGeneral/`;
 const API_URL_GS = `${API_BASE_URL.onedh}/GetSupervisor/`;
 
-const CreateJCMscreen = ({navigation}) => {
+const CreateWoGenScreen = ({navigation}) => {
   const insets = useSafeAreaInsets();
   const {user, activeSite} = useSiteContext();
 
   const [loadingMaster, setLoadingMaster] = useState(true);
-  const [unitList, setUnitList] = useState([]);
-  const [selectedUnit, setSelectedUnit] = useState(null);
 
   const [woList, setWoList] = useState([]);
   const [selectedWO, setSelectedWO] = useState(null);
-
-  const [groupTaskList, setGroupTaskList] = useState([]);
-  const [selectedGroupTask, setSelectedGroupTask] = useState(null);
-
-  const [assignmentList, setAssignmentList] = useState([]);
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
 
   const [supervisorList, setSupervisorList] = useState([]);
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
@@ -68,9 +56,74 @@ const CreateJCMscreen = ({navigation}) => {
   const [showTanggalPicker, setShowTanggalPicker] = useState(false);
   const [showJamPicker, setShowJamPicker] = useState(false);
 
-  const [openUnit, setOpenUnit] = useState(false);
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable) {
+        console.log('🌐 Online detected, refreshing data...');
+        refreshAll(); // panggil refresh manual
+      }
+    });
 
-  // ===== Helpers =====
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    Toast.show({
+      type: 'info',
+      text1: 'Menyegarkan data...',
+      position: 'top',
+      autoHide: true,
+      visibilityTime: 1000,
+    });
+
+    try {
+      const headers = await getAuthHeader();
+
+      // 🔹 Work Order (on-demand cache by unit)
+      const woRes = await fetchWithCache('cache_wo_gen', API_URL_GWG, headers);
+      const formattedWO = woRes.data.map(wo => ({
+        label: `${wo.work_order} - ${wo.wo_task_desc}`,
+        value: wo.work_order,
+      }));
+      setWoList(formattedWO);
+      setSelectedWO(null);
+
+      // 🔹 Supervisor (by unit)
+      const supRes = await fetchWithCache(
+        'cache_supervisor',
+        API_URL_GS,
+        headers,
+      );
+      const formattedSup = supRes.data.map(item => ({
+        label: item.name,
+        value: item.jdeno,
+      }));
+      setSupervisorList(formattedSup);
+      setSelectedSupervisor(null);
+
+      setLoadingMaster(false);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Data berhasil diperbarui',
+      });
+    } catch (error) {
+      console.error('Error saat refreshAll:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal memuat data',
+        text2: 'Pastikan koneksi internet stabil.',
+      });
+    }
+  }, []);
+
+  const refreshQueueCount = useCallback(async () => {
+    const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
+    setQueueCount(count);
+  }, []);
+
   const getAuthHeader = async () => {
     const cache = await AsyncStorage.getItem('loginCache');
     const token = cache && JSON.parse(cache)?.token;
@@ -78,309 +131,119 @@ const CreateJCMscreen = ({navigation}) => {
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      Accept: 'application/json',
     };
   };
-
-  // ===== Initial master load (units + groups) =====
-  const refreshMaster = useCallback(async () => {
-    try {
-      const headers = await getAuthHeader();
-      const [unitsRes, groupsRes] = await Promise.all([
-        fetchWithCache('cache_units', API_URL_MU, headers),
-        fetchWithCache('cache_group_task', API_URL_GGT, headers),
-      ]);
-
-      setUnitList(
-        (unitsRes.data || []).map((u: any) => ({
-          label: u.plant_no,
-          value: u.plant_no,
-        })),
-      );
-
-      setGroupTaskList(
-        (groupsRes.data || []).map((g: any) => ({
-          label: g.group_task,
-          value: g.group_task,
-        })),
-      );
-    } catch (e) {
-      console.error('refreshMaster error:', e);
-      Toast.show({type: 'error', text1: 'Gagal mengambil master data'});
-    } finally {
-      setLoadingMaster(false);
-    }
-  }, []);
-
-  // === Focus: load master + validate ===
-  useFocusEffect(
-    useCallback(() => {
-      refreshMaster();
-      validateOfflineSelections();
-    }, [refreshMaster]),
-  );
-
-  // === NetInfo listener ===
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      if (state.isConnected && state.isInternetReachable) {
-        refreshMaster();
-        validateOfflineSelections();
-      } else {
-        validateOfflineSelections();
-      }
-    });
-    return () => unsubscribe();
-  }, [refreshMaster]);
-
-  // === Refresh offline queue count ===
-  const refreshQueueCount = useCallback(async () => {
-    const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
-    setQueueCount(count);
-  }, []);
 
   useEffect(() => {
     refreshQueueCount();
   }, [refreshQueueCount]);
 
-  // === 1) Unit Dipilih ➝ Load WO ===
-  useEffect(() => {
-    const run = async () => {
-      if (!selectedUnit) {
-        setWoList([]);
-        setSelectedWO(null);
-        setGroupTaskList(prev => prev); // tetap, sudah di-load di master
-        setSelectedGroupTask(null);
-        setAssignmentList([]);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-        return;
-      }
-      try {
-        const headers = await getAuthHeader();
-        const woRes = await fetchWithCachePerKey(
-          'cache_wo',
-          selectedUnit,
-          `${API_URL_GWU}${selectedUnit}`,
-          headers,
-        );
-        const formatted = (woRes.data || []).map((wo: any) => ({
-          label: `${wo.work_order} - ${wo.wo_type}`,
-          value: wo.work_order,
-        }));
-        setWoList(formatted);
-        setSelectedWO(null);
-        // Reset chain below
-        setSelectedGroupTask(null);
-        setAssignmentList([]);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-      } catch (e) {
-        console.error('Load WO gagal:', e);
-      }
-    };
-    run();
-  }, [selectedUnit]);
+  const refreshAllMasterData = useCallback(async () => {
+    try {
+      const headers = await getAuthHeader();
 
-  // === 2) WO Dipilih ➝ Load Group Task ===
-  useEffect(() => {
-    const run = async () => {
-      if (!selectedWO) {
-        setSelectedGroupTask(null);
-        setAssignmentList([]);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-        return;
-      }
-      try {
-        const headers = await getAuthHeader();
-        const groupRes = await fetchWithCache(
-          'cache_group_task',
-          API_URL_GGT,
-          headers,
-        );
-        const formatted = (groupRes.data || []).map((g: any) => ({
-          label: g.group_task,
-          value: g.group_task,
-        }));
-        setGroupTaskList(formatted);
-        setSelectedGroupTask(null);
-        setAssignmentList([]);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-      } catch (e) {
-        console.error('Load Group Task gagal:', e);
-      }
-    };
-    run();
-  }, [selectedWO]);
+      // 3. Supervisor (jika ada unit)
+      const supRes = await fetchWithCache(
+        'cache_supervisor',
+        API_URL_GS,
+        headers,
+      );
+      const formattedSup = supRes.data.map(item => ({
+        label: item.name,
+        value: item.jdeno,
+      }));
+      setSupervisorList(formattedSup);
+      setSelectedSupervisor(null);
 
-  // === 3) Group Task Dipilih ➝ Load Task Assignment ===
-  useEffect(() => {
-    const run = async () => {
-      if (!selectedGroupTask) {
-        setAssignmentList([]);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-        return;
-      }
-      try {
-        const headers = await getAuthHeader();
-        const asgRes = await fetchWithCachePerKey(
-          'cache_assignment',
-          selectedGroupTask,
-          `${API_URL_GTA}${selectedGroupTask}`,
-          headers,
-        );
-        const formatted = (asgRes.data || []).map((a: any) => ({
-          label: a.task,
-          value: a.id,
-        }));
-        setAssignmentList(formatted);
-        setSelectedAssignment(null);
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-      } catch (e) {
-        console.error('Load Assignment gagal:', e);
-      }
-    };
-    run();
-  }, [selectedGroupTask]);
+      // 4. WO (jika ada unit)
+      const woRes = await fetchWithCache(
+        'cache_wo_gen',
+        `${API_URL_GWG}`,
+        headers,
+      );
+      const formattedWO = woRes.data.map(wo => ({
+        label: `${wo.work_order} - ${wo.wo_task_desc}`,
+        value: wo.work_order,
+      }));
+      setWoList(formattedWO);
+      setSelectedWO(null);
 
-  // === 4) Supervisor aktif jika semua sudah dipilih ===
-  useEffect(() => {
-    const run = async () => {
-      const ready =
-        selectedUnit && selectedWO && selectedGroupTask && selectedAssignment;
-      if (!ready) {
-        setSupervisorList([]);
-        setSelectedSupervisor(null);
-        return;
-      }
-      try {
-        const headers = await getAuthHeader();
-        const supRes = await fetchWithCache(
-          'cache_supervisor',
-          API_URL_GS,
-          headers,
-        );
-        const formatted = (supRes.data || []).map((s: any) => ({
-          label: s.name,
-          value: s.jdeno,
-        }));
-        setSupervisorList(formatted);
-        setSelectedSupervisor(null);
-      } catch (e) {
-        console.error('Load Supervisor gagal:', e);
-      }
-    };
-    run();
-  }, [selectedUnit, selectedWO, selectedGroupTask, selectedAssignment]);
+      Toast.show({
+        type: 'success',
+        text1: 'Data berhasil diperbarui',
+      });
+    } catch (err) {
+      console.error('refreshAllMasterData error:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal refresh data',
+        text2: 'Cek koneksi internet atau ulangi.',
+      });
+    } finally {
+      setLoadingMaster(false);
+    }
+  }, []);
 
-  // === Validate offline selections ===
+  // 🔄 Saat koneksi kembali online
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable) {
+        console.log('📶 Online, auto-refresh master data');
+        refreshAllMasterData();
+        validateOfflineSelections();
+      }
+    });
+    return () => unsubscribe();
+  }, [refreshAllMasterData]);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (!state.isConnected || !state.isInternetReachable) {
+        console.log('📴 Offline mode, validate dropdown values');
+        validateOfflineSelections();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const validateOfflineSelections = async () => {
     try {
       const headers = await getAuthHeader();
 
-      // Unit
-      const unitCache = await fetchWithCache(
-        'cache_units',
-        API_URL_MU,
+      // ✅ Validate WO
+      const woCache = await fetchWithCachePerKey(
+        'cache_wo_gen',
+        `${API_URL_GWG}`,
         headers,
         true,
       );
-      const validUnits = unitCache?.data?.map((i: any) => i.plant_no) || [];
-      if (selectedUnit && !validUnits.includes(selectedUnit)) {
-        Toast.show({type: 'info', text1: 'Unit tidak tersedia, di-reset.'});
-        setSelectedUnit(null);
-      }
+      const validWOs = woCache?.data?.map(wo => wo.work_order) || [];
 
-      // WO
-      if (selectedUnit) {
-        const woCache = await fetchWithCachePerKey(
-          'cache_wo',
-          selectedUnit,
-          `${API_URL_GWU}${selectedUnit}`,
-          headers,
-          true,
-        );
-        const validWO = woCache?.data?.map((i: any) => i.work_order) || [];
-        if (selectedWO && !validWO.includes(selectedWO)) {
-          Toast.show({type: 'info', text1: 'WO tidak tersedia, di-reset.'});
-          setSelectedWO(null);
-        }
-      }
-
-      // Group Task
-      const groupCache = await fetchWithCache(
-        'cache_group_task',
-        API_URL_GGT,
-        headers,
-        true,
-      );
-      const validGroups = groupCache?.data?.map((i: any) => i.group_task) || [];
-      if (selectedGroupTask && !validGroups.includes(selectedGroupTask)) {
+      if (selectedWO && !validWOs.includes(selectedWO)) {
         Toast.show({
           type: 'info',
-          text1: 'Group Task tidak tersedia, di-reset.',
+          text1: 'WO tidak tersedia',
+          text2: 'Pilihan WO tidak valid di data offline dan telah di-reset.',
         });
-        setSelectedGroupTask(null);
+        setSelectedWO(null);
       }
-
-      // Assignment
-      if (selectedGroupTask) {
-        const asgCache = await fetchWithCachePerKey(
-          'cache_assignment',
-          selectedGroupTask,
-          `${API_URL_GTA}${selectedGroupTask}`,
-          headers,
-          true,
-        );
-        const validAssignments = asgCache?.data?.map((i: any) => i.id) || [];
-        if (
-          selectedAssignment &&
-          !validAssignments.includes(selectedAssignment)
-        ) {
-          Toast.show({
-            type: 'info',
-            text1: 'Assignment tidak tersedia, di-reset.',
-          });
-          setSelectedAssignment(null);
-        }
-      }
-    } catch (e) {
-      console.warn('validateOfflineSelections error:', e);
+    } catch (error) {
+      console.warn('Offline validation failed:', error);
     }
   };
 
-  // 🔁 Satu fungsi gabungan
-  const refreshAndValidate = useCallback(async () => {
-    await refreshMaster();
-    await validateOfflineSelections();
-  }, [refreshMaster]);
-
+  // 🔄 Saat screen difokuskan
   useFocusEffect(
     useCallback(() => {
-      refreshAndValidate(); // 👁️ Saat screen difokuskan
-    }, [refreshAndValidate]),
+      const run = async () => {
+        console.log('👁️ Screen focused, refresh + validate');
+        await refreshAllMasterData();
+        await validateOfflineSelections(); // ⬅️ Tambahkan ini
+      };
+      run();
+    }, [refreshAllMasterData]),
   );
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      if (state.isConnected && state.isInternetReachable) {
-        refreshAndValidate(); // 🌐 Saat online kembali
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [refreshAndValidate]);
 
   const handleClearOfflineCache = async () => {
     try {
@@ -392,7 +255,6 @@ const CreateJCMscreen = ({navigation}) => {
         text1: 'Berhasil Hapus Cache',
         text2: 'Data offline berhasil dihapus dari penyimpanan.',
         position: 'top',
-        text2NumberOfLines: 10,
       });
 
       console.log('Offline cache cleared successfully.');
@@ -404,7 +266,6 @@ const CreateJCMscreen = ({navigation}) => {
         text1: 'Gagal Hapus Cache',
         text2: 'Terjadi kesalahan saat menghapus data offline.',
         position: 'top',
-        text2NumberOfLines: 10,
       });
     }
   };
@@ -413,12 +274,11 @@ const CreateJCMscreen = ({navigation}) => {
     if (loading) return; // mencegah double submit
     setLoading(true); // mulai loading
 
+    console.log('✅ handleSubmit DIPANGGIL');
+
     const missingFields = [];
 
-    if (!selectedUnit) missingFields.push('Unit');
     if (!selectedWO) missingFields.push('WO');
-    if (!selectedGroupTask) missingFields.push('Group Task');
-    if (!selectedAssignment) missingFields.push('Assignment');
     if (!selectedSupervisor) missingFields.push('Supervisor');
 
     if (missingFields.length > 0) {
@@ -451,43 +311,33 @@ const CreateJCMscreen = ({navigation}) => {
         return;
       }
 
-      const selectedAssignmentObj = assignmentList.find(
-        item => item.value === selectedAssignment,
-      );
-
       const type = DeviceInfo.getSystemName();
       const version = DeviceInfo.getVersion();
       const build = DeviceInfo.getBuildNumber();
 
       dataSubmit = {
         id: uuidv4(),
-        wono: selectedWO,
+        wono_gen: selectedWO,
         jdeno,
         tanggal: tanggalStr,
         jam: jamStr,
-        unitNo: selectedUnit,
         typeInput: `(${type})(${build})(${version})`,
-        wo_task_desc: selectedAssignmentObj?.label || '',
-        fid_wo_Task: selectedAssignment,
         fid_pengawas: selectedSupervisor,
-        parrent_wo_task: selectedGroupTask,
       };
-
+      console.log(dataSubmit);
       const headers = await getAuthHeader();
-      const response = await fetch(
-        `${API_BASE_URL.onedh}/CreateTaskAssignment`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(dataSubmit),
-        },
-      );
+
+      const response = await fetch(`${API_BASE_URL.onedh}/StoreTaskWOGen`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(dataSubmit),
+      });
 
       if (response.ok) {
         Toast.show({
           type: 'success',
           text1: 'Sukses',
-          text2: 'Job Card berhasil disubmit!',
+          text2: 'Data berhasil disubmit!',
         });
         setLoading(false);
         navigation.goBack();
@@ -516,7 +366,7 @@ const CreateJCMscreen = ({navigation}) => {
             type: 'error',
             text1: 'Gagal',
             text2: rawMessage,
-            text2NumberOfLines: 20,
+            text2NumberOfLines: 10,
           });
           setLoading(false);
           return;
@@ -578,16 +428,11 @@ const CreateJCMscreen = ({navigation}) => {
       end={{x: 1, y: 0}}
       style={styles.gradient}>
       <SafeAreaView style={styles.container}>
-        <KeyboardAwareScrollView
-          contentContainerStyle={styles.scrollContainer}
-          enableOnAndroid={true}
-          extraScrollHeight={100}
-          nestedScrollEnabled={true}
-          keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.title}>Form Job Card Mechanic</Text>
-          {/* <TouchableOpacity onPress={refreshAll} style={styles.refreshButton}>
+          <TouchableOpacity onPress={refreshAll} style={styles.refreshButton}>
             <Text style={styles.refreshButtonText}>🔄 Refresh Data</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           {/* === Offline Queue Action Buttons === */}
           {queueCount > 0 && (
@@ -640,26 +485,6 @@ const CreateJCMscreen = ({navigation}) => {
 
           {/* === FORM CARD === */}
           <View style={styles.card}>
-            <View style={[styles.formGroup, {zIndex: 3000}]}>
-              <Text style={styles.label}>Pilih Unit</Text>
-              <DropDownPicker
-                open={openUnit}
-                value={selectedUnit}
-                items={unitList}
-                setOpen={setOpenUnit}
-                setValue={setSelectedUnit}
-                setItems={setUnitList}
-                placeholder="Pilih Unit"
-                searchable={true}
-                searchPlaceholder="Cari Unit..."
-                zIndex={3000}
-                zIndexInverse={1000}
-                listMode="MODAL"
-                style={styles.dropdown} // opsional
-                dropDownContainerStyle={styles.dropdownContainer} // opsional
-              />
-            </View>
-
             <View style={styles.formGroup}>
               <Text style={styles.label}>Nomor WO</Text>
               <RNPickerSelect
@@ -672,35 +497,23 @@ const CreateJCMscreen = ({navigation}) => {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Group Task</Text>
-              <RNPickerSelect
-                onValueChange={setSelectedGroupTask}
-                items={groupTaskList}
-                placeholder={{label: 'Pilih Group Task', value: null}}
-                style={styles.picker}
-                value={selectedGroupTask}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Task Assignment</Text>
-              <RNPickerSelect
-                onValueChange={setSelectedAssignment}
-                items={assignmentList}
-                placeholder={{label: 'Pilih Task Assignment', value: null}}
-                style={styles.picker}
-                value={selectedAssignment}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
               <Text style={styles.label}>Supervisor</Text>
               <RNPickerSelect
-                onValueChange={setSelectedSupervisor}
+                onValueChange={value => {
+                  if (!selectedWO) {
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Pilih WO terlebih dahulu',
+                    });
+                    return;
+                  }
+                  setSelectedSupervisor(value);
+                }}
                 items={supervisorList}
                 placeholder={{label: 'Pilih Supervisor', value: null}}
                 style={styles.picker}
                 value={selectedSupervisor}
+                disabled={!selectedWO} // 🔒 disabled jika WO belum dipilih
               />
             </View>
             <View style={styles.row}>
@@ -758,13 +571,13 @@ const CreateJCMscreen = ({navigation}) => {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Kirim JCM</Text>
+              <Text style={styles.buttonText}>Kirim</Text>
             )}
           </TouchableOpacity>
-        </KeyboardAwareScrollView>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 };
 
-export default CreateJCMscreen;
+export default CreateWoGenScreen;

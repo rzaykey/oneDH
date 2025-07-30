@@ -8,7 +8,7 @@ import {
   Pressable,
   useWindowDimensions,
   ActivityIndicator,
-  Alert,
+  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -19,15 +19,28 @@ import {useSiteContext} from '../context/SiteContext';
 import LinearGradient from 'react-native-linear-gradient';
 import {cacheAllMasterData} from '../utils/cacheAllMasterData'; // path ke fungsi kamu
 import {
-  addQueueOffline,
   pushOfflineQueue,
   getOfflineQueueCount,
 } from '../utils/offlineQueueHelper';
 import API_BASE_URL from '../config';
 import NetInfo from '@react-native-community/netinfo';
 import Toast from 'react-native-toast-message';
+import DeviceInfo from 'react-native-device-info';
+import {useFocusEffect} from '@react-navigation/native';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
+const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.onedh';
+const API_URL = `${API_BASE_URL.onedh}/CekVersion`;
+
+const getAuthHeader = async () => {
+  const cache = await AsyncStorage.getItem('loginCache');
+  const token = cache && JSON.parse(cache)?.token;
+  if (!token) throw new Error('Token tidak ditemukan!');
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+};
 
 const carouselData = [
   {id: '1', text: 'Sed viverra nibh eget tincidunt convallis...'},
@@ -50,10 +63,22 @@ const DashboardScreen: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [appVersion, setAppVersion] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     cacheAllMasterData(); // tidak perlu await
   }, []);
+
+  const isOutdated = (latest, current) => {
+    const a = latest.split('.').map(Number);
+    const b = current.split('.').map(Number);
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if ((a[i] || 0) > (b[i] || 0)) return true;
+      if ((a[i] || 0) < (b[i] || 0)) return false;
+    }
+    return false;
+  };
 
   // Ambil semua dari context!
   const {activeSite, setActiveSite, sites, user, setSites, setRoles, setUser} =
@@ -226,7 +251,7 @@ const DashboardScreen: React.FC = () => {
     });
 
     navigation.replace('Login');
-  };
+  };4100
 
   // Site chip (highlight active, bisa tap)
 
@@ -238,6 +263,98 @@ const DashboardScreen: React.FC = () => {
       text2: `Kamu memilih site: ${site}`,
     });
   };
+
+  const checkVersion = async () => {
+    try {
+      const currentVersion = DeviceInfo.getVersion().trim();
+      setAppVersion(currentVersion);
+
+      const headers = await getAuthHeader();
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers,
+      });
+
+      // 🔐 Cek jika sesi berakhir
+      if (response.status === 401) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sesi Berakhir',
+          text2: 'Silakan login kembali.',
+          position: 'top',
+          topOffset: 50,
+        });
+
+        setTimeout(() => {
+          handleLogout(); // ⬅️ Fungsi logout
+        }, 1500);
+
+        return; // Hentikan proses
+      }
+
+      // ❗ Tangkap error HTTP lainnya
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // ✅ Lanjut proses jika aman
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Format respon bukan JSON.');
+      }
+
+      const latestVersion = data?.version?.trim();
+      if (
+        !data?.status ||
+        !latestVersion ||
+        !/^\d+\.\d+\.\d+$/.test(latestVersion)
+      ) {
+        const msg = data?.notif || data?.message || 'Data versi tidak valid.';
+        throw new Error(msg);
+      }
+
+      console.log('Current Version:', currentVersion);
+      console.log('Latest Version from API:', latestVersion);
+
+      if (isOutdated(latestVersion, currentVersion)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Versi Lama',
+          text2: `Aplikasi perlu diperbarui ke versi ${latestVersion}.`,
+          autoHide: false,
+          position: 'top',
+          topOffset: 50,
+          onPress: () => Linking.openURL(PLAYSTORE_URL),
+        });
+
+        setTimeout(() => {
+          handleLogout();
+          Linking.openURL(PLAYSTORE_URL);
+        }, 2000);
+      }
+    } catch (err) {
+      const errorMessage =
+        err?.message?.toString?.() || 'Terjadi kesalahan tidak diketahui.';
+
+      console.warn('❗ Gagal cek versi:', errorMessage);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Cek Versi',
+        text2: errorMessage,
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      checkVersion();
+    }, []),
+  );
 
   const SiteChip: React.FC<{
     site: string;

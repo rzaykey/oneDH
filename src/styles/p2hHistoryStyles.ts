@@ -240,7 +240,7 @@ export const p2hHistoryStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent', // ✅
   },
   modalContent: {
     margin: 20,

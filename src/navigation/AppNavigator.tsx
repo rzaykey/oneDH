@@ -25,6 +25,8 @@ import TabNavigator from './TabNavigator';
 import JCMScreen from '../screens/module/JCMScreen';
 import CreateJCMScreen from '../screens/jcm/CreateJCMScreen';
 import JCMHistoryScreen from '../screens/jcm/JCMHistoryScreen';
+import CreateWoGenScreen from '../screens/wogen/CreateWoGenScreen';
+import WoGenHistoryScreen from '../screens/wogen/WoGenHistoryScreen';
 import JCMOpenScreen from '../screens/jcm/JCMOpenScreen';
 import JCMValidasiScreen from '../screens/jcm/JCMValidasiScreen';
 import MOPScreen from '../screens/module/MOPScreen';
@@ -60,6 +62,9 @@ const AppNavigator = () => (
     <Stack.Screen name="CreateJCMScreen" component={CreateJCMScreen} />
     <Stack.Screen name="JCMOpenScreen" component={JCMOpenScreen} />
     <Stack.Screen name="JCMValidasiScreen" component={JCMValidasiScreen} />
+
+    <Stack.Screen name="WoGenHistoryScreen" component={WoGenHistoryScreen} />
+    <Stack.Screen name="CreateWoGenScreen" component={CreateWoGenScreen} />
 
     <Stack.Screen name="P2HScreen" component={P2HScreen} />
     <Stack.Screen name="P2HHistory" component={P2HHistory} />

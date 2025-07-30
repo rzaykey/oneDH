@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import {SiteProvider} from './src/context/SiteContext';
 import Toast from 'react-native-toast-message';
+import {toastConfig} from './src/components/toastConfig'; // ⬅️ import config toast custom
 
 // Context providers
 import {OfflineQueueProvider} from './src/utils/OfflineQueueContext';
@@ -53,7 +54,7 @@ const AppInitWrapper = () => {
       <SafeAreaProvider>
         <NavigationContainer>
           <AppNavigator />
-          <Toast />
+          <Toast config={toastConfig} />
         </NavigationContainer>
       </SafeAreaProvider>
     </SiteProvider>

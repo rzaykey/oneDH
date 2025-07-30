@@ -82,4 +82,39 @@ export const jcmStyles = StyleSheet.create({
     color: '#586479',
     fontWeight: '400',
   },
+
+  // Tambahan untuk modal
+  modal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 14,
+    textAlign: 'center',
+    color: '#222',
+  },
+
+  modalButton: {
+    backgroundColor: '#1E90FF',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+
+  modalButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 15,
+  },
 });
