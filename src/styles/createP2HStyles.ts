@@ -43,6 +43,12 @@ export const createP2HStyles = StyleSheet.create({
     marginVertical: 18,
   },
   label: {fontWeight: 'bold', fontSize: 13, color: '#333', marginTop: 12},
+  labelSwitch: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#2463EB',
+    marginTop: 12,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#e3e8f0',
@@ -153,5 +159,31 @@ export const createP2HStyles = StyleSheet.create({
     backgroundColor: '#f9fafb',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 16, // Jika React Native >= 0.71
+  },
+  inputContainer: {
+    flex: 1,
+    marginVertical: 5,
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  disabledInput: {
+    backgroundColor: '#f1f5f9',
+    color: '#888',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
   },
 });

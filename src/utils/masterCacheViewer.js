@@ -21,6 +21,8 @@ export const cacheKeys = [
   'master_model',
   // User login cache
   'loginCache',
+  //Ees
+  'master_category',
 ];
 
 export const getAllMasterCache = async () => {

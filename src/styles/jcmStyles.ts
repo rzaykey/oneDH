@@ -85,15 +85,16 @@ export const jcmStyles = StyleSheet.create({
 
   // Tambahan untuk modal
   modal: {
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
     margin: 0,
   },
 
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
+    borderRadius: 10,
     padding: 20,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    width: width * 0.8,
   },
 
   modalTitle: {

@@ -31,7 +31,7 @@ const sectionConfig = [
         label: 'Pilih Pekerjaan',
         icon: 'build-outline',
         action: 'read',
-        screen: 'CreateJCMScreen', // default screen
+        screen: 'CreateJCMScreen',
         desc: 'Pilih pekerjaan',
         isMulti: true,
       },
@@ -39,9 +39,9 @@ const sectionConfig = [
         label: 'Riwayat Pekerjaan',
         icon: 'file-tray-full-outline',
         action: 'read',
-        screen: 'JCMHistoryScreen', // default fallback
+        screen: 'JCMHistoryScreen',
         desc: 'Lihat riwayat pekerjaan',
-        isMultiHistory: true, // Tambahan
+        isMultiHistory: true,
       },
     ],
   },
@@ -67,7 +67,10 @@ const sectionConfig = [
 const JCMScreen = ({navigation}: any) => {
   const [permit, setPermit] = useState<PermitType | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalHistoryVisible, setModalHistoryVisible] = useState(false); // baru
+  const [modalOptions, setModalOptions] = useState<{
+    title: string;
+    options: {label: string; target: string}[];
+  } | null>(null);
 
   useEffect(() => {
     const loadPermit = async () => {
@@ -93,9 +96,23 @@ const JCMScreen = ({navigation}: any) => {
 
   const handleCardPress = (item: any) => {
     if (item.isMulti) {
+      setModalOptions({
+        title: 'Pilih jenis pekerjaan',
+        options: [
+          {label: 'JCM', target: 'CreateJCMScreen'},
+          {label: 'Work Order General', target: 'CreateWoGenScreen'},
+        ],
+      });
       setModalVisible(true);
     } else if (item.isMultiHistory) {
-      setModalHistoryVisible(true);
+      setModalOptions({
+        title: 'Pilih Riwayat',
+        options: [
+          {label: 'Riwayat JCM', target: 'JCMHistoryScreen'},
+          {label: 'Riwayat Work Order General', target: 'WoGenHistoryScreen'},
+        ],
+      });
+      setModalVisible(true);
     } else {
       navigation.navigate(item.screen);
     }
@@ -103,7 +120,7 @@ const JCMScreen = ({navigation}: any) => {
 
   const handleModalNavigate = (target: string) => {
     setModalVisible(false);
-    setModalHistoryVisible(false); // Tutup keduanya
+    setModalOptions(null);
     navigation.navigate(target);
   };
 
@@ -148,8 +165,7 @@ const JCMScreen = ({navigation}: any) => {
           })}
         </ScrollView>
 
-        {/* Modal Opsi */}
-        {/* Modal Pilih Pekerjaan */}
+        {/* Modal Tunggal */}
         <Modal
           isVisible={modalVisible}
           onBackdropPress={() => setModalVisible(false)}
@@ -157,40 +173,15 @@ const JCMScreen = ({navigation}: any) => {
           backdropOpacity={0.3}
           style={styles.modal}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Pilih jenis pekerjaan</Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleModalNavigate('CreateJCMScreen')}>
-              <Text style={styles.modalButtonText}>JCM</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleModalNavigate('CreateWoGenScreen')}>
-              <Text style={styles.modalButtonText}>Work Order General</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-
-        <Modal
-          isVisible={modalHistoryVisible}
-          onBackdropPress={() => setModalHistoryVisible(false)}
-          useNativeDriver
-          backdropOpacity={0.3}
-          style={styles.modal}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Pilih Riwayat</Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleModalNavigate('JCMHistoryScreen')}>
-              <Text style={styles.modalButtonText}>Riwayat JCM</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleModalNavigate('WoGenHistoryScreen')}>
-              <Text style={styles.modalButtonText}>
-                Riwayat Work Order General
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{modalOptions?.title}</Text>
+            {modalOptions?.options.map(opt => (
+              <TouchableOpacity
+                key={opt.label}
+                style={styles.modalButton}
+                onPress={() => handleModalNavigate(opt.target)}>
+                <Text style={styles.modalButtonText}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </Modal>
       </SafeAreaView>

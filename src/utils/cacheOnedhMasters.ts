@@ -27,6 +27,11 @@ export const cacheOnedhMasters = async (headers: Record<string, string>) => {
         url: `${API_BASE_URL.onedh}/GetModel`,
         label: 'MASTER MODEL',
       },
+      {
+        key: 'master_category',
+        url: `${API_BASE_URL.onedh}/GetCategory`,
+        label: 'MASTER CATEGORY',
+      },
     ];
 
     for (const req of requests) {

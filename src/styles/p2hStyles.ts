@@ -65,4 +65,40 @@ export const p2hStyles = StyleSheet.create({
     color: '#586479',
     fontWeight: '400',
   },
+
+  //Modal
+  modal: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    width: width * 0.8,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#222',
+  },
+  modalButtonYellow: {
+    padding: 12,
+    backgroundColor: '#FFBE00',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  modalButtonBlue: {
+    padding: 12,
+    backgroundColor: '#B9DCEB',
+    borderRadius: 8,
+  },
+  modalButtonText: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#333',
+  },
 });

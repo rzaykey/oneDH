@@ -14,6 +14,7 @@ const MODULE_TO_SCREEN: Record<string, string> = {
   P2H: 'P2HScreen',
   JCM: 'JCMScreen',
   MOP: 'MOPScreen',
+  AES: 'AESScreen',
 };
 
 const iconForModule = (mod: string) => {
@@ -38,6 +39,14 @@ const iconForModule = (mod: string) => {
       return (
         <Image
           source={require('../assets/images/practice.png')} // Ganti path sesuai lokasi car.png
+          style={[styles.icon, {width: 50, height: 50}]}
+          resizeMode="contain"
+        />
+      );
+    case 'AES':
+      return (
+        <Image
+          source={require('../assets/images/aes.png')} // Ganti path sesuai lokasi car.png
           style={[styles.icon, {width: 50, height: 50}]}
           resizeMode="contain"
         />

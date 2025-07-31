@@ -36,6 +36,9 @@ import P2HHistory from '../screens/p2h/P2HHistoryScreen';
 import P2HMyHistory from '../screens/p2h/P2HMyHistoryScreen';
 import P2HDetailScreen from '../screens/p2h/P2HDetailScreen';
 import CreateP2HScreen from '../screens/p2h/CreateP2HScreen';
+import AESScreen from '../screens/module/AESScreen';
+import CreatePresentAESScreen from '../screens/aes/CreatePresentAESScreen';
+import CreateGuestAESScreen from '../screens/aes/CreateGuestAESScreen';
 import MasterCacheScreen from '../screens/MasterCacheScreen';
 
 // Stack inisialisasi dengan tipe RootStackParamList
@@ -71,6 +74,16 @@ const AppNavigator = () => (
     <Stack.Screen name="P2HMyHistory" component={P2HMyHistory} />
     <Stack.Screen name="P2HDetail" component={P2HDetailScreen} />
     <Stack.Screen name="CreateP2HScreen" component={CreateP2HScreen} />
+
+    <Stack.Screen name="AESScreen" component={AESScreen} />
+    <Stack.Screen
+      name="CreatePresentAESScreen"
+      component={CreatePresentAESScreen}
+    />
+    <Stack.Screen
+      name="CreateGuestAESScreen"
+      component={CreateGuestAESScreen}
+    />
 
     <Stack.Screen name="MasterCacheScreen" component={MasterCacheScreen} />
 
