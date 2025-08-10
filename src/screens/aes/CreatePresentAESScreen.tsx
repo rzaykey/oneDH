@@ -272,23 +272,23 @@ const CreatePresentAESScreen = ({navigation}) => {
         position: 'top',
       });
 
-      navigation.replace('P2HMyHistory');
+      navigation.replace('AESMyHistory');
       return;
     }
 
     // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
-      // const token = loginCache ? JSON.parse(loginCache).token : null;
+      const token = loginCache ? JSON.parse(loginCache).token : null;
 
-      // const response = await fetch(`${API_BASE_URL.onedh}/CreateAgenda`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify(payload),
-      // });
+      const response = await fetch(`${API_BASE_URL.onedh}/CreateAgenda`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       let data = {};
       let isSuccess = false;
@@ -302,7 +302,10 @@ const CreatePresentAESScreen = ({navigation}) => {
 
       setLoading(false);
 
-      if (isSuccess) {
+      if (data?.status === true) {
+        const code = data.code || '-';
+
+        // Lakukan sync jika online
         if (netState.isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
@@ -315,26 +318,34 @@ const CreatePresentAESScreen = ({navigation}) => {
           setSyncing(false);
         }
 
+        // Tampilkan Toast
         Toast.show({
           type: 'success',
           text1: 'Sukses',
-          text2: data.message || 'P2H berhasil disimpan!',
+          text2: `${
+            data.notif || data.message || 'Event berhasil disimpan!'
+          } (Kode: ${data.code || '-'})`,
           position: 'top',
+          visibilityTime: 3000,
+          topOffset: 40,
         });
+        console.log('🔁 Respon lengkap:', data);
+        console.log('✅ Kode agenda:', data.code);
 
-        navigation.replace('P2HMyHistory');
+        // navigation.replace('AESMyHistory');
       } else {
         // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
         await refreshQueueCount();
         Toast.show({
-          type: 'info',
-          text1: 'Gagal Kirim ke Server',
-          text2:
-            'Data disimpan ke antrian offline & akan dikirim otomatis saat server kembali normal.',
+          type: 'error',
+          text1: 'Gagal Menyimpan Agenda',
+          text2: data?.notif || data?.message || 'Terjadi kesalahan.',
           position: 'top',
+          visibilityTime: 3000,
+          topOffset: 40,
         });
-        navigation.replace('P2HMyHistory');
+        navigation.replace('AESMyHistory');
       }
     } catch (err) {
       console.log('[FETCH ERROR]', err);
@@ -348,7 +359,7 @@ const CreatePresentAESScreen = ({navigation}) => {
           'Data disimpan ke antrian offline & akan dikirim saat server kembali tersedia.',
         position: 'top',
       });
-      navigation.replace('P2HMyHistory');
+      navigation.replace('AESMyHistory');
     }
   };
 

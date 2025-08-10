@@ -5,6 +5,21 @@ export interface P2HDetail {
   driver: string;
   tanggal: string;
 }
+
+export interface P2HItem {
+  id: number;
+  no_unit: string;
+  site: string;
+  model: string;
+  namapengemudi: string;
+  jdeno: string;
+  tanggal: string;
+  hmkm: string;
+  fuel_permit: string;
+  sticker_permit: string;
+  keterangan?: string;
+}
+
 export interface JCMItem {
   id: number | string;
   unitno: string;
@@ -63,7 +78,6 @@ export interface DailyActivity {
   updated_at: string | null;
   updated_by: string | null;
 }
-
 export interface TrainHours {
   id: number;
   jde_no: number;
@@ -86,6 +100,26 @@ export interface TrainHours {
   updated_at: string | null;
   updated_by: string | null;
 }
+
+export type EASItem = {
+  id: string;
+  fid_presenter: string;
+  nama_presenter: string;
+  fid_site: string;
+  site: string;
+  company: string;
+  position: string;
+  department: string;
+  fid_category: string;
+  category: string;
+  code: string;
+  judul: string;
+  pemateri: string;
+  start: string;
+  end: string;
+  status: string;
+  remark?: string;
+};
 
 export interface MopData {
   id: number;

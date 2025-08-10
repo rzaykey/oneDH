@@ -19,21 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
+import {P2HItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
-
-interface P2HItem {
-  id: number;
-  no_unit: string;
-  site: string;
-  model: string;
-  namapengemudi: string;
-  jdeno: string;
-  tanggal: string;
-  hmkm: string;
-  fuel_permit: string;
-  sticker_permit: string;
-  keterangan?: string;
-}
 
 interface BadgeProps {
   label: string;

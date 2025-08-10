@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import {ToastAndroid, Platform, Alert} from 'react-native';
+import Toast from 'react-native-toast-message';
 
 const isPushingQueue = {};
 
@@ -38,23 +39,28 @@ export const pushOfflineQueue = async (
 ) => {
   if (isPushingQueue[queueKey]) return 0;
   isPushingQueue[queueKey] = true;
+
   let queue = [];
   try {
     const str = await AsyncStorage.getItem(queueKey);
     if (str) queue = JSON.parse(str);
   } catch {}
+
   if (!queue.length) {
     isPushingQueue[queueKey] = false;
     return 0;
   }
-  // Gunakan token dari loginCache supaya konsisten dengan submit online
+
   const loginCache = await AsyncStorage.getItem('loginCache');
   const token = loginCache ? JSON.parse(loginCache).token : null;
+
   let failedData = [];
   let successCount = 0;
+
   for (let i = 0; i < queue.length; i++) {
+    const {id_local, ...payload} = queue[i];
+
     try {
-      const {id_local, ...payload} = queue[i];
       const res = await axios.post(
         `${baseUrl || API_BASE_URL.mop}${endpoint}`,
         payload,
@@ -66,16 +72,47 @@ export const pushOfflineQueue = async (
           },
         },
       );
-      if (res.data?.success || res.data?.status) {
+
+      const responseData = res.data;
+
+      if (responseData?.success || responseData?.status) {
         successCount += 1;
       } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Kirim dari Antrian',
+          text2:
+            responseData?.notif ||
+            responseData?.message ||
+            'Terjadi kesalahan.',
+          position: 'top',
+          visibilityTime: 4000,
+          topOffset: 40,
+        });
         failedData.push(queue[i]);
       }
     } catch (err) {
+      // ❗ Tangkap error network/server di sini
       failedData.push(queue[i]);
+
+      const message =
+        err?.response?.data?.notif ||
+        err?.response?.data?.message ||
+        'Tidak dapat menghubungi server.';
+
+      Toast.show({
+        type: 'error',
+        text1: 'Koneksi Gagal',
+        text2: message,
+        position: 'top',
+        visibilityTime: 4000,
+        topOffset: 40,
+      });
     }
+
     if (onProgress) onProgress(i + 1, queue.length);
   }
+
   await AsyncStorage.setItem(queueKey, JSON.stringify(failedData));
   isPushingQueue[queueKey] = false;
   return successCount;

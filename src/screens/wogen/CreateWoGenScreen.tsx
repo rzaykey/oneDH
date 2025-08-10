@@ -300,6 +300,7 @@ const CreateWoGenScreen = ({navigation}) => {
       const cache = await AsyncStorage.getItem('loginCache');
       const parsed = JSON.parse(cache);
       const jdeno = parsed?.dataEmp?.jdeno;
+      const site = parsed?.dataEmp?.site;
 
       if (!jdeno) {
         Toast.show({
@@ -319,6 +320,7 @@ const CreateWoGenScreen = ({navigation}) => {
         id: uuidv4(),
         wono_gen: selectedWO,
         jdeno,
+        site,
         tanggal: tanggalStr,
         jam: jamStr,
         typeInput: `(${type})(${build})(${version})`,

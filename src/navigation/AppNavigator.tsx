@@ -36,6 +36,7 @@ import P2HHistory from '../screens/p2h/P2HHistoryScreen';
 import P2HMyHistory from '../screens/p2h/P2HMyHistoryScreen';
 import P2HDetailScreen from '../screens/p2h/P2HDetailScreen';
 import CreateP2HScreen from '../screens/p2h/CreateP2HScreen';
+import AESMyHistory from '../screens/aes/AESMyHistoryScreen';
 import AESScreen from '../screens/module/AESScreen';
 import CreatePresentAESScreen from '../screens/aes/CreatePresentAESScreen';
 import CreateGuestAESScreen from '../screens/aes/CreateGuestAESScreen';
@@ -84,6 +85,7 @@ const AppNavigator = () => (
       name="CreateGuestAESScreen"
       component={CreateGuestAESScreen}
     />
+    <Stack.Screen name="AESMyHistory" component={AESMyHistory} />
 
     <Stack.Screen name="MasterCacheScreen" component={MasterCacheScreen} />
 

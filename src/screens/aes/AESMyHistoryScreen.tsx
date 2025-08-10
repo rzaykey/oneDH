@@ -19,21 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
+import {EASItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
-
-interface P2HItem {
-  id: number;
-  no_unit: string;
-  site: string;
-  model: string;
-  namapengemudi: string;
-  jdeno: string;
-  tanggal: string;
-  hmkm: string;
-  fuel_permit: string;
-  sticker_permit: string;
-  keterangan?: string;
-}
 
 interface BadgeProps {
   label: string;
@@ -44,10 +31,10 @@ interface InfoEmptyProps {
   message?: string;
 }
 
-const API_URL = `${API_BASE_URL.onedh}/GetDataP2HPersonal`;
+const API_URL = `${API_BASE_URL.onedh}/GetMyAgenda`;
 
-const P2HHistoryScreen: React.FC = () => {
-  const [history, setHistory] = useState<P2HItem[]>([]);
+const AESMyHistoryScreen: React.FC = () => {
+  const [history, setHistory] = useState<EASItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +61,7 @@ const P2HHistoryScreen: React.FC = () => {
   }, [limit]);
 
   const fetchHistory = async (isLoadMore = false) => {
+    console.log('fetchHistory dipanggil. isLoadMore:', isLoadMore);
     if (isLoadMore) setIsLoadingMore(true);
     else {
       setLoading(true);
@@ -82,16 +70,15 @@ const P2HHistoryScreen: React.FC = () => {
     }
 
     const currentPage = isLoadMore ? page + 1 : 1;
-
     let token = '';
-    let user = null;
 
     try {
+      console.log('Ambil loginCache...');
       const loginCache = await AsyncStorage.getItem('loginCache');
+      console.log('Hasil loginCache:', loginCache);
       if (loginCache) {
         const parsed = JSON.parse(loginCache);
         token = parsed?.token || '';
-        user = parsed?.dataEmp || null;
       }
 
       if (!token || !user) {
@@ -99,8 +86,8 @@ const P2HHistoryScreen: React.FC = () => {
         setHistory([]);
         return;
       }
-
-      const effectiveSearch = !canViewAll && user?.jdeno ? user.jdeno : search;
+      const effectiveSearch =
+        !canViewAll && user?.fid_presenter ? user.fid_presenter : search;
 
       const params = new URLSearchParams({
         page: String(currentPage),
@@ -108,22 +95,46 @@ const P2HHistoryScreen: React.FC = () => {
         search: effectiveSearch,
       });
 
+      console.log('Fetch URL:', `${API_URL}?${params.toString()}`);
+      console.log('Authorization:', `Bearer ${token}`);
+
+      // const response = await fetch(`${API_URL}?${params.toString()}`, {
+      //   headers: {Authorization: `Bearer ${token}`},
+      // });
+
+      // const params = new URLSearchParams({
+      //   page: String(currentPage),
+      //   limit: String(limit),
+      // });
+      // if (search?.trim()) {
+      //   params.append('search', search.trim());
+      // }
+
+      console.log('Fetch URL:', `${API_URL}?${params.toString()}`);
+      console.log('Authorization:', `Bearer ${token}`);
       const response = await fetch(`${API_URL}?${params.toString()}`, {
         headers: {Authorization: `Bearer ${token}`},
       });
 
       const json = await response.json();
+      console.log('Response JSON:', json);
 
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');
         setHistory([]);
       } else {
-        let data: P2HItem[] = json.data || [];
+        let data: EASItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
 
+        console.log('Data sebelum filter:', data.length);
+
         if (!canViewAll && user?.jdeno) {
-          data = data.filter(item => item.jdeno === user.jdeno);
+          data = data.filter(
+            item => String(item.fid_presenter) === String(user.jdeno),
+          );
         }
+
+        console.log('Data setelah filter:', data.length);
 
         if (isLoadMore) {
           setHistory(prev => [...prev, ...data]);
@@ -137,6 +148,7 @@ const P2HHistoryScreen: React.FC = () => {
         setHasMore(currentPage < totalPagesFromApi);
       }
     } catch (err) {
+      console.error('Fetch error:', err);
       setError('Tidak dapat terhubung ke server.');
       if (!isLoadMore) setHistory([]);
     }
@@ -149,64 +161,55 @@ const P2HHistoryScreen: React.FC = () => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchHistory();
+    console.log('history is array?', Array.isArray(history));
+    console.log('history length:', history.length);
   };
 
-  const renderItem = ({item}: {item: P2HItem}) => (
+  const renderItem = ({item}: {item: EASItem}) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.83}
       onPress={() =>
-        navigation.navigate('P2HDetail', {
-          fid_p2h: item.id,
-          unit: item.no_unit,
-          driver: item.namapengemudi,
-          tanggal: item.tanggal,
+        navigation.navigate('AESDetail', {
+          agendaId: item.id,
+          code: item.code,
         })
       }>
       <View style={styles.headerRow}>
-        <Text style={styles.unitText}>{item.no_unit}</Text>
+        <Text style={styles.unitTextCode}>{item.code}</Text>
+      </View>
+      <View style={styles.headerRow}>
+        <Text style={styles.unitText}>{item.judul}</Text>
         <Text style={styles.siteLabel}>{item.site}</Text>
       </View>
-      <Text style={styles.modelText}>{item.model}</Text>
+      <Text style={styles.modelText}>{item.category}</Text>
       <View style={styles.row}>
         <Icon name="person-circle-outline" size={17} color="#4886E3" />
-        <Text style={styles.driverName}>
-          {item.namapengemudi}
-          {item.jdeno === user?.jdeno ? ' (Punya Anda)' : ''}
-        </Text>
+        <Text style={styles.driverName}>{item.pemateri} (Pemateri)</Text>
       </View>
       <View style={styles.rowSpace}>
         <Text style={styles.labelInfo}>
           <Icon name="calendar-outline" size={15} color="#999" />{' '}
-          {dayjs(item.tanggal).format('DD MMM YYYY')}
+          {dayjs(item.start).format('DD MMM YYYY HH:mm')} -{' '}
+          {dayjs(item.end).format('HH:mm')}
         </Text>
-        <Text style={styles.hmkm}>{item.hmkm} HM/KM</Text>
+        <Text style={styles.hmkm}>{item.status}</Text>
       </View>
-      <View style={styles.badgeRow}>
-        <Badge
-          label={`Fuel: ${item.fuel_permit}`}
-          color={item.fuel_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-        <Badge
-          label={`Sticker: ${item.sticker_permit}`}
-          color={item.sticker_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-      </View>
-      {item.keterangan && (
+      {item.remark && (
         <View style={styles.keteranganRow}>
-          <Text style={styles.ketLabel}>Keterangan: </Text>
-          <Text style={styles.ketValue}>{item.keterangan}</Text>
+          <Text style={styles.ketLabel}>Deskripsi: </Text>
+          <Text style={styles.ketValue}>{item.remark}</Text>
         </View>
       )}
     </TouchableOpacity>
   );
 
   const InfoEmpty: React.FC<InfoEmptyProps> = ({
-    message = 'Data kosong/belum ada pemeriksaan P2H.',
+    message = 'Data kosong/belum ada event.',
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,
@@ -245,7 +248,7 @@ const P2HHistoryScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 20}}
           />
-          <Text style={styles.title}>Riwayat Pemeriksaan P2H Saya</Text>
+          <Text style={styles.title}>Riwayat Event Saya</Text>
         </View>
 
         <View style={styles.limitPickerWrap}>
@@ -272,7 +275,7 @@ const P2HHistoryScreen: React.FC = () => {
         <View style={styles.searchContainer}>
           <Icon name="search-outline" size={20} color="#888" />
           <TextInput
-            placeholder="Cari unit / driver..."
+            placeholder="Cari event..."
             value={search}
             onChangeText={text => setSearch(text)}
             onSubmitEditing={() => fetchHistory()}
@@ -290,6 +293,10 @@ const P2HHistoryScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        <Text style={{textAlign: 'center', color: '#888', marginBottom: 4}}>
+          Jumlah data: {history.length}
+        </Text>
 
         {error ? (
           <InfoEmpty message={error} />
@@ -336,4 +343,4 @@ const P2HHistoryScreen: React.FC = () => {
   );
 };
 
-export default P2HHistoryScreen;
+export default AESMyHistoryScreen;

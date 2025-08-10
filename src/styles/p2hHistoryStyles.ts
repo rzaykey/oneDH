@@ -53,6 +53,11 @@ export const p2hHistoryStyles = StyleSheet.create({
     fontSize: 15,
     color: '#2463EB',
   },
+  unitTextCode: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#ff0000ff',
+  },
   siteLabel: {
     backgroundColor: '#e3eafe',
     color: '#2563eb',

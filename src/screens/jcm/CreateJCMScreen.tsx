@@ -36,7 +36,7 @@ const OFFLINE_SUBMIT_KEY = 'offline_submit_jcm';
 const API_URL_MU = `${API_BASE_URL.onedh}/MasterUnit`;
 const API_URL_GWU = `${API_BASE_URL.onedh}/GetWoUnit/`;
 const API_URL_GGT = `${API_BASE_URL.onedh}/GetGroupTask`;
-const API_URL_GTA = `${API_BASE_URL.onedh}/GetTask Assignment/`;
+const API_URL_GTA = `${API_BASE_URL.onedh}/GetTaskAssignment/`;
 const API_URL_GS = `${API_BASE_URL.onedh}/GetSupervisor/`;
 
 const CreateJCMscreen = ({navigation}) => {
@@ -440,7 +440,8 @@ const CreateJCMscreen = ({navigation}) => {
       const cache = await AsyncStorage.getItem('loginCache');
       const parsed = JSON.parse(cache);
       const jdeno = parsed?.dataEmp?.jdeno;
-
+      const site = parsed?.dataEmp?.site;
+      console.log(site);
       if (!jdeno) {
         Toast.show({
           type: 'error',
@@ -463,6 +464,7 @@ const CreateJCMscreen = ({navigation}) => {
         id: uuidv4(),
         wono: selectedWO,
         jdeno,
+        site,
         tanggal: tanggalStr,
         jam: jamStr,
         unitNo: selectedUnit,
@@ -473,6 +475,7 @@ const CreateJCMscreen = ({navigation}) => {
         parrent_wo_task: selectedGroupTask,
       };
 
+      console.log(dataSubmit);
       const headers = await getAuthHeader();
       const response = await fetch(
         `${API_BASE_URL.onedh}/CreateTaskAssignment`,
@@ -585,7 +588,9 @@ const CreateJCMscreen = ({navigation}) => {
           nestedScrollEnabled={true}
           keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Form Job Card Mechanic</Text>
-          {/* <TouchableOpacity onPress={refreshAll} style={styles.refreshButton}>
+          {/* <TouchableOpacity
+            onPress={refreshMaster}
+            style={styles.refreshButton}>
             <Text style={styles.refreshButtonText}>🔄 Refresh Data</Text>
           </TouchableOpacity> */}
 

@@ -27,7 +27,7 @@ const fullMenu = [
     label: 'Riwayat Event Saya',
     icon: 'alert-circle-outline',
     desc: 'Riwayat anda sebagai presenter/guest',
-    screen: 'P2HMyHistory',
+    screen: 'AESMyHistory',
   },
 ];
 
@@ -96,7 +96,7 @@ const AESScreen = ({navigation}: any) => {
           : 'CreateGuestAESScreen';
     } else if (selectedMenu.id === 'myhistory') {
       targetScreen =
-        role === 'presenter' ? 'P2HMyHistory' : 'GuestP2HMyHistory';
+        role === 'presenter' ? 'AESMyHistory' : 'GuestP2HMyHistory';
     }
 
     navigation.navigate(targetScreen);
@@ -109,7 +109,7 @@ const AESScreen = ({navigation}: any) => {
       start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>P2H - Pemeriksaan Harian Kendaraan</Text>
+        <Text style={styles.title}>AES - Attendant Event System</Text>
         <FlatList
           data={menus}
           keyExtractor={item => item.id}
