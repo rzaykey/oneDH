@@ -19,21 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
+import {EASGuestItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
-
-interface P2HItem {
-  id: number;
-  no_unit: string;
-  site: string;
-  model: string;
-  namapengemudi: string;
-  jdeno: string;
-  tanggal: string;
-  hmkm: string;
-  fuel_permit: string;
-  sticker_permit: string;
-  keterangan?: string;
-}
 
 interface BadgeProps {
   label: string;
@@ -44,10 +31,68 @@ interface InfoEmptyProps {
   message?: string;
 }
 
-const API_URL = `${API_BASE_URL.onedh}/GetDataP2H`;
+const API_URL = `${API_BASE_URL.onedh}/ShowAgendaGuest`;
 
-const P2HHistoryScreen: React.FC = () => {
-  const [history, setHistory] = useState<P2HItem[]>([]);
+interface GuestItemProps {
+  item: EASGuestItem;
+  navigation: any;
+}
+const GuestItem: React.FC<GuestItemProps> = ({item, navigation}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.83}
+      onPress={() => setExpanded(!expanded)} // toggle expand/collapse
+    >
+      {/* Kode agenda & nama tamu */}
+      <View style={styles.headerRow}>
+        <Text style={styles.unitTextCode}>{item.code_agenda}</Text>
+        <Text style={styles.unitText}>{item.judul}</Text>
+      </View>
+
+      <Text style={styles.modelText}>Pemateri: {item.pemateri}</Text>
+      <Text style={styles.modelText}>Kategori: {item.category}</Text>
+      <Text style={styles.modelText}>Site: {item.site_code}</Text>
+      <View style={styles.rowSpace}>
+        <Text style={styles.labelInfo}>
+          <Icon name="calendar-outline" size={15} color="#999" />{' '}
+          {dayjs(item.start).format('DD MMM YYYY HH:mm')} -{' '}
+          {dayjs(item.end).format('DD MMM YYYY HH:mm')}
+        </Text>
+      </View>
+      {/* Detail muncul kalau expanded */}
+      {expanded && (
+        <>
+          <View style={styles.headerRow}>
+            <Text style={styles.siteLabel}>{item.company}</Text>
+          </View>
+
+          <View style={{marginTop: 4, marginBottom: 4}}>
+            <Text
+              style={{
+                color: item.status === 'Open' ? 'green' : 'red',
+                fontWeight: '600',
+              }}>
+              Status: {item.status}
+            </Text>
+          </View>
+
+          {item.remark && (
+            <View style={styles.keteranganRow}>
+              <Text style={styles.ketLabel}>Keterangan: </Text>
+              <Text style={styles.ketValue}>{item.remark}</Text>
+            </View>
+          )}
+        </>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const GuestAESMyHistoryScreen: React.FC = () => {
+  const [history, setHistory] = useState<EASGuestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,24 +127,29 @@ const P2HHistoryScreen: React.FC = () => {
     }
 
     const currentPage = isLoadMore ? page + 1 : 1;
-
-    const params = new URLSearchParams({
-      page: String(currentPage),
-      limit: String(limit),
-      search,
-    });
+    let token = '';
 
     try {
-      const cache = await AsyncStorage.getItem('loginCache');
-      const token = cache && JSON.parse(cache)?.token;
+      const loginCache = await AsyncStorage.getItem('loginCache');
+      if (loginCache) {
+        const parsed = JSON.parse(loginCache);
+        token = parsed?.token || '';
+      }
 
-      if (!token) {
+      if (!token || !user) {
         setError('Session habis. Silakan login ulang.');
         setHistory([]);
-        setLoading(false);
-        setIsLoadingMore(false);
         return;
       }
+
+      const effectiveSearch =
+        !canViewAll && user?.fid_guest ? user.fid_guest : search;
+
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(limit),
+        search: effectiveSearch,
+      });
 
       const response = await fetch(`${API_URL}?${params.toString()}`, {
         headers: {Authorization: `Bearer ${token}`},
@@ -107,15 +157,19 @@ const P2HHistoryScreen: React.FC = () => {
 
       const json = await response.json();
 
+      console.log(json);
+
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');
         setHistory([]);
       } else {
-        let data: P2HItem[] = json.data || [];
+        let data: EASGuestItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
 
         if (!canViewAll && user?.jdeno) {
-          data = data.filter(item => item.jdeno === user.jdeno);
+          data = data.filter(
+            item => String(item.fid_guest) === String(user.jdeno),
+          );
         }
 
         if (isLoadMore) {
@@ -144,62 +198,17 @@ const P2HHistoryScreen: React.FC = () => {
     fetchHistory();
   };
 
-  const renderItem = ({item}: {item: P2HItem}) => (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.83}
-      onPress={() =>
-        navigation.navigate('P2HDetail', {
-          fid_p2h: item.id,
-          unit: item.no_unit,
-          driver: item.namapengemudi,
-          tanggal: item.tanggal,
-        })
-      }>
-      <View style={styles.headerRow}>
-        <Text style={styles.unitText}>{item.no_unit}</Text>
-        <Text style={styles.siteLabel}>{item.site}</Text>
-      </View>
-      <Text style={styles.modelText}>{item.model}</Text>
-      <View style={styles.row}>
-        <Icon name="person-circle-outline" size={17} color="#4886E3" />
-        <Text style={styles.driverName}>
-          {item.namapengemudi}
-          {item.jdeno === user?.jdeno ? ' (Punya Anda)' : ''}
-        </Text>
-      </View>
-      <View style={styles.rowSpace}>
-        <Text style={styles.labelInfo}>
-          <Icon name="calendar-outline" size={15} color="#999" />{' '}
-          {dayjs(item.tanggal).format('DD MMM YYYY')}
-        </Text>
-        <Text style={styles.hmkm}>{item.hmkm} HM/KM</Text>
-      </View>
-      <View style={styles.badgeRow}>
-        <Badge
-          label={`Fuel: ${item.fuel_permit}`}
-          color={item.fuel_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-        <Badge
-          label={`Sticker: ${item.sticker_permit}`}
-          color={item.sticker_permit === 'Berlaku' ? '#4CAF50' : '#E53935'}
-        />
-      </View>
-      {item.keterangan && (
-        <View style={styles.keteranganRow}>
-          <Text style={styles.ketLabel}>Keterangan: </Text>
-          <Text style={styles.ketValue}>{item.keterangan}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+  // **RENDER ITEM PAKAI GuestItem**
+  const renderItem = ({item}: {item: EASGuestItem}) => (
+    <GuestItem item={item} navigation={navigation} />
   );
 
   const InfoEmpty: React.FC<InfoEmptyProps> = ({
-    message = 'Data kosong/belum ada pemeriksaan P2H.',
+    message = 'Data kosong/belum ada event.',
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,
@@ -209,7 +218,7 @@ const P2HHistoryScreen: React.FC = () => {
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
-        Belum ada data P2H, pastikan user mengisi P2H bulan ini.
+        Silakan buat event dan data akan muncul di sini.
       </Text>
     </View>
   );
@@ -238,7 +247,7 @@ const P2HHistoryScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 20}}
           />
-          <Text style={styles.title}>Riwayat Pemeriksaan P2H</Text>
+          <Text style={styles.title}>Riwayat Event Saya</Text>
         </View>
 
         <View style={styles.limitPickerWrap}>
@@ -265,13 +274,13 @@ const P2HHistoryScreen: React.FC = () => {
         <View style={styles.searchContainer}>
           <Icon name="search-outline" size={20} color="#888" />
           <TextInput
-            placeholder="Cari unit / driver..."
-            placeholderTextColor="#0f0f0f"
+            placeholder="Cari event..."
             value={search}
             onChangeText={text => setSearch(text)}
             onSubmitEditing={() => fetchHistory()}
             style={styles.searchInput}
             returnKeyType="search"
+            placeholderTextColor="#0f0f0f"
           />
           {search !== '' && (
             <TouchableOpacity
@@ -283,6 +292,10 @@ const P2HHistoryScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        <Text style={{textAlign: 'center', color: '#888', marginBottom: 4}}>
+          Jumlah data: {history.length}
+        </Text>
 
         {error ? (
           <InfoEmpty message={error} />
@@ -329,4 +342,4 @@ const P2HHistoryScreen: React.FC = () => {
   );
 };
 
-export default P2HHistoryScreen;
+export default GuestAESMyHistoryScreen;

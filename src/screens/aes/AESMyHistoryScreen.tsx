@@ -8,6 +8,8 @@ import {
   RefreshControl,
   TextInput,
   Image,
+  Modal,
+  Alert,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -21,6 +23,7 @@ import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
 import {EASItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 interface BadgeProps {
   label: string;
@@ -32,6 +35,7 @@ interface InfoEmptyProps {
 }
 
 const API_URL = `${API_BASE_URL.onedh}/GetMyAgenda`;
+const API_URL_CLOSE = `${API_BASE_URL.onedh}/CloseAgenda`;
 
 const AESMyHistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<EASItem[]>([]);
@@ -48,6 +52,19 @@ const AESMyHistoryScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const {roles, user, activeSite} = useSiteContext();
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [photo, setPhoto] = useState(null);
+
+  // Ambil token dari AsyncStorage untuk header auth
+  const getAuthHeader = async () => {
+    const cache = await AsyncStorage.getItem('loginCache');
+    const token = cache ? JSON.parse(cache)?.token : null;
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  };
 
   const canViewAll = isAdminHSE(roles, user, activeSite);
 
@@ -60,8 +77,31 @@ const AESMyHistoryScreen: React.FC = () => {
     fetchHistory();
   }, [limit]);
 
-  const fetchHistory = async (isLoadMore = false) => {
-    console.log('fetchHistory dipanggil. isLoadMore:', isLoadMore);
+  const pickImage = () => {
+    const options = {
+      mediaType: 'photo',
+      quality: 0.8,
+      includeBase64: false,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        setPhoto(response.assets[0]);
+      }
+    });
+  };
+
+  const fetchHistory = async (isLoadMore = false, resetSearch = false) => {
+    console.log(
+      'fetchHistory dipanggil. isLoadMore:',
+      isLoadMore,
+      'resetSearch:',
+      resetSearch,
+    );
     if (isLoadMore) setIsLoadingMore(true);
     else {
       setLoading(true);
@@ -73,9 +113,7 @@ const AESMyHistoryScreen: React.FC = () => {
     let token = '';
 
     try {
-      console.log('Ambil loginCache...');
       const loginCache = await AsyncStorage.getItem('loginCache');
-      console.log('Hasil loginCache:', loginCache);
       if (loginCache) {
         const parsed = JSON.parse(loginCache);
         token = parsed?.token || '';
@@ -86,32 +124,23 @@ const AESMyHistoryScreen: React.FC = () => {
         setHistory([]);
         return;
       }
-      const effectiveSearch =
-        !canViewAll && user?.fid_presenter ? user.fid_presenter : search;
 
       const params = new URLSearchParams({
         page: String(currentPage),
         limit: String(limit),
-        search: effectiveSearch,
       });
 
-      console.log('Fetch URL:', `${API_URL}?${params.toString()}`);
-      console.log('Authorization:', `Bearer ${token}`);
+      if (!resetSearch) {
+        const effectiveSearch =
+          !canViewAll && user?.fid_presenter ? user.fid_presenter : search;
 
-      // const response = await fetch(`${API_URL}?${params.toString()}`, {
-      //   headers: {Authorization: `Bearer ${token}`},
-      // });
-
-      // const params = new URLSearchParams({
-      //   page: String(currentPage),
-      //   limit: String(limit),
-      // });
-      // if (search?.trim()) {
-      //   params.append('search', search.trim());
-      // }
+        if (effectiveSearch && String(effectiveSearch).trim() !== '') {
+          params.append('search', String(effectiveSearch).trim());
+        }
+      }
 
       console.log('Fetch URL:', `${API_URL}?${params.toString()}`);
-      console.log('Authorization:', `Bearer ${token}`);
+
       const response = await fetch(`${API_URL}?${params.toString()}`, {
         headers: {Authorization: `Bearer ${token}`},
       });
@@ -126,15 +155,11 @@ const AESMyHistoryScreen: React.FC = () => {
         let data: EASItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
 
-        console.log('Data sebelum filter:', data.length);
-
         if (!canViewAll && user?.jdeno) {
           data = data.filter(
             item => String(item.fid_presenter) === String(user.jdeno),
           );
         }
-
-        console.log('Data setelah filter:', data.length);
 
         if (isLoadMore) {
           setHistory(prev => [...prev, ...data]);
@@ -158,6 +183,37 @@ const AESMyHistoryScreen: React.FC = () => {
     setIsLoadingMore(false);
   };
 
+  const uploadCloseAgenda = async () => {
+    try {
+      const headers = await getAuthHeader(); // ✅ ambil header autentikasi
+
+      const formData = new FormData();
+      formData.append('fid_agenda', selectedItem?.id);
+
+      if (photo) {
+        formData.append('photo', {
+          uri: photo.uri,
+          type: 'image/jpeg',
+          name: 'close_agenda.jpg',
+        });
+      }
+
+      const res = await fetch(`${API_BASE_URL.onedh}/CloseAgenda`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const json = await res.json();
+      console.log(json);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchHistory();
@@ -170,7 +226,7 @@ const AESMyHistoryScreen: React.FC = () => {
       style={styles.card}
       activeOpacity={0.83}
       onPress={() =>
-        navigation.navigate('AESDetail', {
+        navigation.navigate('EditPresentAESScreen', {
           agendaId: item.id,
           code: item.code,
         })
@@ -201,6 +257,17 @@ const AESMyHistoryScreen: React.FC = () => {
           <Text style={styles.ketValue}>{item.remark}</Text>
         </View>
       )}
+
+      {item.status == 'Open' && (
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            setSelectedItem(item);
+            setShowCloseModal(true);
+          }}>
+          <Text style={styles.closeButtonText}>Close Event</Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 
@@ -219,7 +286,7 @@ const AESMyHistoryScreen: React.FC = () => {
       />
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubText}>
-        Silakan lakukan pemeriksaan P2H dan data akan muncul di sini.
+        Silakan buat event dan data akan muncul di sini.
       </Text>
     </View>
   );
@@ -233,7 +300,6 @@ const AESMyHistoryScreen: React.FC = () => {
       <Text style={[styles.badgeText, {color}]}>{label}</Text>
     </View>
   );
-
   return (
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
@@ -287,7 +353,7 @@ const AESMyHistoryScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => {
                 setSearch('');
-                fetchHistory();
+                fetchHistory(false, true); // param kedua tanda reset search
               }}>
               <Icon name="close-circle" size={20} color="#888" />
             </TouchableOpacity>
@@ -339,6 +405,42 @@ const AESMyHistoryScreen: React.FC = () => {
           </>
         )}
       </SafeAreaView>
+      <Modal visible={showCloseModal} animationType="fade" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Close Agenda</Text>
+            <Text style={styles.modalSubtitle}>{selectedItem?.tittle}</Text>
+
+            {photo && (
+              <Image source={{uri: photo.uri}} style={styles.modalImage} />
+            )}
+
+            <TouchableOpacity
+              onPress={pickImage}
+              style={styles.modalButtonBlue}>
+              <Text style={styles.modalButtonText}>Pilih Foto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={uploadCloseAgenda}
+              disabled={loading}
+              style={[
+                styles.modalButtonGreen,
+                loading && styles.modalButtonDisabled,
+              ]}>
+              <Text style={styles.modalButtonText}>
+                {loading ? 'Mengirim...' : 'Kirim'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setShowCloseModal(false)}
+              style={styles.modalButtonRed}>
+              <Text style={styles.modalButtonText}>Batal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };

@@ -37,8 +37,10 @@ import P2HMyHistory from '../screens/p2h/P2HMyHistoryScreen';
 import P2HDetailScreen from '../screens/p2h/P2HDetailScreen';
 import CreateP2HScreen from '../screens/p2h/CreateP2HScreen';
 import AESMyHistory from '../screens/aes/AESMyHistoryScreen';
+import GuestAESMyHistory from '../screens/aes/GuestAESMyHistoryScreen';
 import AESScreen from '../screens/module/AESScreen';
 import CreatePresentAESScreen from '../screens/aes/CreatePresentAESScreen';
+import EditPresentAESScreen from '../screens/aes/EditPresentAESScreen';
 import CreateGuestAESScreen from '../screens/aes/CreateGuestAESScreen';
 import MasterCacheScreen from '../screens/MasterCacheScreen';
 
@@ -82,10 +84,15 @@ const AppNavigator = () => (
       component={CreatePresentAESScreen}
     />
     <Stack.Screen
+      name="EditPresentAESScreen"
+      component={EditPresentAESScreen}
+    />
+    <Stack.Screen
       name="CreateGuestAESScreen"
       component={CreateGuestAESScreen}
     />
     <Stack.Screen name="AESMyHistory" component={AESMyHistory} />
+    <Stack.Screen name="GuestAESMyHistory" component={GuestAESMyHistory} />
 
     <Stack.Screen name="MasterCacheScreen" component={MasterCacheScreen} />
 

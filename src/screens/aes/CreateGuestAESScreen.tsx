@@ -106,8 +106,7 @@ const CreateGuestScreen = ({navigation}) => {
       position: position,
       department: dept,
       company: company,
-      remark: dept,
-      keterangan,
+      remark: keterangan,
       code_agenda,
       device_info: `(${type})(${build})(${version})`,
     };
@@ -124,7 +123,7 @@ const CreateGuestScreen = ({navigation}) => {
           'Data disimpan ke antrian offline. Akan dikirim otomatis saat online!',
         position: 'top',
       });
-      navigation.replace('AESMyHistory');
+      navigation.replace('GuestAESMyHistory');
       return;
     }
 
@@ -182,7 +181,7 @@ const CreateGuestScreen = ({navigation}) => {
         console.log('🔁 Respon lengkap:', data);
         console.log('✅ Kode agenda:', data.code);
 
-        // navigation.replace('AESMyHistory');
+        // navigation.replace('GuestAESMyHistory');
       } else {
         // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -195,7 +194,7 @@ const CreateGuestScreen = ({navigation}) => {
           visibilityTime: 3000,
           topOffset: 40,
         });
-        navigation.replace('AESMyHistory');
+        navigation.replace('GuestAESMyHistory');
       }
     } catch (err) {
       console.log('[FETCH ERROR]', err);
@@ -211,7 +210,7 @@ const CreateGuestScreen = ({navigation}) => {
         position: 'top',
       });
 
-      navigation.replace('AESMyHistory');
+      navigation.replace('GuestAESMyHistory');
     }
   };
 

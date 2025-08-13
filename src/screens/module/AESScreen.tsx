@@ -96,7 +96,7 @@ const AESScreen = ({navigation}: any) => {
           : 'CreateGuestAESScreen';
     } else if (selectedMenu.id === 'myhistory') {
       targetScreen =
-        role === 'presenter' ? 'AESMyHistory' : 'GuestP2HMyHistory';
+        role === 'presenter' ? 'AESMyHistory' : 'GuestAESMyHistory';
     }
 
     navigation.navigate(targetScreen);

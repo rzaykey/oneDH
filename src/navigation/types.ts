@@ -121,6 +121,24 @@ export type EASItem = {
   remark?: string;
 };
 
+export type EASGuestItem = {
+  id: number;
+  fid_guest: string;
+  name_guest: string;
+  company: string;
+  code_agenda: string;
+  start: string;
+  end: string;
+  remark: string;
+  position: string;
+  department: string;
+  judul: string;
+  status: string;
+  pemateri: string;
+  category: string;
+  site_code: string;
+};
+
 export interface MopData {
   id: number;
   jde_no: string;

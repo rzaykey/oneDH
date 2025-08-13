@@ -61,7 +61,7 @@ const CreatePresentAESScreen = ({navigation}) => {
   const [queueCount, setQueueCount] = useState(0);
   const [siteList, setSiteList] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
-  const [fidCategory, setFidCategory] = useState('1'); // default kategori
+  const [fidCategory, setFidCategory] = useState('1');
 
   const getAuthHeader = async () => {
     const cache = await AsyncStorage.getItem('loginCache');
