@@ -9,7 +9,6 @@ import {
   TextInput,
   Image,
   Modal,
-  Alert,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -24,6 +23,7 @@ import {useSiteContext} from '../../context/SiteContext';
 import {EASItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
 import {launchImageLibrary} from 'react-native-image-picker';
+import Toast from 'react-native-toast-message';
 
 interface BadgeProps {
   label: string;
@@ -96,12 +96,6 @@ const AESMyHistoryScreen: React.FC = () => {
   };
 
   const fetchHistory = async (isLoadMore = false, resetSearch = false) => {
-    console.log(
-      'fetchHistory dipanggil. isLoadMore:',
-      isLoadMore,
-      'resetSearch:',
-      resetSearch,
-    );
     if (isLoadMore) setIsLoadingMore(true);
     else {
       setLoading(true);
@@ -139,14 +133,11 @@ const AESMyHistoryScreen: React.FC = () => {
         }
       }
 
-      console.log('Fetch URL:', `${API_URL}?${params.toString()}`);
-
       const response = await fetch(`${API_URL}?${params.toString()}`, {
         headers: {Authorization: `Bearer ${token}`},
       });
 
       const json = await response.json();
-      console.log('Response JSON:', json);
 
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');
@@ -185,7 +176,7 @@ const AESMyHistoryScreen: React.FC = () => {
 
   const uploadCloseAgenda = async () => {
     try {
-      const headers = await getAuthHeader(); // ✅ ambil header autentikasi
+      const headers = await getAuthHeader();
 
       const formData = new FormData();
       formData.append('fid_agenda', selectedItem?.id);
@@ -207,10 +198,49 @@ const AESMyHistoryScreen: React.FC = () => {
         body: formData,
       });
 
-      const json = await res.json();
-      console.log(json);
+      const data = await res.json();
+      console.log(data);
+
+      if (res.ok) {
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: `${
+            data.notif || data.message || 'Event berhasil disimpan!'
+          } (Kode: ${data.code || '-'})`,
+          position: 'top',
+          visibilityTime: 3000,
+          topOffset: 40,
+        });
+
+        // Tutup modal dan reset photo
+        setShowCloseModal(false);
+        setPhoto(null);
+
+        // Delay sedikit biar toast muncul
+        setTimeout(() => {
+          navigation.replace('AESMyHistory');
+        }, 500);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: data.message || 'Gagal menyimpan event!',
+          position: 'top',
+          visibilityTime: 3000,
+          topOffset: 40,
+        });
+      }
     } catch (error) {
       console.error(error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Terjadi kesalahan saat mengirim data!',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: 40,
+      });
     }
   };
 

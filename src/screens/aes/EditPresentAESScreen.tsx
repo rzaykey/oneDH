@@ -11,6 +11,8 @@ import {
   Platform,
   UIManager,
   Button,
+  Pressable,
+  Modal,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -44,6 +46,7 @@ export default function EditPresentAESScreen({route, navigation}) {
   const [loading, setLoading] = useState(true);
   const [collapsedGeneral, setCollapsedGeneral] = useState(false);
   const [collapsedTime, setCollapsedTime] = useState(true);
+  const isDisabled = agenda?.status === 'Close';
 
   // Field dari JSON
   const [title, setTitle] = useState('');
@@ -70,8 +73,10 @@ export default function EditPresentAESScreen({route, navigation}) {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [photoClose, setPhotoClose] = useState('');
-  const FILE_BASE_URL = API_BASE_URL.onedh.replace('/api', '');
   const [agendaDetail, setAgendaDetail] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const FILE_BASE_URL = API_BASE_URL.onedh.replace('/api', '');
   interface Agenda {
     status?: string;
   }
@@ -99,20 +104,16 @@ export default function EditPresentAESScreen({route, navigation}) {
         : await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers}).then(r =>
             r.json(),
           );
-      console.log('📌 Dept API result:', deptData);
       const siteData = siteCache
         ? JSON.parse(siteCache)
         : await fetch(`${API_BASE_URL.onedh}/GetSite`, {headers}).then(r =>
             r.json(),
           );
-      console.log('📌 Site API result:', siteData);
       const categoryData = categoryCache
         ? JSON.parse(categoryCache)
         : await fetch(`${API_BASE_URL.onedh}/GetCategory`, {headers}).then(r =>
             r.json(),
           );
-
-      console.log('📌 Site API result:', categoryData);
       setDepartments(
         (deptData || []).map(d => ({
           label: d?.department_name ?? '',
@@ -133,8 +134,6 @@ export default function EditPresentAESScreen({route, navigation}) {
           value: c?.id != null ? String(c.id) : '',
         })),
       );
-
-      console.log('master_dept');
     } catch (e) {
       console.log('❌ Gagal ambil master data:', e);
     }
@@ -177,14 +176,12 @@ export default function EditPresentAESScreen({route, navigation}) {
         setFidCategory(agenda.fid_category?.toString() || '');
         setPhotoClose(agenda.photo || '');
         setAgenda(agenda);
-        console.log(agenda);
       }
     } catch (err) {
       console.log('❌ Gagal ambil detail agenda:', err);
     }
     setLoading(false);
   };
-  console.log('📷 Photo URL:', photoClose);
 
   const updateAgenda = async () => {
     try {
@@ -254,7 +251,6 @@ export default function EditPresentAESScreen({route, navigation}) {
     }
   }, [agendaId]);
 
-  // Fungsi toggle collapse dengan animasi
   const toggleCollapse = setter => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setter(prev => !prev);
@@ -267,7 +263,6 @@ export default function EditPresentAESScreen({route, navigation}) {
       </View>
     );
   }
-
   return (
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
@@ -300,6 +295,7 @@ export default function EditPresentAESScreen({route, navigation}) {
                 inputAndroid: styles.inputAndroid,
               }}
               placeholder={{label: 'Pilih Site', value: null}}
+              disabled={isDisabled}
             />
 
             <Text style={styles.label}>Kategori</Text>
@@ -387,19 +383,38 @@ export default function EditPresentAESScreen({route, navigation}) {
             />
 
             {photoClose ? (
-              <Image
-                source={{uri: `${FILE_BASE_URL}/storage/${photoClose}`}}
-                style={{
-                  width: 200,
-                  height: 200,
-                  marginVertical: 10,
-                  borderRadius: 8,
-                }}
-                resizeMode="cover"
-              />
+              <View style={{alignItems: 'center', marginVertical: 10}}>
+                <TouchableOpacity onPress={() => setModalVisible(true)}>
+                  <Image
+                    source={{uri: `${FILE_BASE_URL}/storage/${photoClose}`}}
+                    style={{
+                      width: 200,
+                      height: 200,
+                      borderRadius: 8,
+                    }}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              </View>
             ) : (
               <Text style={{color: '#999'}}>Tidak ada foto penutupan</Text>
             )}
+            {/* Modal Fullscreen */}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}>
+              <Pressable
+                style={styles.modalContainer}
+                onPress={() => setModalVisible(false)}>
+                <Image
+                  source={{uri: `${FILE_BASE_URL}/storage/${photoClose}`}}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+              </Pressable>
+            </Modal>
           </CollapsibleCard>
 
           <CollapsibleCard
