@@ -93,43 +93,61 @@ export default function EditPresentAESScreen({route, navigation}) {
   const fetchMasterData = async () => {
     try {
       const headers = await getAuthHeader();
+
+      // Ambil cache dari AsyncStorage
       const [deptCache, siteCache, categoryCache] = await Promise.all([
         AsyncStorage.getItem('master_dept'),
         AsyncStorage.getItem('master_site'),
         AsyncStorage.getItem('master_category'),
       ]);
 
-      const deptData = deptCache
-        ? JSON.parse(deptCache)
-        : await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers}).then(r =>
-            r.json(),
-          );
-      const siteData = siteCache
-        ? JSON.parse(siteCache)
-        : await fetch(`${API_BASE_URL.onedh}/GetSite`, {headers}).then(r =>
-            r.json(),
-          );
-      const categoryData = categoryCache
-        ? JSON.parse(categoryCache)
-        : await fetch(`${API_BASE_URL.onedh}/GetCategory`, {headers}).then(r =>
-            r.json(),
-          );
+      // Parse cache jika ada
+      let deptData = deptCache ? JSON.parse(deptCache) : null;
+      let siteData = siteCache ? JSON.parse(siteCache) : null;
+      let categoryData = categoryCache ? JSON.parse(categoryCache) : null;
+
+      // Ambil data dari API jika cache kosong atau tidak valid
+      if (!Array.isArray(deptData)) {
+        const res = await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers});
+        const json = await res.json();
+        deptData = Array.isArray(json) ? json : json?.data || [];
+        await AsyncStorage.setItem('master_dept', JSON.stringify(deptData)); // update cache
+      }
+
+      if (!Array.isArray(siteData)) {
+        const res = await fetch(`${API_BASE_URL.onedh}/GetSite`, {headers});
+        const json = await res.json();
+        siteData = Array.isArray(json) ? json : json?.data || [];
+        await AsyncStorage.setItem('master_site', JSON.stringify(siteData)); // update cache
+      }
+
+      if (!Array.isArray(categoryData)) {
+        const res = await fetch(`${API_BASE_URL.onedh}/GetCategory`, {headers});
+        const json = await res.json();
+        categoryData = Array.isArray(json) ? json : json?.data || [];
+        await AsyncStorage.setItem(
+          'master_category',
+          JSON.stringify(categoryData),
+        ); // update cache
+      }
+
+      // Set state dengan aman
       setDepartments(
-        (deptData || []).map(d => ({
+        deptData.map(d => ({
           label: d?.department_name ?? '',
           value: d?.department_name != null ? String(d.department_name) : '',
         })),
       );
 
       setSites(
-        (siteData || []).map(s => ({
+        siteData.map(s => ({
           label: s?.code ?? '',
           value: s?.id != null ? String(s.id) : '',
         })),
       );
 
       setCategories(
-        (categoryData || []).map(c => ({
+        categoryData.map(c => ({
           label: c?.name ?? '',
           value: c?.id != null ? String(c.id) : '',
         })),
