@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  useWindowDimensions,
   ActivityIndicator,
   Linking,
 } from 'react-native';
@@ -56,15 +55,11 @@ const DashboardScreen: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const carouselRef = useRef<FlatList<any>>(null);
-  const {width: windowWidth} = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [refreshingMaster, setRefreshingMaster] = useState(false);
-  const [isConnected, setIsConnected] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [appVersion, setAppVersion] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     cacheAllMasterData(); // tidak perlu await
@@ -251,7 +246,8 @@ const DashboardScreen: React.FC = () => {
     });
 
     navigation.replace('Login');
-  };4100
+  };
+  4100;
 
   // Site chip (highlight active, bisa tap)
 

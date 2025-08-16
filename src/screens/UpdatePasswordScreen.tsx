@@ -74,6 +74,7 @@ const UpdatePassword = ({navigation}) => {
 
         setTimeout(async () => {
           await AsyncStorage.removeItem('loginCache'); // Hapus token/session
+          await AsyncStorage.removeItem('activeSite');
           navigation.reset({
             index: 0,
             routes: [{name: 'Login'}], // Ganti dengan nama screen login kamu
