@@ -412,18 +412,20 @@ const CreatePresentAESScreen = ({navigation}) => {
           <Text style={styles.title}>Form Pengisian Agenda</Text>
 
           {/* Tombol Cek Queue */}
-          <View style={{marginVertical: 10}}>
-            <Button
-              title="Tampilkan Offline Queue"
-              onPress={showOfflineQueue}
-            />
-            <View style={{height: 10}} />
-            <Button
-              title="Hapus Offline Queue"
-              color="red"
-              onPress={clearOfflineQueue}
-            />
-          </View>
+          {queueCount > 0 && (
+            <View style={{marginVertical: 10}}>
+              {/* <Button
+                title="Tampilkan Offline Queue"
+                onPress={showOfflineQueue}
+              /> */}
+              <View style={{height: 10}} />
+              <Button
+                title="Hapus Offline Queue"
+                color="red"
+                onPress={clearOfflineQueue}
+              />
+            </View>
+          )}
 
           {/* BADGE QUEUE */}
           {queueCount > 0 && (

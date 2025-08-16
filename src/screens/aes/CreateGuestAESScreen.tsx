@@ -178,7 +178,7 @@ const CreateGuestScreen = ({navigation}) => {
           topOffset: 40,
         });
 
-        // navigation.replace('GuestAESMyHistory');
+        navigation.replace('GuestAESMyHistory');
       } else {
         // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -240,7 +240,7 @@ const CreateGuestScreen = ({navigation}) => {
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
           <Text style={styles.title}>Form Attendance Guest</Text>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => setShowModal(true)}
             style={{
               padding: 10,
@@ -249,7 +249,22 @@ const CreateGuestScreen = ({navigation}) => {
               marginBottom: 10,
             }}>
             <Text style={{color: '#fff'}}>Lihat Data Offline</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+
+          {queueCount > 0 && (
+            <View style={{marginVertical: 10}}>
+              {/* <Button
+                title="Tampilkan Offline Queue"
+                onPress={showOfflineQueue}
+              /> */}
+              <View style={{height: 10}} />
+              <Button
+                title="Hapus Offline Queue"
+                color="red"
+                onPress={clearOfflineQueue}
+              />
+            </View>
+          )}
 
           <ShowOfflineQueueModalScreen
             visible={showModal}
@@ -418,7 +433,7 @@ const CreateGuestScreen = ({navigation}) => {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Kirim P2H</Text>
+              <Text style={styles.buttonText}>Kirim</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
