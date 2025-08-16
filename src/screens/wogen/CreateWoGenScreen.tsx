@@ -59,7 +59,6 @@ const CreateWoGenScreen = ({navigation}) => {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
-        console.log('🌐 Online detected, refreshing data...');
         refreshAll(); // panggil refresh manual
       }
     });
@@ -188,7 +187,6 @@ const CreateWoGenScreen = ({navigation}) => {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
-        console.log('📶 Online, auto-refresh master data');
         refreshAllMasterData();
         validateOfflineSelections();
       }
@@ -199,7 +197,6 @@ const CreateWoGenScreen = ({navigation}) => {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (!state.isConnected || !state.isInternetReachable) {
-        console.log('📴 Offline mode, validate dropdown values');
         validateOfflineSelections();
       }
     });
@@ -237,7 +234,6 @@ const CreateWoGenScreen = ({navigation}) => {
   useFocusEffect(
     useCallback(() => {
       const run = async () => {
-        console.log('👁️ Screen focused, refresh + validate');
         await refreshAllMasterData();
         await validateOfflineSelections(); // ⬅️ Tambahkan ini
       };
@@ -256,8 +252,6 @@ const CreateWoGenScreen = ({navigation}) => {
         text2: 'Data offline berhasil dihapus dari penyimpanan.',
         position: 'top',
       });
-
-      console.log('Offline cache cleared successfully.');
     } catch (error) {
       console.error('Gagal menghapus cache offline:', error);
 
@@ -273,8 +267,6 @@ const CreateWoGenScreen = ({navigation}) => {
   const handleSubmit = async () => {
     if (loading) return; // mencegah double submit
     setLoading(true); // mulai loading
-
-    console.log('✅ handleSubmit DIPANGGIL');
 
     const missingFields = [];
 
@@ -326,7 +318,6 @@ const CreateWoGenScreen = ({navigation}) => {
         typeInput: `(${type})(${build})(${version})`,
         fid_pengawas: selectedSupervisor,
       };
-      console.log(dataSubmit);
       const headers = await getAuthHeader();
 
       const response = await fetch(`${API_BASE_URL.onedh}/StoreTaskWOGen`, {

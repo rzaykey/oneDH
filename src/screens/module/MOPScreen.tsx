@@ -169,7 +169,6 @@ const MOPScreen: React.FC = () => {
 
       if (token) {
         await cacheMopMasters(token);
-        console.log('🔄 Master MOP berhasil di-refresh manual');
         Toast.show({
           type: 'success',
           text1: 'Berhasil',

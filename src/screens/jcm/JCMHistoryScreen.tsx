@@ -102,7 +102,6 @@ const JCMHistoryScreen: React.FC = () => {
       });
 
       const json = await response.json();
-      console.log(json);
 
       if (!response.ok) {
         setError(json?.message || 'Gagal mengambil data.');

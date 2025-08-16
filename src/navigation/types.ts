@@ -18,6 +18,7 @@ export interface P2HItem {
   fuel_permit: string;
   sticker_permit: string;
   keterangan?: string;
+  created_at: string;
 }
 
 export interface JCMItem {

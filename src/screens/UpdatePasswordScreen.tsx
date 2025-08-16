@@ -63,7 +63,6 @@ const UpdatePassword = ({navigation}) => {
         headers,
         body: JSON.stringify({password: newPassword}),
       });
-      console.log(newPassword);
       const resJson = await response.json();
 
       if (response.ok && resJson.status === true) {

@@ -24,7 +24,6 @@ import {EASItem} from '../../navigation/types';
 import {isAdminHSE} from '../../utils/role';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
-
 interface BadgeProps {
   label: string;
   color: string;
@@ -35,7 +34,7 @@ interface InfoEmptyProps {
 }
 
 const API_URL = `${API_BASE_URL.onedh}/GetMyAgenda`;
-const API_URL_CLOSE = `${API_BASE_URL.onedh}/CloseAgenda`;
+const API_URL_SG = `${API_BASE_URL.onedh}/ShowGuest`;
 
 const AESMyHistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<EASItem[]>([]);
@@ -54,7 +53,9 @@ const AESMyHistoryScreen: React.FC = () => {
   const {roles, user, activeSite} = useSiteContext();
   const [selectedItem, setSelectedItem] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showViewGuestModal, setShowViewGuestModal] = useState(false);
   const [photo, setPhoto] = useState(null);
+  const [guestList, setGuestList] = useState<any[]>([]);
 
   // Ambil token dari AsyncStorage untuk header auth
   const getAuthHeader = async () => {
@@ -199,7 +200,6 @@ const AESMyHistoryScreen: React.FC = () => {
       });
 
       const data = await res.json();
-      console.log(data);
 
       if (res.ok) {
         Toast.show({
@@ -244,11 +244,36 @@ const AESMyHistoryScreen: React.FC = () => {
     }
   };
 
+  const fetchGuest = async (code_agenda: string) => {
+    try {
+      const headers = await getAuthHeader();
+
+      const response = await fetch(`${API_URL_SG}?code_agenda=${code_agenda}`, {
+        method: 'GET',
+        headers,
+      });
+      const text = await response.text();
+
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Response bukan JSON. Cek API backend.');
+      }
+
+      if (!response.ok) {
+        console.error('Fetch Guest Gagal:', json);
+        return;
+      }
+      setGuestList(json.data || []);
+    } catch (err) {
+      console.error('Fetch Guest Error:', err);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchHistory();
-    console.log('history is array?', Array.isArray(history));
-    console.log('history length:', history.length);
   };
 
   const renderItem = ({item}: {item: EASItem}) => (
@@ -289,14 +314,39 @@ const AESMyHistoryScreen: React.FC = () => {
       )}
 
       {item.status == 'Open' && (
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => {
-            setSelectedItem(item);
-            setShowCloseModal(true);
-          }}>
-          <Text style={styles.closeButtonText}>Close Event</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => {
+              setSelectedItem(item);
+              setShowCloseModal(true);
+            }}>
+            <Text style={styles.closeButtonText}>Close Event</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.viewGuestButton}
+            onPress={() => {
+              setSelectedItem(item);
+              fetchGuest(item.code); // ambil data berdasarkan code agenda
+              setShowViewGuestModal(true);
+            }}>
+            <Text style={styles.buttonText}>View Guest</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {item.status == 'Close' && (
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.viewGuestButton}
+            onPress={() => {
+              setSelectedItem(item);
+              fetchGuest(item.code); // ambil data berdasarkan code agenda
+              setShowViewGuestModal(true);
+            }}>
+            <Text style={styles.buttonText}>View Guest</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -467,6 +517,54 @@ const AESMyHistoryScreen: React.FC = () => {
               onPress={() => setShowCloseModal(false)}
               style={styles.modalButtonRed}>
               <Text style={styles.modalButtonText}>Batal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={showViewGuestModal}
+        animationType="fade"
+        transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Daftar Peserta</Text>
+
+            {/* Header Tabel */}
+            <View
+              style={{
+                flexDirection: 'row',
+                borderBottomWidth: 1,
+                paddingBottom: 5,
+                marginBottom: 5,
+              }}>
+              <Text style={{flex: 2, fontWeight: 'bold'}}>Nama</Text>
+              <Text style={{flex: 2, fontWeight: 'bold'}}>Perusahaan</Text>
+              <Text style={{flex: 2, fontWeight: 'bold'}}>Posisi</Text>
+            </View>
+
+            {/* Isi Tabel */}
+            <FlatList
+              style={{maxHeight: 300}} // supaya bisa scroll
+              data={guestList}
+              keyExtractor={(item, index) => item.id ?? index.toString()}
+              renderItem={({item}) => (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    paddingVertical: 4,
+                    borderBottomWidth: 0.5,
+                  }}>
+                  <Text style={{flex: 2}}>{item.name_guest}</Text>
+                  <Text style={{flex: 2}}>{item.company}</Text>
+                  <Text style={{flex: 2}}>{item.position}</Text>
+                </View>
+              )}
+            />
+
+            <TouchableOpacity
+              onPress={() => setShowViewGuestModal(false)}
+              style={styles.modalButtonRed}>
+              <Text style={styles.modalButtonText}>Tutup</Text>
             </TouchableOpacity>
           </View>
         </View>

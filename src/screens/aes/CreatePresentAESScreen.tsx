@@ -256,7 +256,6 @@ const CreatePresentAESScreen = ({navigation}) => {
       device_info: `(${DeviceInfo.getSystemName()})(${DeviceInfo.getVersion()})`,
       dept: dept,
     };
-    console.log(payload);
 
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
@@ -329,10 +328,8 @@ const CreatePresentAESScreen = ({navigation}) => {
           visibilityTime: 3000,
           topOffset: 40,
         });
-        console.log('🔁 Respon lengkap:', data);
-        console.log('✅ Kode agenda:', data.code);
 
-        // navigation.replace('AESMyHistory');
+        navigation.replace('AESMyHistory');
       } else {
         // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -367,10 +364,8 @@ const CreatePresentAESScreen = ({navigation}) => {
     const data = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      console.log('🗂 Offline Queue:', parsed);
       Alert.alert('Offline Queue', JSON.stringify(parsed, null, 2));
     } else {
-      console.log('🟢 Queue kosong');
       Alert.alert('Queue kosong');
     }
   };
@@ -379,10 +374,8 @@ const CreatePresentAESScreen = ({navigation}) => {
     const existing = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
     if (existing) {
       await AsyncStorage.removeItem(OFFLINE_SUBMIT_KEY);
-      console.log('🧹 Offline queue cleared.');
       Alert.alert('Sukses', 'Offline queue telah dibersihkan.');
     } else {
-      console.log('⚠️ Tidak ada data untuk dihapus.');
       Alert.alert('Tidak Ada Data', 'Queue sudah kosong.');
     }
   };

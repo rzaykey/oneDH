@@ -13,10 +13,11 @@ type DetailItem = {
   id: string;
   pertanyaan: string;
   jawaban: string;
+  create: string;
 };
 
 const P2HDetailScreen = ({route}) => {
-  const {fid_p2h, unit, driver, tanggal} = route.params;
+  const {fid_p2h, unit, driver, tanggal, create} = route.params;
   const insets = useSafeAreaInsets();
 
   const [detail, setDetail] = useState<DetailItem[]>([]);
@@ -45,7 +46,6 @@ const P2HDetailScreen = ({route}) => {
           headers: {Authorization: `Bearer ${token}`},
         });
         const json = await response.json();
-
         if (!response.ok) {
           setError(json?.message || 'Gagal mengambil data.');
           setDetail([]);
@@ -85,8 +85,12 @@ const P2HDetailScreen = ({route}) => {
         <Text style={styles.driverText}>{driver}</Text>
       </View>
       <View style={styles.infoRow}>
-        <Icon name="calendar-outline" size={18} color="#888" />
+        <Text style={styles.driverText}>Dibuat : </Text>
         <Text style={styles.tglText}>{tanggal}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.driverText}>Dikirim : </Text>
+        <Text style={styles.tglText}>{create}</Text>
       </View>
     </View>
   );

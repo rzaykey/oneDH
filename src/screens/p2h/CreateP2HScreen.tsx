@@ -610,10 +610,8 @@ const CreateP2HScreen = ({navigation}) => {
     const data = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      console.log('🗂 Offline Queue:', parsed);
       Alert.alert('Offline Queue', JSON.stringify(parsed, null, 2));
     } else {
-      console.log('🟢 Queue kosong');
       Alert.alert('Queue kosong');
     }
   };
@@ -730,7 +728,6 @@ const CreateP2HScreen = ({navigation}) => {
               />
             )}
 
-            {/* Status Koneksi */}
             <View
               style={[
                 styles.statusContainer,
@@ -756,10 +753,18 @@ const CreateP2HScreen = ({navigation}) => {
           {/* CARD: Informasi Unit */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informasi Unit</Text>
-            <Text style={styles.label}>No. Unit</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text style={styles.label}>No. Unit</Text>
+              <Text style={{color: 'red'}}>Ex: DHLVxxxx</Text>
+            </View>
             <TextInput
               style={styles.input}
-              placeholder="No Unit"
+              placeholder="No Unit Ex: DHLVxxxx"
               value={nounit}
               onChangeText={setNoUnit}
             />
@@ -950,27 +955,6 @@ const CreateP2HScreen = ({navigation}) => {
           {/* CARD: Lainnya */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Lainnya</Text>
-
-            {/* DATE PICKER */}
-            {/* <Text style={styles.label}>Tanggal</Text>
-            <TouchableOpacity
-              style={[styles.input, {justifyContent: 'center'}]}
-              onPress={() => setShowDate(true)}>
-              <Text>{tanggal || dayjs().format('YYYY-MM-DD')}</Text>
-            </TouchableOpacity>
-            {showDate && (
-              <DateTimePicker
-                value={dayjs(tanggal || dayjs().format('YYYY-MM-DD')).toDate()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDate(false);
-                  if (selectedDate) {
-                    setTanggal(dayjs(selectedDate).format('YYYY-MM-DD'));
-                  }
-                }}
-              />
-            )} */}
 
             <Text style={styles.label}>Keterangan</Text>
             <TextInput

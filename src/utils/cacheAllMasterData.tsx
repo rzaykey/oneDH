@@ -22,7 +22,6 @@ export const cacheAllMasterData = async () => {
     // await cacheMopMasters(headers);
 
     await AsyncStorage.setItem('cache_master_last', String(now));
-    console.log('✅ Master data cached (all)');
   } catch (err) {
     console.log('❌ Gagal cache master:', err?.message || err);
   }

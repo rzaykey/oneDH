@@ -271,7 +271,7 @@ export default function EditPresentAESScreen({route, navigation}) {
       end={{x: 1, y: 0}}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <Text style={styles.title}>Form Edit Agenda</Text>
+          <Text style={styles.title}>Form Event Detail</Text>
 
           {/* Detail Agenda */}
           <CollapsibleCard

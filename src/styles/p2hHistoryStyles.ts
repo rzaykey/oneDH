@@ -236,12 +236,33 @@ export const p2hHistoryStyles = StyleSheet.create({
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
-    marginTop: 10,
+    flex: 1, // biar sama lebar
+    marginRight: 5, // jarak antar tombol
+  },
+  viewGuestButton: {
+    backgroundColor: '#2196F3', // biru
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 5,
   },
   closeButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
+  viewGuestButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  modalCard: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    maxHeight: '80%', // penting untuk kasih ruang FlatList
+  },
+
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -338,13 +359,6 @@ export const p2hHistoryStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    width: '90%',
-    alignItems: 'center',
   },
   modalSubtitle: {
     fontSize: 16,

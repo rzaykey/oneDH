@@ -395,7 +395,6 @@ const CreateJCMscreen = ({navigation}) => {
         text2NumberOfLines: 10,
       });
 
-      console.log('Offline cache cleared successfully.');
     } catch (error) {
       console.error('Gagal menghapus cache offline:', error);
 
@@ -441,7 +440,6 @@ const CreateJCMscreen = ({navigation}) => {
       const parsed = JSON.parse(cache);
       const jdeno = parsed?.dataEmp?.jdeno;
       const site = parsed?.dataEmp?.site;
-      console.log(site);
       if (!jdeno) {
         Toast.show({
           type: 'error',
@@ -475,7 +473,6 @@ const CreateJCMscreen = ({navigation}) => {
         parrent_wo_task: selectedGroupTask,
       };
 
-      console.log(dataSubmit);
       const headers = await getAuthHeader();
       const response = await fetch(
         `${API_BASE_URL.onedh}/CreateTaskAssignment`,

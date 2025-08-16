@@ -148,6 +148,7 @@ const P2HHistoryScreen: React.FC = () => {
           unit: item.no_unit,
           driver: item.namapengemudi,
           tanggal: item.tanggal,
+          create: item.created_at,
         })
       }>
       <View style={styles.headerRow}>

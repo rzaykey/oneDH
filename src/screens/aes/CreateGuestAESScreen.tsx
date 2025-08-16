@@ -110,7 +110,6 @@ const CreateGuestScreen = ({navigation}) => {
       code_agenda,
       device_info: `(${type})(${build})(${version})`,
     };
-    console.log(payload);
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
@@ -178,8 +177,6 @@ const CreateGuestScreen = ({navigation}) => {
           visibilityTime: 3000,
           topOffset: 40,
         });
-        console.log('🔁 Respon lengkap:', data);
-        console.log('✅ Kode agenda:', data.code);
 
         // navigation.replace('GuestAESMyHistory');
       } else {
@@ -197,7 +194,6 @@ const CreateGuestScreen = ({navigation}) => {
         navigation.replace('GuestAESMyHistory');
       }
     } catch (err) {
-      console.log('[FETCH ERROR]', err);
       setLoading(false);
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
       await refreshQueueCount();
@@ -218,10 +214,8 @@ const CreateGuestScreen = ({navigation}) => {
     const data = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      console.log('🗂 Offline Queue:', parsed);
       Alert.alert('Offline Queue', JSON.stringify(parsed, null, 2));
     } else {
-      console.log('🟢 Queue kosong');
       Alert.alert('Queue kosong');
     }
   };
@@ -230,10 +224,8 @@ const CreateGuestScreen = ({navigation}) => {
     const existing = await AsyncStorage.getItem(OFFLINE_SUBMIT_KEY);
     if (existing) {
       await AsyncStorage.removeItem(OFFLINE_SUBMIT_KEY);
-      console.log('🧹 Offline queue cleared.');
       Alert.alert('Sukses', 'Offline queue telah dibersihkan.');
     } else {
-      console.log('⚠️ Tidak ada data untuk dihapus.');
       Alert.alert('Tidak Ada Data', 'Queue sudah kosong.');
     }
   };

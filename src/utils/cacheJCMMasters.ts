@@ -31,7 +31,6 @@ export const cacheJCMMasters = async (headers: Record<string, string>) => {
           req.key,
           JSON.stringify(resp.data?.data || []),
         );
-        console.log(`✅ Berhasil cache ${req.label}`);
       } catch (e) {
         console.log(`❌ Gagal cache ${req.label}:`, e?.message || e);
       }

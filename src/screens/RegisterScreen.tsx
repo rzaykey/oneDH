@@ -73,7 +73,6 @@ export default function RegisterScreen() {
         roles: data.role,
       }),
     );
-    console.log(data);
   };
 
   const handleRegister = async () => {
