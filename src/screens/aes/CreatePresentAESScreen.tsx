@@ -638,9 +638,9 @@ const CreatePresentAESScreen = ({navigation}) => {
               items={
                 Array.isArray(siteList)
                   ? siteList.map(s => ({
-                      label: s.code,
-                      value: s.code,
-                      key: String(s.code),
+                      label: s.site,
+                      value: s.id,
+                      key: String(s.id),
                     }))
                   : []
               }

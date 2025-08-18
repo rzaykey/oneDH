@@ -219,6 +219,7 @@ export default function EditPresentAESScreen({route, navigation}) {
         jdeno: fid_presenter,
         company,
       };
+      console.log(payload);
 
       const res = await fetch(`${API_BASE_URL.onedh}/EditAgenda`, {
         method: 'POST',
