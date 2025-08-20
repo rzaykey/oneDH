@@ -304,9 +304,14 @@ const CreateWoGenScreen = ({navigation}) => {
         return;
       }
 
-      const type = DeviceInfo.getSystemName();
+      const brand = DeviceInfo.getBrand();
+      const modelDevice = DeviceInfo.getModel();
+      const systemName = DeviceInfo.getSystemName();
+      const systemVersion = DeviceInfo.getSystemVersion();
       const version = DeviceInfo.getVersion();
       const build = DeviceInfo.getBuildNumber();
+
+      const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
 
       dataSubmit = {
         id: uuidv4(),
@@ -315,7 +320,7 @@ const CreateWoGenScreen = ({navigation}) => {
         site,
         tanggal: tanggalStr,
         jam: jamStr,
-        typeInput: `(${type})(${build})(${version})`,
+        typeInput: fullInfo,
         fid_pengawas: selectedSupervisor,
       };
       const headers = await getAuthHeader();

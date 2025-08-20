@@ -40,7 +40,6 @@ const CreatePresentAESScreen = ({navigation}) => {
   const [dept, setDept] = useState('');
   const [title, setTitle] = useState('');
   const [remark, setRemark] = useState('');
-  const [namePresenter, setNamePresenter] = useState('');
   const [company, setCompany] = useState(user?.company || '');
   const [position, setPosition] = useState(user?.position || '');
   const [namaPemateri, setNamaPemateri] = useState('');
@@ -200,38 +199,62 @@ const CreatePresentAESScreen = ({navigation}) => {
   }, [refreshQueueCount]);
 
   // ==== 7. Validasi form ====
-  function isFormValid() {
-    const now = dayjs();
-    const start = dayjs(dateStart);
-    const finish = dayjs(dateFinish);
-    if (!site || !dept || !title || !dateStart || !dateFinish) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validasi Gagal',
-        text2: 'Lengkapi semua field wajib!',
-      });
-      return false;
-    } // Cek apakah dateStart atau dateFinish terlalu dekat dengan waktu saat ini (belum dipilih)
-    if (start.diff(now, 'minute') >= -1 && start.diff(now, 'minute') <= 1) {
-      Alert.alert('Validasi Gagal', 'Tanggal dan jam mulai belum dipilih.');
-      return;
-    }
+  const isFormValid = () => {
+    let start = dateStart || new Date();
+    let finish = dateFinish || new Date();
 
-    if (finish.diff(now, 'minute') >= -1 && finish.diff(now, 'minute') <= 1) {
-      Alert.alert('Validasi Gagal', 'Tanggal dan jam selesai belum dipilih.');
-      return;
-    }
-
-    // Cek urutan tanggal
-    if (finish.isBefore(start)) {
+    // Validasi tanggal selesai tidak boleh sebelum tanggal mulai
+    if (dayjs(finish).isBefore(dayjs(start))) {
       Alert.alert(
         'Validasi Gagal',
         'Tanggal selesai tidak boleh sebelum tanggal mulai.',
       );
-      return;
+      return false;
     }
+
+    // Validasi field wajib
+    if (!user?.name) {
+      Alert.alert('Validasi Gagal', 'Nama presenter tidak boleh kosong.');
+      return false;
+    }
+
+    if (!company) {
+      Alert.alert('Validasi Gagal', 'Company harus diisi.');
+      return false;
+    }
+
+    if (!position) {
+      Alert.alert('Validasi Gagal', 'Posisi harus diisi.');
+      return false;
+    }
+
+    if (!site) {
+      Alert.alert('Validasi Gagal', 'Site harus diisi.');
+      return false;
+    }
+
+    if (!fidCategory) {
+      Alert.alert('Validasi Gagal', 'Kategori harus dipilih.');
+      return false;
+    }
+
+    if (!title) {
+      Alert.alert('Validasi Gagal', 'Judul harus diisi.');
+      return false;
+    }
+
+    if (!remark) {
+      Alert.alert('Validasi Gagal', 'Keterangan/Remark harus diisi.');
+      return false;
+    }
+
+    if (!dept) {
+      Alert.alert('Validasi Gagal', 'Department harus diisi.');
+      return false;
+    }
+
     return true;
-  }
+  };
 
   // ==== 9. Submit ====
   const handleSubmit = async () => {
@@ -240,6 +263,14 @@ const CreatePresentAESScreen = ({navigation}) => {
     }
 
     setLoading(true);
+
+    const brand = DeviceInfo.getBrand();
+    const modelDevice = DeviceInfo.getModel();
+    const systemName = DeviceInfo.getSystemName();
+    const systemVersion = DeviceInfo.getSystemVersion();
+    const version = DeviceInfo.getVersion();
+
+    const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version}`;
 
     const payload = {
       jdeno: user?.jdeno || '',
@@ -250,12 +281,13 @@ const CreatePresentAESScreen = ({navigation}) => {
       fid_site: site,
       fid_category: fidCategory,
       tittle: title,
-      datestart: dateStart,
-      datefinish: dateFinish,
+      datestart: dayjs(dateStart || new Date()).format('YYYY-MM-DD HH:mm:ss'),
+      datefinish: dayjs(dateFinish || new Date()).format('YYYY-MM-DD HH:mm:ss'),
       remark: remark,
-      device_info: `(${DeviceInfo.getSystemName()})(${DeviceInfo.getVersion()})`,
+      device_info: fullInfo,
       dept: dept,
     };
+    console.log(payload);
 
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
@@ -534,7 +566,7 @@ const CreatePresentAESScreen = ({navigation}) => {
             {/* Switch untuk memilih mode input */}
             <View style={styles.switchRow}>
               <Text style={styles.labelSwitch}>
-                Input manual data pemateri ??{' '}
+                Input manual data pemateri ?{' '}
               </Text>
               <Switch value={useManualInput} onValueChange={handleToggle} />
             </View>
@@ -650,26 +682,27 @@ const CreatePresentAESScreen = ({navigation}) => {
                 placeholder: {...styles.input, color: '#aaa'},
               }}
             />
-
-            {/* Tanggal Mulai */}
+            {/* === Tanggal Mulai === */}
             <Text style={styles.label}>Tanggal Mulai</Text>
             <View style={styles.row}>
               {/* Tanggal Mulai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
-                  title={dayjs(dateStart).format('YYYY-MM-DD')}
+                  title={dayjs(dateStart || new Date()).format('YYYY-MM-DD')}
                   onPress={() => setShowStartDatePicker(true)}
                 />
                 {showStartDatePicker && (
                   <DateTimePicker
-                    value={dayjs(dateStart, 'YYYY-MM-DD HH:mm:ss').toDate()}
+                    value={dateStart ? dayjs(dateStart).toDate() : new Date()}
                     mode="date"
                     display="default"
                     onChange={(event, selectedDate) => {
                       setShowStartDatePicker(false);
                       if (event?.type === 'set' && selectedDate) {
-                        const time = dayjs(dateStart).format('HH:mm:ss');
+                        const time = dateStart
+                          ? dayjs(dateStart).format('HH:mm:ss')
+                          : dayjs().format('HH:mm:ss'); // default jam sekarang
                         setDateStart(
                           dayjs(selectedDate).format(`YYYY-MM-DD ${time}`),
                         );
@@ -683,18 +716,20 @@ const CreatePresentAESScreen = ({navigation}) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
-                  title={dayjs(dateStart).format('HH:mm:ss')}
+                  title={dayjs(dateStart || new Date()).format('HH:mm:ss')}
                   onPress={() => setShowStartTimePicker(true)}
                 />
                 {showStartTimePicker && (
                   <DateTimePicker
-                    value={dayjs(dateStart, 'YYYY-MM-DD HH:mm:ss').toDate()}
+                    value={dateStart ? dayjs(dateStart).toDate() : new Date()}
                     mode="time"
                     display="default"
                     onChange={(event, selectedTime) => {
                       setShowStartTimePicker(false);
                       if (event?.type === 'set' && selectedTime) {
-                        const date = dayjs(dateStart).format('YYYY-MM-DD');
+                        const date = dateStart
+                          ? dayjs(dateStart).format('YYYY-MM-DD')
+                          : dayjs().format('YYYY-MM-DD'); // default hari ini
                         setDateStart(
                           dayjs(
                             `${date} ${dayjs(selectedTime).format('HH:mm:ss')}`,
@@ -707,25 +742,27 @@ const CreatePresentAESScreen = ({navigation}) => {
               </View>
             </View>
 
-            {/* Tanggal Selesai */}
+            {/* === Tanggal Selesai === */}
             <Text style={styles.label}>Tanggal Selesai</Text>
             <View style={styles.row}>
               {/* Tanggal Selesai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
-                  title={dayjs(dateFinish).format('YYYY-MM-DD')}
+                  title={dayjs(dateFinish || new Date()).format('YYYY-MM-DD')}
                   onPress={() => setShowEndDatePicker(true)}
                 />
                 {showEndDatePicker && (
                   <DateTimePicker
-                    value={dayjs(dateFinish, 'YYYY-MM-DD HH:mm:ss').toDate()}
+                    value={dateFinish ? dayjs(dateFinish).toDate() : new Date()}
                     mode="date"
                     display="default"
                     onChange={(event, selectedDate) => {
                       setShowEndDatePicker(false);
                       if (event?.type === 'set' && selectedDate) {
-                        const time = dayjs(dateFinish).format('HH:mm:ss');
+                        const time = dateFinish
+                          ? dayjs(dateFinish).format('HH:mm:ss')
+                          : dayjs().format('HH:mm:ss'); // default jam sekarang
                         setDateFinish(
                           dayjs(selectedDate).format(`YYYY-MM-DD ${time}`),
                         );
@@ -739,18 +776,20 @@ const CreatePresentAESScreen = ({navigation}) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
-                  title={dayjs(dateFinish).format('HH:mm:ss')}
+                  title={dayjs(dateFinish || new Date()).format('HH:mm:ss')}
                   onPress={() => setShowEndTimePicker(true)}
                 />
                 {showEndTimePicker && (
                   <DateTimePicker
-                    value={dayjs(dateFinish, 'YYYY-MM-DD HH:mm:ss').toDate()}
+                    value={dateFinish ? dayjs(dateFinish).toDate() : new Date()}
                     mode="time"
                     display="default"
                     onChange={(event, selectedTime) => {
                       setShowEndTimePicker(false);
                       if (event?.type === 'set' && selectedTime) {
-                        const date = dayjs(dateFinish).format('YYYY-MM-DD');
+                        const date = dateFinish
+                          ? dayjs(dateFinish).format('YYYY-MM-DD')
+                          : dayjs().format('YYYY-MM-DD'); // default hari ini
                         setDateFinish(
                           dayjs(
                             `${date} ${dayjs(selectedTime).format('HH:mm:ss')}`,

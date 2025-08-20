@@ -471,9 +471,14 @@ const CreateP2HScreen = ({navigation}) => {
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
 
-    const type = DeviceInfo.getSystemName();
+    const brand = DeviceInfo.getBrand();
+    const modelDevice = DeviceInfo.getModel();
+    const systemName = DeviceInfo.getSystemName();
+    const systemVersion = DeviceInfo.getSystemVersion();
     const version = DeviceInfo.getVersion();
     const build = DeviceInfo.getBuildNumber();
+
+    const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
 
     const payload = {
       nounit,
@@ -489,7 +494,7 @@ const CreateP2HScreen = ({navigation}) => {
       Sticker: stickerFuelPermit,
       tanggal: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       keterangan,
-      device_info: `(${type})(${build})(${version})`,
+      device_info: fullInfo,
     };
 
     const netState = await NetInfo.fetch();

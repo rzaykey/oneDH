@@ -394,7 +394,6 @@ const CreateJCMscreen = ({navigation}) => {
         position: 'top',
         text2NumberOfLines: 10,
       });
-
     } catch (error) {
       console.error('Gagal menghapus cache offline:', error);
 
@@ -454,9 +453,14 @@ const CreateJCMscreen = ({navigation}) => {
         item => item.value === selectedAssignment,
       );
 
-      const type = DeviceInfo.getSystemName();
+      const brand = DeviceInfo.getBrand();
+      const modelDevice = DeviceInfo.getModel();
+      const systemName = DeviceInfo.getSystemName();
+      const systemVersion = DeviceInfo.getSystemVersion();
       const version = DeviceInfo.getVersion();
       const build = DeviceInfo.getBuildNumber();
+
+      const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
 
       dataSubmit = {
         id: uuidv4(),
@@ -466,7 +470,7 @@ const CreateJCMscreen = ({navigation}) => {
         tanggal: tanggalStr,
         jam: jamStr,
         unitNo: selectedUnit,
-        typeInput: `(${type})(${build})(${version})`,
+        typeInput: fullInfo,
         wo_task_desc: selectedAssignmentObj?.label || '',
         fid_wo_Task: selectedAssignment,
         fid_pengawas: selectedSupervisor,

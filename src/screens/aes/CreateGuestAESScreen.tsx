@@ -96,9 +96,14 @@ const CreateGuestScreen = ({navigation}) => {
 
     setLoading(true);
 
-    const type = DeviceInfo.getSystemName();
+    const brand = DeviceInfo.getBrand();
+    const modelDevice = DeviceInfo.getModel();
+    const systemName = DeviceInfo.getSystemName();
+    const systemVersion = DeviceInfo.getSystemVersion();
     const version = DeviceInfo.getVersion();
     const build = DeviceInfo.getBuildNumber();
+
+    const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
 
     const payload = {
       fid_guest: user?.jdeno || '',
@@ -108,7 +113,7 @@ const CreateGuestScreen = ({navigation}) => {
       company: company,
       remark: keterangan,
       code_agenda,
-      device_info: `(${type})(${build})(${version})`,
+      device_info: fullInfo,
     };
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
