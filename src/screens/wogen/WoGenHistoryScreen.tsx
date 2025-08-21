@@ -24,6 +24,7 @@ import {useSiteContext} from '../../context/SiteContext';
 import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan paket ini sudah diinstall
 import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
 import Toast from 'react-native-toast-message';
+import dayjs from 'dayjs';
 
 interface BadgeProps {
   label: string;
@@ -186,11 +187,10 @@ const WoGenHistoryScreen: React.FC = () => {
       const body = {
         idTaskWoGen,
         jdeno,
-        tanggal,
-        jam,
+        tanggal: dayjs(selectedDate).format('YYYY-MM-DD'),
+        jam: dayjs(selectedDate).format('HH:mm:ss'),
         remark,
       };
-
       const response = await fetch(`${API_URL_CT}`, {
         method: 'POST',
         headers,
@@ -462,7 +462,6 @@ const WoGenHistoryScreen: React.FC = () => {
               <Text style={styles.modalTitle}>
                 Konfirmasi Close {selectedItem?.wono}?
               </Text>
-
               {/* Informasi Unit dan Task */}
               <Text style={styles.modalLabel}>
                 Unit: {selectedItem?.unitno}
@@ -473,7 +472,6 @@ const WoGenHistoryScreen: React.FC = () => {
               <Text style={styles.modalLabel}>
                 WO Task Desc: {selectedItem?.task_desc}
               </Text>
-
               {/* Tanggal & Jam dalam Satu Row */}
               <Text style={styles.modalLabel}>Tanggal & Jam:</Text>
               <View style={styles.dateTimeRow}>
@@ -502,7 +500,6 @@ const WoGenHistoryScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
-
               {/* Pickers */}
               {showDatePicker && (
                 <DateTimePicker
@@ -512,36 +509,42 @@ const WoGenHistoryScreen: React.FC = () => {
                   onChange={(event, date) => {
                     setShowDatePicker(false);
                     if (date) {
-                      const updated = new Date(selectedDate);
-                      updated.setFullYear(
+                      const prev = selectedDate;
+                      const combined = new Date(
                         date.getFullYear(),
                         date.getMonth(),
                         date.getDate(),
+                        prev.getHours(),
+                        prev.getMinutes(),
+                        prev.getSeconds(),
                       );
-                      setSelectedDate(updated);
+                      setSelectedDate(combined);
                     }
                   }}
                 />
               )}
-
               {showTimePicker && (
                 <DateTimePicker
                   value={selectedDate}
                   mode="time"
-                  is24Hour
                   display="default"
-                  onChange={(event, date) => {
+                  onChange={(event, time) => {
                     setShowTimePicker(false);
-                    if (date) {
-                      const updated = new Date(selectedDate);
-                      updated.setHours(date.getHours());
-                      updated.setMinutes(date.getMinutes());
-                      setSelectedDate(updated);
+                    if (time) {
+                      const prev = selectedDate;
+                      const combined = new Date(
+                        prev.getFullYear(),
+                        prev.getMonth(),
+                        prev.getDate(),
+                        time.getHours(),
+                        time.getMinutes(),
+                        time.getSeconds(),
+                      );
+                      setSelectedDate(combined);
                     }
                   }}
                 />
               )}
-
               {/* Remark */}
               <Text style={styles.modalLabel}>Remark:</Text>
               <TextInput
@@ -551,7 +554,6 @@ const WoGenHistoryScreen: React.FC = () => {
                 value={remark}
                 onChangeText={setRemark}
               />
-
               {/* Tombol Aksi */}
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity

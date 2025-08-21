@@ -264,13 +264,11 @@ const CreatePresentAESScreen = ({navigation}) => {
 
     setLoading(true);
 
-    const brand = DeviceInfo.getBrand();
-    const modelDevice = DeviceInfo.getModel();
     const systemName = DeviceInfo.getSystemName();
     const systemVersion = DeviceInfo.getSystemVersion();
     const version = DeviceInfo.getVersion();
 
-    const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version}`;
+    const fullInfo = `${systemName} ${systemVersion} - ${version}`;
 
     const payload = {
       jdeno: user?.jdeno || '',

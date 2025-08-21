@@ -453,14 +453,11 @@ const CreateJCMscreen = ({navigation}) => {
         item => item.value === selectedAssignment,
       );
 
-      const brand = DeviceInfo.getBrand();
-      const modelDevice = DeviceInfo.getModel();
       const systemName = DeviceInfo.getSystemName();
       const systemVersion = DeviceInfo.getSystemVersion();
       const version = DeviceInfo.getVersion();
-      const build = DeviceInfo.getBuildNumber();
 
-      const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
+      const fullInfo = `${systemName} ${systemVersion} - ${version}`;
 
       dataSubmit = {
         id: uuidv4(),
@@ -476,7 +473,6 @@ const CreateJCMscreen = ({navigation}) => {
         fid_pengawas: selectedSupervisor,
         parrent_wo_task: selectedGroupTask,
       };
-
       const headers = await getAuthHeader();
       const response = await fetch(
         `${API_BASE_URL.onedh}/CreateTaskAssignment`,

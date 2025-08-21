@@ -471,14 +471,11 @@ const CreateP2HScreen = ({navigation}) => {
       q => `${q.id}-${inlineRadioOptions[q.id] || ''}`,
     );
 
-    const brand = DeviceInfo.getBrand();
-    const modelDevice = DeviceInfo.getModel();
     const systemName = DeviceInfo.getSystemName();
     const systemVersion = DeviceInfo.getSystemVersion();
     const version = DeviceInfo.getVersion();
-    const build = DeviceInfo.getBuildNumber();
 
-    const fullInfo = `${brand} ${modelDevice} - ${systemName} ${systemVersion} - ${version} ${build}`;
+    const fullInfo = `${systemName} ${systemVersion} - ${version}`;
 
     const payload = {
       nounit,

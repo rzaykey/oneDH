@@ -24,6 +24,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan
 import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
 import Toast from 'react-native-toast-message';
 import Modal from 'react-native-modal';
+import dayjs from 'dayjs';
 
 interface BadgeProps {
   label: string;
@@ -195,11 +196,11 @@ const JCMHistoryScreen: React.FC = () => {
         wono,
         wotaskno,
         ddlstatus,
-        tanggal,
-        jam,
+        tanggal: dayjs(selectedDate).format('YYYY-MM-DD'),
+        jam: dayjs(selectedDate).format('HH:mm:ss'),
         remark,
       };
-
+      console.log(body);
       const response = await fetch(`${API_URL_CT}`, {
         method: 'POST',
         headers,
@@ -550,31 +551,38 @@ const JCMHistoryScreen: React.FC = () => {
                   onChange={(event, date) => {
                     setShowDatePicker(false);
                     if (date) {
-                      const updated = new Date(selectedDate);
-                      updated.setFullYear(
+                      const prev = selectedDate;
+                      const combined = new Date(
                         date.getFullYear(),
                         date.getMonth(),
                         date.getDate(),
+                        prev.getHours(),
+                        prev.getMinutes(),
+                        prev.getSeconds(),
                       );
-                      setSelectedDate(updated);
+                      setSelectedDate(combined);
                     }
                   }}
                 />
               )}
-
               {showTimePicker && (
                 <DateTimePicker
                   value={selectedDate}
                   mode="time"
-                  is24Hour
                   display="default"
-                  onChange={(event, date) => {
+                  onChange={(event, time) => {
                     setShowTimePicker(false);
-                    if (date) {
-                      const updated = new Date(selectedDate);
-                      updated.setHours(date.getHours());
-                      updated.setMinutes(date.getMinutes());
-                      setSelectedDate(updated);
+                    if (time) {
+                      const prev = selectedDate;
+                      const combined = new Date(
+                        prev.getFullYear(),
+                        prev.getMonth(),
+                        prev.getDate(),
+                        time.getHours(),
+                        time.getMinutes(),
+                        time.getSeconds(),
+                      );
+                      setSelectedDate(combined);
                     }
                   }}
                 />
