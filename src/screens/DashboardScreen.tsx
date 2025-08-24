@@ -230,6 +230,12 @@ const DashboardScreen: React.FC = () => {
   const handleLogout = async () => {
     await AsyncStorage.removeItem('loginCache');
     await AsyncStorage.removeItem('activeSite');
+    await AsyncStorage.multiRemove([
+      'loginCache',
+      'activeSite',
+      'token',
+      'userData',
+    ]);
     setActiveSite(null);
     setRoles([]);
     setSites([]);
