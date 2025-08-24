@@ -30,6 +30,7 @@ import NetInfo from '@react-native-community/netinfo';
 import {useFocusEffect} from '@react-navigation/native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import dayjs from 'dayjs';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_jcm';
 
@@ -432,8 +433,8 @@ const CreateJCMscreen = ({navigation}) => {
     let dataSubmit = {};
 
     try {
-      const tanggalStr = tanggal.toISOString().split('T')[0];
-      const jamStr = jam.toTimeString().split(' ')[0];
+      const tanggalStr = dayjs(tanggal).format('YYYY-MM-DD');
+      const jamStr = dayjs(jam).format('HH:mm:ss');
 
       const cache = await AsyncStorage.getItem('loginCache');
       const parsed = JSON.parse(cache);

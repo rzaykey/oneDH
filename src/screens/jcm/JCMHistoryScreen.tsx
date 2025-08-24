@@ -56,7 +56,7 @@ const JCMHistoryScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const {user, activeSite} = useSiteContext();
-  const [ddlStatus, setDdlStatus] = useState('RFU');
+  const [ddlStatus, setDdlStatus] = useState('');
   const [remark, setRemark] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -189,7 +189,14 @@ const JCMHistoryScreen: React.FC = () => {
   }) => {
     try {
       const headers = await getAuthHeader();
-
+      if (!ddlStatus || ddlStatus.trim() === '') {
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Silakan pilih status terlebih dahulu.',
+        });
+        return;
+      }
       const body = {
         id,
         jde,
@@ -494,23 +501,28 @@ const JCMHistoryScreen: React.FC = () => {
               {/* Dropdown Status */}
               <Text style={styles.modalLabel}>Status:</Text>
               <View style={styles.statusOptions}>
-                {['RFU', 'Pending Job', 'Pending Unit'].map(status => (
-                  <TouchableOpacity
-                    key={status}
-                    onPress={() => setDdlStatus(status)}
-                    style={[
-                      styles.statusOption,
-                      ddlStatus === status && styles.statusOptionSelected,
-                    ]}>
-                    <Text
+                {['Pilih Status', 'RFU', 'Pending Job', 'Pending Unit'].map(
+                  status => (
+                    <TouchableOpacity
+                      key={status}
+                      onPress={() =>
+                        status !== 'Pilih Status' && setDdlStatus(status)
+                      }
                       style={[
-                        styles.statusOptionText,
-                        ddlStatus === status && styles.statusOptionTextSelected,
+                        styles.statusOption,
+                        ddlStatus === status && styles.statusOptionSelected,
                       ]}>
-                      {status}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.statusOptionText,
+                          ddlStatus === status &&
+                            styles.statusOptionTextSelected,
+                        ]}>
+                        {status}
+                      </Text>
+                    </TouchableOpacity>
+                  ),
+                )}
               </View>
 
               {/* Tanggal & Jam dalam Satu Row */}
@@ -603,18 +615,28 @@ const JCMHistoryScreen: React.FC = () => {
                 <TouchableOpacity
                   style={styles.modalButton}
                   onPress={() => {
+                    // Validasi status wajib dipilih dan bukan 'Open'
                     if (
-                      selectedItem?.status !== 'Open' &&
-                      selectedItem?.status !== null &&
-                      selectedItem?.status !== ''
+                      !ddlStatus ||
+                      ddlStatus === 'Pilih Status' ||
+                      ddlStatus === 'Open'
                     ) {
+                      Toast.show({
+                        type: 'error',
+                        text1: 'Gagal',
+                        text2:
+                          'Silakan pilih status yang valid: RFU, Pending Job, atau Pending Unit.',
+                      });
+                      return;
+                    }
+                    if (selectedItem?.status !== 'Open') {
                       Alert.alert(
                         'Tidak bisa menutup JCM',
                         `Status saat ini adalah "${selectedItem.status}". Hanya JCM dengan status "Open" yang bisa ditutup.`,
                       );
                       return;
                     }
-
+                    // Submit jika semua valid
                     handleSubmitCloseJCM({
                       id: selectedItem?.id,
                       jde: selectedItem?.jde_mekanik,
