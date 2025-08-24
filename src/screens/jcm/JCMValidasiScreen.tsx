@@ -178,10 +178,12 @@ const JCMOpenScreen: React.FC = () => {
         </View>
 
         {/* Tanggal & Waktu */}
-        <View style={styles.rowSpace}>
+        <View style={styles.row}>
           <Text style={styles.labelInfo}>
             Mulai: {item.tanggal_mulai} {item.waktu_mulai}
           </Text>
+        </View>
+        <View style={styles.row}>
           <Text style={styles.labelInfo}>
             Selesai: {item.tanggal_selesai} {item.waktu_selesai}
           </Text>
