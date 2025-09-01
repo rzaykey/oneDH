@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Button,
+  Modal,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,6 +25,8 @@ import {
   getOfflineQueueCount,
 } from '../../utils/offlineQueueHelper';
 import ShowOfflineQueueModalScreen from '../aes/ShowOfflineQueueModalScreen';
+// import QRCodeScanner from 'react-native-qrcode-scanner';
+import {Camera} from 'react-native-camera-kit';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_aes_guest';
 
@@ -45,6 +48,8 @@ const CreateGuestScreen = ({navigation}) => {
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [qrValue, setQrValue] = useState('');
+  const [scannerVisible, setScannerVisible] = useState(false);
   // ====  Load offline queue count, push offline queue dsb ====
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
@@ -231,6 +236,12 @@ const CreateGuestScreen = ({navigation}) => {
       Alert.alert('Tidak Ada Data', 'Queue sudah kosong.');
     }
   };
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleBarCodeRead = ({data}) => {
+    setCodeAgenda(data);
+    setModalVisible(false);
+  };
 
   return (
     <LinearGradient
@@ -370,14 +381,37 @@ const CreateGuestScreen = ({navigation}) => {
           {/* Form Card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Code Event</Text>
-            <Text style={styles.label}>Code Event</Text>
             <TextInput
               style={[styles.input, {height: 60}]}
-              placeholder="Code"
+              placeholder="Masukkan Kode Event atau Scan QR"
               value={code_agenda}
               onChangeText={setCodeAgenda}
               multiline
             />
+
+            <TouchableOpacity
+              style={[styles.button, {marginTop: 10}]}
+              onPress={() => setModalVisible(true)}>
+              <Text style={styles.buttonText}>Scan QR Code</Text>
+            </TouchableOpacity>
+
+            <Modal
+              animationType="slide"
+              transparent={false}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}>
+              <Camera
+                style={{flex: 1}}
+                scanBarcode={true}
+                onReadCode={event => {
+                  setCodeAgenda(event.nativeEvent.codeStringValue);
+                  setModalVisible(false);
+                }}
+                showFrame={true}
+                laserColor="red"
+                frameColor="white"
+              />
+            </Modal>
           </View>
 
           {/* Card Informasi Pribadi */}

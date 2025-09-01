@@ -186,4 +186,25 @@ export const createP2HStyles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingBottom: 50,
+  },
+  scanText: {
+    fontSize: 18,
+    color: 'white',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: '#FFBE00',
+    padding: 10,
+    borderRadius: 8,
+  },
+  closeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

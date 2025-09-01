@@ -23,6 +23,7 @@ import API_BASE_URL from '../../config';
 import {agendaFormStyles as styles} from '../../styles/agendaFormStyles';
 import RNPickerSelect from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
+import QRCode from 'react-native-qrcode-svg';
 
 if (
   Platform.OS === 'android' &&
@@ -46,6 +47,8 @@ export default function EditPresentAESScreen({route, navigation}) {
   const [loading, setLoading] = useState(true);
   const [collapsedGeneral, setCollapsedGeneral] = useState(false);
   const [collapsedTime, setCollapsedTime] = useState(true);
+  const [collapsedQR, setCollapsedQR] = useState(true);
+
   const isDisabled = agenda?.status === 'Close';
 
   // Field dari JSON
@@ -291,6 +294,29 @@ export default function EditPresentAESScreen({route, navigation}) {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.title}>Form Event Detail</Text>
+          <CollapsibleCard
+            title="QR Code Agenda"
+            collapsed={collapsedQR}
+            onToggle={() => toggleCollapse(setCollapsedQR)}>
+            <View style={{alignItems: 'center', marginVertical: 10}}>
+              {code_agenda ? (
+                <>
+                  <QRCode
+                    value={code_agenda}
+                    size={180} // ukuran QR
+                    color="#000" // warna QR
+                    backgroundColor="#fff" // warna background
+                  />
+                  <Text
+                    style={{marginTop: 10, fontSize: 16, fontWeight: '600'}}>
+                    {code_agenda}
+                  </Text>
+                </>
+              ) : (
+                <Text style={{color: '#888'}}>Kode agenda belum tersedia</Text>
+              )}
+            </View>
+          </CollapsibleCard>
 
           {/* Detail Agenda */}
           <CollapsibleCard
@@ -303,7 +329,6 @@ export default function EditPresentAESScreen({route, navigation}) {
               value={title}
               onChangeText={setTitle}
             />
-
             <Text style={styles.label}>Site</Text>
             <RNPickerSelect
               onValueChange={setFidSite}
