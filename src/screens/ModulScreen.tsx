@@ -15,6 +15,7 @@ const MODULE_TO_SCREEN: Record<string, string> = {
   JCM: 'JCMScreen',
   // MOP: 'MOPScreen',
   AES: 'AESScreen',
+  EWC: 'EWCScreen',
 };
 
 const iconForModule = (mod: string) => {
@@ -22,7 +23,7 @@ const iconForModule = (mod: string) => {
     case 'P2H':
       return (
         <Image
-          source={require('../assets/images/list.png')} // Ganti path sesuai lokasi car.png
+          source={require('../assets/images/list.png')}
           style={[styles.icon, {width: 50, height: 50}]}
           resizeMode="contain"
         />
@@ -30,7 +31,7 @@ const iconForModule = (mod: string) => {
     case 'JCM':
       return (
         <Image
-          source={require('../assets/images/mechanic.png')} // Ganti path sesuai lokasi car.png
+          source={require('../assets/images/mechanic.png')}
           style={[styles.icon, {width: 50, height: 50}]}
           resizeMode="contain"
         />
@@ -38,7 +39,7 @@ const iconForModule = (mod: string) => {
     case 'MOP':
       return (
         <Image
-          source={require('../assets/images/practice.png')} // Ganti path sesuai lokasi car.png
+          source={require('../assets/images/practice.png')}
           style={[styles.icon, {width: 50, height: 50}]}
           resizeMode="contain"
         />
@@ -46,7 +47,15 @@ const iconForModule = (mod: string) => {
     case 'AES':
       return (
         <Image
-          source={require('../assets/images/aes.png')} // Ganti path sesuai lokasi car.png
+          source={require('../assets/images/aes.png')}
+          style={[styles.icon, {width: 50, height: 50}]}
+          resizeMode="contain"
+        />
+      );
+    case 'EWC':
+      return (
+        <Image
+          source={require('../assets/images/ewc.png')}
           style={[styles.icon, {width: 50, height: 50}]}
           resizeMode="contain"
         />

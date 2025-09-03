@@ -1,12 +1,14 @@
 import {StyleSheet, Platform, Dimensions} from 'react-native';
 
-// const {width} = Dimensions.get('window');
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
+
 export const dashboardStyles = StyleSheet.create({
+  // ================= Container & Header =================
   container: {
     flex: 1,
     paddingTop: Platform.OS === 'android' ? 8 : 0,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
@@ -23,31 +25,9 @@ export const dashboardStyles = StyleSheet.create({
     letterSpacing: 0.2,
     marginVertical: 18,
   },
-  avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 30,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarIcon: {
-    fontSize: 40,
-    color: '#222',
-  },
-  welcome: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: '#222',
-    marginTop: 2,
-    marginBottom: 1,
-  },
-  notif: {
-    fontSize: 14,
-    color: '#757686',
-    marginBottom: 8,
-    fontWeight: '400',
-  },
+  greeting: {fontSize: 20, fontWeight: 'bold', color: '#183153'},
+  subGreeting: {fontSize: 14, color: '#555'},
+  headerMenu: {padding: 8},
   logoutBtn: {
     position: 'absolute',
     right: 0,
@@ -57,17 +37,19 @@ export const dashboardStyles = StyleSheet.create({
     borderRadius: 15,
     zIndex: 10,
   },
+
+  // ================= Carousel =================
   carouselContainer: {
     marginTop: 18,
     marginBottom: 12,
-    minHeight: 155, // cukup 3 baris
+    minHeight: 155,
     alignItems: 'center',
     justifyContent: 'center',
   },
   carouselCard: {
     backgroundColor: '#2463EB',
     borderRadius: 20,
-    width: SCREEN_WIDTH * 0.8, // 80% dari layar
+    width: SCREEN_WIDTH * 0.8,
     minHeight: 115,
     maxHeight: 150,
     alignItems: 'center',
@@ -108,148 +90,19 @@ export const dashboardStyles = StyleSheet.create({
     opacity: 1,
     backgroundColor: '#222',
   },
-  menuModuleContainer: {
-    marginTop: 18,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-  },
-  sectionTitle: {
-    fontWeight: '700',
-    fontSize: 16,
-    color: '#29436e',
-    marginBottom: 8,
-    marginLeft: 3,
-  },
-  menuModuleGrid: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 14,
-  },
-  menuModuleCard: {
-    backgroundColor: '#fff',
-    borderRadius: 17,
-    paddingVertical: 22,
-    paddingHorizontal: 16,
-    margin: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    minWidth: 140,
-    maxWidth: '47%',
-    elevation: 2,
-    shadowColor: '#2463EB',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-  },
-  menuModuleText: {
-    color: '#29436e',
-    fontWeight: '600',
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'transparent', // ✅
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-  },
-  dropdownMenu: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginTop: 58, // supaya muncul tepat di bawah titik tiga
-    marginRight: 18,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    elevation: 6,
-    minWidth: 130,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 6,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 2,
-  },
-  dropdownText: {
-    marginLeft: 12,
-    fontSize: 15,
-    color: '#222',
-  }, // Tambahkan di bawah style yang lain di dashboardStyles
-  siteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 3,
-    marginTop: 5,
-  },
-  siteLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#2463EB',
-    marginRight: 7,
-  },
-  siteChip: {
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 15,
-    backgroundColor: '#f2f6fa',
-    marginRight: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e1e7ee',
-  },
-  siteChipText: {
-    fontSize: 14,
-    color: '#4b6178',
-  },
-  siteChipActive: {
-    backgroundColor: '#e8f5ff',
-    borderColor: '#3498db',
-  },
-  siteChipTextActive: {
-    color: '#3498db',
-    fontWeight: 'bold',
-  },
-  moduleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 0,
-  },
-  moduleName: {
-    fontWeight: '600',
-    fontSize: 15,
-    color: '#29436e',
-    marginRight: 8,
-    minWidth: 64,
-  },
-  modulePermit: {
-    color: '#2463EB',
-    fontSize: 13,
-    marginRight: 8,
-    fontWeight: 'bold',
-  },
-  moduleRoleName: {
-    color: '#757686',
-    fontSize: 13,
-    fontStyle: 'italic',
-  },
+
+  // ================= Profile Card =================
   profileCard: {
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    borderRadius: 18,
-    padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 14,
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.13,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   profileAvatar: {
     marginRight: 14,
@@ -257,27 +110,20 @@ export const dashboardStyles = StyleSheet.create({
     borderRadius: 40,
     padding: 6,
   },
-  profileInfo: {
-    flex: 1,
-  },
   profileName: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 2,
   },
+  profileInfo: {flex: 1},
   profileInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
-    gap: 8, // untuk spacing antar elemen, opsional jika pakai RN 0.71+
+    gap: 8,
   },
-  profileId: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginBottom: 1,
-    marginRight: 10, // supaya berjarak kalau sejajar
-  },
+  profileId: {fontSize: 13, color: '#6b7280', marginBottom: 1, marginRight: 10},
   profileDept: {
     fontSize: 13,
     color: '#3080d0',
@@ -291,6 +137,8 @@ export const dashboardStyles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 1,
   },
+
+  // ================= Site Selector =================
   siteListRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -303,23 +151,137 @@ export const dashboardStyles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 10,
   },
+  siteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  siteLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginRight: 6,
+    color: '#2463EB',
+  },
+  siteChip: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#e1e7ee',
+  },
+  siteChipActive: {backgroundColor: '#2463EB', borderColor: '#2463EB'},
+  siteChipText: {fontSize: 12, color: '#2463EB'},
+  siteChipTextActive: {color: '#fff', fontWeight: '600'},
+  siteWarning: {color: 'red', fontSize: 13, fontWeight: 'bold'},
+
+  // ================= Notifications / Absensi =================
   notifCard: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    borderRadius: 12,
-    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     marginBottom: 18,
-    marginTop: 0,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  notifText: {
-    fontSize: 15,
+  notifIcon: {marginRight: 12},
+  notifContent: {flex: 1},
+  notifTitle: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#164160',
-    flex: 1,
+    marginBottom: 4,
   },
+  notifTime: {fontSize: 14, color: '#4caf50', marginBottom: 2},
+  notifStatus: {fontSize: 13, color: '#444', textAlign: 'center', marginTop: 4},
+
+  absenCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  absenRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  absenCol: {flex: 1, alignItems: 'center'},
+  absenLabel: {fontSize: 12, color: '#555', marginTop: 4},
+  absenValue: {fontSize: 16, fontWeight: 'bold', marginTop: 2},
+
+  // ================= Quick Actions =================
+  quickActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginVertical: 16,
+  },
+  quickAction: {
+    width: '48%',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quickActionLabel: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#183153',
+    fontWeight: '500',
+  },
+
+  // ================= Stats =================
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#fff',
+    marginHorizontal: 4,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  statValue: {fontSize: 16, fontWeight: 'bold', color: '#2463EB'},
+  statLabel: {fontSize: 12, color: '#555', marginTop: 4},
+
+  // ================= Modal & Dropdown =================
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+  },
+  dropdownMenu: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginTop: 58,
+    marginRight: 18,
+    paddingVertical: 8,
+    width: 220,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowOffset: {width: 0, height: 2},
+    shadowRadius: 6,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  dropdownText: {marginLeft: 12, fontSize: 15, color: '#222'},
 });

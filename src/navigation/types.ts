@@ -37,7 +37,7 @@ export interface JCMItem {
   durasi: string;
   remark: string;
   status: string;
-  validate_status: string;
+  status_validasi: string;
   jde_pengawas: string;
   nama_pengawas: string;
   unit_grp_id: string;
@@ -209,3 +209,23 @@ export type RootStackParamList = {
   Mop: undefined;
   AddMop: undefined;
 };
+
+export interface AbsensiToday {
+  durasiact: string | null;
+  durasipaid: string | null;
+  idroster: string;
+  jde_no: string;
+  tanggal: string;
+  timein: string | null;
+  timeout: string | null;
+}
+
+export interface AbsensiPerBulan {
+  durasiact: string | null;
+  durasipaid: string | null;
+  idroster: string;
+  jde_no: string;
+  tanggal: string;
+  timein: string | null;
+  timeout: string | null;
+}

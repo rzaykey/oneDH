@@ -26,6 +26,8 @@ import NetInfo from '@react-native-community/netinfo';
 import Toast from 'react-native-toast-message';
 import DeviceInfo from 'react-native-device-info';
 import {useFocusEffect} from '@react-navigation/native';
+import {AbsensiToday} from '../navigation/types';
+import dayjs from 'dayjs';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
 const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.onedh';
@@ -60,6 +62,8 @@ const DashboardScreen: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [appVersion, setAppVersion] = useState('');
+  const [absensiToday, setAbsensiToday] = useState<AbsensiToday | null>(null);
+  const [loadingAbsensi, setLoadingAbsensi] = useState<boolean>(false);
 
   useEffect(() => {
     cacheAllMasterData(); // tidak perlu await
@@ -256,7 +260,6 @@ const DashboardScreen: React.FC = () => {
   4100;
 
   // Site chip (highlight active, bisa tap)
-
   const handleSiteSelect = (site: string) => {
     setActiveSite(site);
     Toast.show({
@@ -266,6 +269,7 @@ const DashboardScreen: React.FC = () => {
     });
   };
 
+  //Version
   const checkVersion = async () => {
     try {
       const currentVersion = DeviceInfo.getVersion().trim();
@@ -277,7 +281,6 @@ const DashboardScreen: React.FC = () => {
         headers,
       });
 
-      // 🔐 Cek jika sesi berakhir
       if (response.status === 401) {
         Toast.show({
           type: 'error',
@@ -294,12 +297,10 @@ const DashboardScreen: React.FC = () => {
         return; // Hentikan proses
       }
 
-      // ❗ Tangkap error HTTP lainnya
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // ✅ Lanjut proses jika aman
       let data;
       try {
         data = await response.json();
@@ -352,11 +353,93 @@ const DashboardScreen: React.FC = () => {
     }
   };
 
+  const fetchAbsensiToday = useCallback(async () => {
+    setLoadingAbsensi(true);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+
+    try {
+      const cache = await AsyncStorage.getItem('loginCache');
+      const parsedCache = cache ? JSON.parse(cache) : null;
+      const token = parsedCache?.token;
+      const username = parsedCache?.dataEmp?.jdeno;
+
+      if (!token || !username) {
+        Toast.show({
+          type: 'info',
+          text1: 'Session tidak lengkap',
+          text2: 'Silakan login ulang.',
+        });
+        setAbsensiToday(null);
+        return;
+      }
+
+      const url = `${API_BASE_URL.onedh}/getAbsensiToday?username=${username}`;
+      const response = await fetch(url, {
+        headers: {Authorization: `Bearer ${token}`},
+        signal: controller.signal,
+      });
+      if (response.status === 401) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sesi Berakhir',
+          text2: 'Silakan login kembali.',
+          position: 'top',
+          topOffset: 50,
+        });
+
+        setTimeout(() => {
+          handleLogout(); // ⬅️ Fungsi logout
+        }, 1500);
+
+        return; // Hentikan proses
+      }
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const json = await response.json();
+      console.log('API Response:', json);
+
+      if (!json || (!json.absen && !json.absen_ls)) {
+        throw new Error('Response tidak sesuai format');
+      }
+
+      const firstData = json.absen?.[0] ?? json.absen_ls?.[0] ?? null;
+      setAbsensiToday(prev =>
+        JSON.stringify(prev) === JSON.stringify(firstData) ? prev : firstData,
+      );
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Memuat Absensi',
+          text2: err?.message ?? 'Terjadi kesalahan.',
+        });
+      }
+      setAbsensiToday(null);
+    } finally {
+      setLoadingAbsensi(false);
+    }
+  }, []);
+  console.log('User object:', user);
+
   useFocusEffect(
     useCallback(() => {
-      checkVersion();
-    }, []),
+      fetchAbsensiToday();
+      const interval = setInterval(() => {
+        fetchAbsensiToday();
+      }, 60000);
+      return () => clearInterval(interval);
+    }, [fetchAbsensiToday]),
   );
+
+  useEffect(() => {
+    checkVersion();
+  }, []);
 
   const SiteChip: React.FC<{
     site: string;
@@ -393,103 +476,160 @@ const DashboardScreen: React.FC = () => {
       <SafeAreaView style={{flex: 1}}>
         <View style={styles.container}>
           {/* HEADER */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginBottom: 14,
-            }}>
-            <View style={{flex: 1}}>
-              <Text
-                style={[
-                  styles.title,
-                  {fontSize: 24, fontWeight: 'bold', color: '#183153'},
-                ]}>
-                Dashboard
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.greeting}>
+                Halo, {user?.name ?? 'User'} 👋
+              </Text>
+              <Text style={styles.subGreeting}>
+                {dayjs().format('dddd, DD MMMM YYYY')}
               </Text>
             </View>
             <TouchableOpacity
-              style={{padding: 8}}
+              style={styles.headerMenu}
               onPress={() => setDropdownVisible(true)}>
               <Icon name="ellipsis-vertical" size={28} color="#2463EB" />
             </TouchableOpacity>
           </View>
 
+          {/* PROFILE CARD */}
           <View style={styles.profileCard}>
-            <View style={styles.profileAvatar}>
-              <Icon name="person-circle" size={56} color="#2463EB" />
-            </View>
-            <View style={styles.profileInfo}>
+            <Icon name="person-circle" size={64} color="#2463EB" />
+            <View style={{marginLeft: 12, flex: 1}}>
+              {/* Nama + Posisi di atas */}
               <Text style={styles.profileName}>{user?.name ?? 'User'}</Text>
-              {/* Info Baris 1: JDE No */}
-              {user?.jdeno ? (
-                <View style={styles.profileInfoRow}>
-                  <Text style={styles.profileId}>JDE No: {user.jdeno}</Text>
-                </View>
-              ) : null}
-              {/* Info Baris 2: Dept & Posisi */}
+
+              {/* Baris Info */}
               <View style={styles.profileInfoRow}>
-                {user?.dept && (
-                  <Text style={styles.profileDept}>{user.dept}</Text>
-                )}
+                <Text style={styles.profileInfo}>
+                  JDE: {user?.jdeno ?? '-'}
+                </Text>
               </View>
               <View style={styles.profileInfoRow}>
-                {user?.position && (
-                  <Text style={styles.profilePosition}>{user.position}</Text>
-                )}
+                <Text style={styles.profileInfo}>
+                  Dept: {user?.dept ?? '-'}
+                </Text>
               </View>
-              {/* Site */}
-              <View style={styles.siteListRow}>
-                <Text style={styles.siteListLabel}>Site:</Text>
+
+              <View style={styles.profileInfoRow}>
+                <Text style={styles.profileInfo}>
+                  Position: {user?.position ?? '-'}
+                </Text>
+              </View>
+              <View style={styles.profileInfoRow}>
+                <Text style={styles.profileInfo}>
+                  Company: {user?.company ?? '-'}
+                </Text>
+              </View>
+              {/* Site List */}
+              <View style={styles.siteRow}>
+                <Text style={styles.siteLabel}>Site:</Text>
                 {sites.length > 0 ? (
                   <FlatList
                     data={sites}
                     keyExtractor={s => s}
                     renderItem={({item}) => (
-                      <SiteChip
-                        site={item}
-                        activeSite={activeSite}
-                        onPress={handleSiteSelect}
-                      />
+                      <TouchableOpacity
+                        style={[
+                          styles.siteChip,
+                          item === activeSite && styles.siteChipActive,
+                        ]}
+                        onPress={() => handleSiteSelect(item)}>
+                        <Text
+                          style={[
+                            styles.siteChipText,
+                            item === activeSite && styles.siteChipTextActive,
+                          ]}>
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
                     )}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{alignItems: 'center'}}
                   />
                 ) : (
-                  <Text
-                    style={{color: 'red', fontSize: 13, fontWeight: 'bold'}}>
-                    Tidak ada site yang bisa dipilih.
-                  </Text>
+                  <Text style={styles.siteWarning}>Tidak ada site.</Text>
                 )}
               </View>
             </View>
           </View>
 
-          <View style={styles.notifCard}>
-            <Icon
-              name="notifications"
-              size={20}
-              color="#ff9800"
-              style={{marginRight: 8}}
-            />
-            <Text style={styles.notifText}>Notification</Text>
+          {/* ABSENSI WIDGET */}
+          <View style={styles.absenCard}>
+            {absensiToday ? (
+              <>
+                <Text style={styles.notifTitle}>Absensi Hari Ini</Text>
+                <View style={styles.absenRow}>
+                  <View style={styles.absenCol}>
+                    <Icon name="log-in-outline" size={22} color="#4CAF50" />
+                    <Text style={styles.absenLabel}>Masuk</Text>
+                    <Text style={styles.absenValue}>
+                      {absensiToday.timein?.split(' ')[1] ?? '-'}
+                    </Text>
+                  </View>
+                  <View style={styles.absenCol}>
+                    <Icon name="log-out-outline" size={22} color="#F44336" />
+                    <Text style={styles.absenLabel}>Keluar</Text>
+                    <Text style={styles.absenValue}>
+                      {absensiToday.timeout?.split(' ')[1] ?? '-'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.notifStatus}>
+                  Status:{' '}
+                  {absensiToday.timeout
+                    ? 'Lengkap'
+                    : absensiToday.timein
+                    ? 'Belum Pulang'
+                    : 'Belum Masuk'}
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.notifTitle}>
+                Belum ada data absensi hari ini
+              </Text>
+            )}
           </View>
 
-          {/* <TouchableOpacity
-            style={{
-              padding: 8,
-              backgroundColor: '#22223b',
-              borderRadius: 8,
-              alignSelf: 'flex-end',
-              margin: 8,
-            }}
-            onPress={() => navigation.navigate('MasterCacheScreen')}>
-            <Text style={{color: 'white', fontWeight: 'bold'}}>
-              🔎 Lihat Cache Master
-            </Text>
-          </TouchableOpacity> */}
-          {/* Dropdown Modal */}
+          {/* QUICK ACTIONS */}
+          {/* <View style={styles.quickActions}>
+            {[
+              {icon: 'calendar-outline', label: 'Riwayat', onPress: () => {}},
+              {
+                icon: 'document-text-outline',
+                label: 'Laporan',
+                onPress: () => {},
+              },
+              {icon: 'clipboard-outline', label: 'P2H', onPress: () => {}},
+              {icon: 'people-outline', label: 'Team', onPress: () => {}},
+            ].map(action => (
+              <TouchableOpacity
+                key={action.label}
+                style={styles.quickAction}
+                onPress={action.onPress}>
+                <Icon name={action.icon} size={28} color="#2463EB" />
+                <Text style={styles.quickActionLabel}>{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View> */}
+
+          {/* STATISTIK MINI */}
+          {/* <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>128</Text>
+              <Text style={styles.statLabel}>Jam Kerja</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>96%</Text>
+              <Text style={styles.statLabel}>Kehadiran</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>2</Text>
+              <Text style={styles.statLabel}>Telat</Text>
+            </View>
+          </View> */}
+
+          {/* DROPDOWN MENU */}
           <Modal
             visible={dropdownVisible}
             transparent
@@ -499,9 +639,7 @@ const DashboardScreen: React.FC = () => {
               style={styles.modalOverlay}
               onPress={() => {
                 if (!refreshingMaster) setDropdownVisible(false);
-              }}
-              disabled={refreshingMaster} // ini juga bisa
-            >
+              }}>
               <View style={styles.dropdownMenu}>
                 {refreshingMaster ? (
                   <View style={{alignItems: 'center', padding: 16}}>
@@ -513,14 +651,11 @@ const DashboardScreen: React.FC = () => {
                     <TouchableOpacity
                       style={styles.dropdownItem}
                       onPress={async () => {
-                        // Modal tetap dibuka saat loading
                         await handleRefreshMaster();
-                        setDropdownVisible(false); // Tutup setelah loading selesai
+                        setDropdownVisible(false);
                       }}>
                       <Icon name="refresh-outline" size={20} color="#2463EB" />
-                      <Text style={styles.dropdownText}>
-                        Refresh Master Data
-                      </Text>
+                      <Text style={styles.dropdownText}>Refresh Master</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.dropdownItem}
@@ -549,60 +684,6 @@ const DashboardScreen: React.FC = () => {
               </View>
             </Pressable>
           </Modal>
-          {/* CAROUSEL */}
-          {/* <View style={styles.carouselContainer}>
-            <FlatList
-              ref={carouselRef}
-              data={carouselData}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={item => item.id}
-              renderItem={({item}) => (
-                <View
-                  style={[
-                    styles.carouselCard,
-                    {
-                      width: windowWidth * 0.8,
-                      marginHorizontal: (windowWidth * 0.1) / 2,
-                    },
-                  ]}>
-                  <Text
-                    style={styles.carouselText}
-                    numberOfLines={4}
-                    ellipsizeMode="tail">
-                    {item.text}
-                  </Text>
-                </View>
-              )}
-              onMomentumScrollEnd={ev => {
-                const idx = Math.round(
-                  ev.nativeEvent.contentOffset.x / (windowWidth * 0.8),
-                );
-                setCurrentIndex(idx);
-              }}
-              contentContainerStyle={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: (windowWidth * 0.1) / 2,
-              }}
-              snapToInterval={windowWidth * 0.8}
-              decelerationRate="fast"
-              extraData={windowWidth}
-            />
-            <View style={styles.dotsContainer}>
-              {carouselData.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === currentIndex ? styles.dotActive : undefined,
-                  ]}
-                />
-              ))}
-            </View>
-          </View> */}
-          {/* --- Tambah menu dashboard lain di sini --- */}
         </View>
       </SafeAreaView>
     </LinearGradient>
