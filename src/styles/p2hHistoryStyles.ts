@@ -399,4 +399,9 @@ export const p2hHistoryStyles = StyleSheet.create({
   modalButtonDisabled: {
     backgroundColor: '#ccc',
   },
+  pickerMonth: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    color: '#000',
+  },
 });

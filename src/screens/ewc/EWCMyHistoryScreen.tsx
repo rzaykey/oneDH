@@ -53,7 +53,6 @@ const EWCMyHistoryScreen: React.FC = () => {
       });
 
       const json = await response.json();
-      console.log(json.absen);
       if (!response.ok || !json.absen) {
         setError(json?.message || 'Gagal mengambil data.');
         setData([]);
@@ -167,7 +166,7 @@ const EWCMyHistoryScreen: React.FC = () => {
             color="#2563eb"
             style={{marginRight: 10}}
           />
-          <Text style={styles.title}>Riwayat Absensi Bulanan</Text>
+          <Text style={styles.title}>Riwayat Absensi Bulaanan</Text>
         </View>
 
         {/* Picker Bulan & Tahun */}
@@ -177,7 +176,7 @@ const EWCMyHistoryScreen: React.FC = () => {
             <Picker
               selectedValue={bulan}
               onValueChange={val => setBulan(val)}
-              style={{backgroundColor: '#fff', borderRadius: 8}}>
+              style={styles.pickerMonth}>
               {Array.from({length: 12}, (_, i) => (
                 <Picker.Item
                   key={i + 1}
@@ -191,7 +190,7 @@ const EWCMyHistoryScreen: React.FC = () => {
             <Picker
               selectedValue={tahun}
               onValueChange={val => setTahun(val)}
-              style={{backgroundColor: '#fff', borderRadius: 8}}>
+              style={styles.pickerMonth}>
               {[tahun - 1, tahun, tahun + 1].map(y => (
                 <Picker.Item key={y} label={y.toString()} value={y} />
               ))}

@@ -402,7 +402,6 @@ const DashboardScreen: React.FC = () => {
       }
 
       const json = await response.json();
-      console.log('API Response:', json);
 
       if (!json || (!json.absen && !json.absen_ls)) {
         throw new Error('Response tidak sesuai format');
@@ -425,7 +424,6 @@ const DashboardScreen: React.FC = () => {
       setLoadingAbsensi(false);
     }
   }, []);
-  console.log('User object:', user);
 
   useFocusEffect(
     useCallback(() => {
