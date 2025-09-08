@@ -8,6 +8,8 @@ import {
   Pressable,
   ActivityIndicator,
   Linking,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -28,10 +30,22 @@ import DeviceInfo from 'react-native-device-info';
 import {useFocusEffect} from '@react-navigation/native';
 import {AbsensiToday} from '../navigation/types';
 import dayjs from 'dayjs';
+import moment from 'moment';
+import RNFS from 'react-native-fs';
+import FileViewer from 'react-native-file-viewer';
+import {Buffer} from 'buffer';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
 const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.onedh';
 const API_URL = `${API_BASE_URL.onedh}/CekVersion`;
+
+type PdfItem = {
+  id: number;
+  day: number;
+  month: number;
+  year: number;
+  file_name: string;
+};
 
 const getAuthHeader = async () => {
   const cache = await AsyncStorage.getItem('loginCache');
@@ -64,6 +78,8 @@ const DashboardScreen: React.FC = () => {
   const [appVersion, setAppVersion] = useState('');
   const [absensiToday, setAbsensiToday] = useState<AbsensiToday | null>(null);
   const [loadingAbsensi, setLoadingAbsensi] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [pdfs, setPdfs] = useState<PdfItem[]>([]);
 
   useEffect(() => {
     cacheAllMasterData(); // tidak perlu await
@@ -425,6 +441,157 @@ const DashboardScreen: React.FC = () => {
     }
   }, []);
 
+  // Fetch PDF list for today
+  const fetchPdfList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const cache = await AsyncStorage.getItem('loginCache');
+      const parsedCache = cache ? JSON.parse(cache) : null;
+      const token = parsedCache?.token;
+
+      if (!token) {
+        Toast.show({
+          type: 'info',
+          text1: 'Session tidak lengkap',
+          text2: 'Silakan login ulang.',
+        });
+        return;
+      }
+
+      const today = moment();
+      const url = `${
+        API_BASE_URL.onedh
+      }/getIDPdfDay?day=${today.date()}&month=${
+        today.month() + 1
+      }&year=${today.year()}`;
+
+      const res = await fetch(url, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = await res.json();
+      console.log('DEBUG: Response dari API:', json);
+
+      if (json.status === 'success' && json.data?.length > 0) {
+        const item = json.data[0];
+        setPdfs([
+          {
+            id: item.id, // ← ini sekarang bisa diambil
+            day: parseInt(item.day, 10),
+            month: parseInt(item.month, 10),
+            year: parseInt(item.year, 10),
+            file_name: item.file_name,
+          },
+        ]);
+      } else {
+        setPdfs([]);
+      }
+    } catch (err: any) {
+      console.error('DEBUG: Error fetch PDF:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal memuat PDF',
+        text2: err.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPdfList();
+  }, [fetchPdfList]);
+
+  const openFile = async (fileItem: {
+    id: string | number;
+    file_name: string;
+  }) => {
+    try {
+      const cache = await AsyncStorage.getItem('loginCache');
+      const token = cache ? JSON.parse(cache)?.token : null;
+
+      if (!token) {
+        Toast.show({
+          type: 'info',
+          text1: 'Session tidak lengkap',
+          text2: 'Silakan login ulang.',
+        });
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const folderPath = `${RNFS.CachesDirectoryPath}/files/${today}`;
+
+      const originalFileName = fileItem.file_name || 'dokumen';
+      const safeFileName = originalFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const extension = safeFileName.includes('.')
+        ? safeFileName.split('.').pop()
+        : 'bin'; // fallback
+      const finalFileName = safeFileName.endsWith(`.${extension}`)
+        ? safeFileName
+        : `${safeFileName}.${extension}`;
+      const localPath = `${folderPath}/${finalFileName}`;
+
+      // Jika sudah ada → langsung buka
+      if (await RNFS.exists(localPath)) {
+        console.log('DEBUG: File sudah ada →', localPath);
+        return openWithFallback(localPath, String(fileItem.id));
+      }
+      const res = await fetch(
+        `${API_BASE_URL.onedh}/P5M/GetPdf?id=${fileItem.id}`,
+        {
+          headers: {Authorization: `Bearer ${token}`},
+        },
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+      const arrayBuffer = await res.arrayBuffer();
+      const base64Data = Buffer?.from
+        ? Buffer.from(arrayBuffer).toString('base64')
+        : btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+      if (!(await RNFS.exists(folderPath))) {
+        await RNFS.mkdir(folderPath);
+      }
+
+      await RNFS.writeFile(localPath, base64Data, 'base64');
+      // Simpan info untuk auto-hapus besok
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + 1);
+      await AsyncStorage.setItem('fileExpiry', expiry.toISOString());
+      await AsyncStorage.setItem('filePath', localPath);
+
+      return openWithFallback(localPath, String(fileItem.id));
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Tidak dapat membuka file',
+        text2: 'Membuka di browser sebagai alternatif...',
+      });
+      setTimeout(() => {
+        Linking.openURL(`${API_BASE_URL.onedh}/P5M/GetPdf?id=${fileItem.id}`);
+      }, 1500);
+    }
+  };
+
+  const openWithFallback = async (path: string, id: string) => {
+    try {
+      await FileViewer.open(path, {showOpenWithDialog: true});
+    } catch (err) {
+      Toast.show({
+        type: 'error',
+        text1: 'Tidak ada aplikasi pembaca',
+        text2: 'Membuka file via browser...',
+      });
+      setTimeout(() => {
+        Linking.openURL(`${API_BASE_URL.onedh}/P5M/GetPdf?id=${id}`);
+      }, 1500);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchAbsensiToday();
@@ -590,42 +757,24 @@ const DashboardScreen: React.FC = () => {
           </View>
 
           {/* QUICK ACTIONS */}
-          {/* <View style={styles.quickActions}>
-            {[
-              {icon: 'calendar-outline', label: 'Riwayat', onPress: () => {}},
-              {
-                icon: 'document-text-outline',
-                label: 'Laporan',
-                onPress: () => {},
-              },
-              {icon: 'clipboard-outline', label: 'P2H', onPress: () => {}},
-              {icon: 'people-outline', label: 'Team', onPress: () => {}},
-            ].map(action => (
-              <TouchableOpacity
-                key={action.label}
-                style={styles.quickAction}
-                onPress={action.onPress}>
-                <Icon name={action.icon} size={28} color="#2463EB" />
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View> */}
-
-          {/* STATISTIK MINI */}
-          {/* <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>128</Text>
-              <Text style={styles.statLabel}>Jam Kerja</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>96%</Text>
-              <Text style={styles.statLabel}>Kehadiran</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>2</Text>
-              <Text style={styles.statLabel}>Telat</Text>
-            </View>
-          </View> */}
+          <View style={styles.quickActions}>
+            {pdfs.length === 0 ? (
+              <Text>Tidak ada PDF hari ini</Text>
+            ) : (
+              pdfs.map(pdf => (
+                <TouchableOpacity
+                  key={pdf.id}
+                  style={styles.quickAction}
+                  onPress={() => openFile(pdf)}>
+                  <Icon name="document-outline" size={28} color="#2463EB" />
+                  <Text style={styles.quickActionLabel}>
+                    Materi Safety Talk{' '}
+                    {`PDF ${pdf.day}/${pdf.month}/${pdf.year}`}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
 
           {/* DROPDOWN MENU */}
           <Modal

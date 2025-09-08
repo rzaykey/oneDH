@@ -284,4 +284,36 @@ export const dashboardStyles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dropdownText: {marginLeft: 12, fontSize: 15, color: '#222'},
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+  },
+  label: {marginLeft: 8, fontSize: 16},
+  // quickActions: {
+  //   flexDirection: 'row',
+  //   flexWrap: 'wrap',
+  //   justifyContent: 'flex-start',
+  //   padding: 16,
+  // },
+  // quickAction: {
+  //   width: 100,
+  //   height: 100,
+  //   backgroundColor: '#f5f5f5',
+  //   margin: 8,
+  //   borderRadius: 12,
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   elevation: 2, // shadow Android
+  // },
+  // quickActionLabel: {
+  //   marginTop: 8,
+  //   fontSize: 14,
+  //   textAlign: 'center',
+  //   color: '#333',
+  // },
 });
