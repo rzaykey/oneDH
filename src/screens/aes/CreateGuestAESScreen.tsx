@@ -160,7 +160,7 @@ const CreateGuestScreen = ({navigation}) => {
       setLoading(false);
 
       if (data?.status === true) {
-        // Lakukan sync jika online
+        // === SUCCESS ===
         if (netState.isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
@@ -173,7 +173,6 @@ const CreateGuestScreen = ({navigation}) => {
           setSyncing(false);
         }
 
-        // Tampilkan Toast
         Toast.show({
           type: 'success',
           text1: 'Sukses',
@@ -187,17 +186,32 @@ const CreateGuestScreen = ({navigation}) => {
 
         navigation.replace('GuestAESMyHistory');
       } else {
-        // server balas error atau parsing JSON gagal
-        await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
-        await refreshQueueCount();
+        // === GAGAL ===
+        const notif = data?.notif || data?.message || '';
+
+        // daftar notif dari backend yang tidak perlu disimpan offline
+        const skipQueueNotifs = [
+          'Agenda Tidak Ditemukan',
+          'Agenda Sudah Selesai',
+          'Terlalu awal, agenda belum dimulai.',
+          'Terlambat, agenda sudah selesai.',
+        ];
+
+        if (!skipQueueNotifs.includes(notif)) {
+          // simpan offline hanya jika bukan error validasi
+          await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
+          await refreshQueueCount();
+        }
+
         Toast.show({
           type: 'error',
           text1: 'Gagal Menyimpan Agenda',
-          text2: data?.notif || data?.message || 'Terjadi kesalahan.',
+          text2: notif || 'Terjadi kesalahan.',
           position: 'top',
           visibilityTime: 3000,
           topOffset: 40,
         });
+
         navigation.replace('GuestAESMyHistory');
       }
     } catch (err) {

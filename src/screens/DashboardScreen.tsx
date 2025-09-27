@@ -760,7 +760,7 @@ const DashboardScreen: React.FC = () => {
             {pdfs.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Icon name="document-outline" size={40} color="#A0A0A0" />
-                <Text style={styles.emptyTitle}>Tidak ada PDF hari ini</Text>
+                <Text style={styles.emptyTitle}>Tidak ada PDF</Text>
                 <Text style={styles.emptySubtitle}>
                   Materi Safety Talk akan muncul di sini jika sudah tersedia.
                 </Text>
