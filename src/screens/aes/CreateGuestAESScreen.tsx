@@ -419,11 +419,11 @@ const CreateGuestScreen = ({navigation}) => {
             <Text style={styles.cardTitle}>Informasi Pribadi</Text>
             <Text style={styles.label}>Nama</Text>
             <View style={[styles.input, {backgroundColor: '#f4f4f4'}]}>
-              <Text>{company || '-'}</Text>
+              <Text>{user?.name || '-'}</Text>
             </View>
             <Text style={styles.label}>Jde</Text>
             <View style={[styles.input, {backgroundColor: '#f4f4f4'}]}>
-              <Text>{site || '-'}</Text>
+              <Text>{user?.jdeno || '-'}</Text>
             </View>
           </View>
 

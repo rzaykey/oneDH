@@ -8,8 +8,6 @@ import {
   Pressable,
   ActivityIndicator,
   Linking,
-  PermissionsAndroid,
-  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -445,6 +443,7 @@ const DashboardScreen: React.FC = () => {
   const fetchPdfList = useCallback(async () => {
     try {
       setLoading(true);
+
       const cache = await AsyncStorage.getItem('loginCache');
       const parsedCache = cache ? JSON.parse(cache) : null;
       const token = parsedCache?.token;
@@ -472,13 +471,12 @@ const DashboardScreen: React.FC = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
-      console.log('DEBUG: Response dari API:', json);
 
       if (json.status === 'success' && json.data?.length > 0) {
         const item = json.data[0];
         setPdfs([
           {
-            id: item.id, // ← ini sekarang bisa diambil
+            id: item.id,
             day: parseInt(item.day, 10),
             month: parseInt(item.month, 10),
             year: parseInt(item.year, 10),
@@ -528,7 +526,7 @@ const DashboardScreen: React.FC = () => {
       const safeFileName = originalFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
       const extension = safeFileName.includes('.')
         ? safeFileName.split('.').pop()
-        : 'bin'; // fallback
+        : 'bin';
       const finalFileName = safeFileName.endsWith(`.${extension}`)
         ? safeFileName
         : `${safeFileName}.${extension}`;
@@ -536,9 +534,9 @@ const DashboardScreen: React.FC = () => {
 
       // Jika sudah ada → langsung buka
       if (await RNFS.exists(localPath)) {
-        console.log('DEBUG: File sudah ada →', localPath);
         return openWithFallback(localPath, String(fileItem.id));
       }
+
       const res = await fetch(
         `${API_BASE_URL.onedh}/P5M/GetPdf?id=${fileItem.id}`,
         {
@@ -558,6 +556,7 @@ const DashboardScreen: React.FC = () => {
       }
 
       await RNFS.writeFile(localPath, base64Data, 'base64');
+
       // Simpan info untuk auto-hapus besok
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 1);
@@ -759,7 +758,13 @@ const DashboardScreen: React.FC = () => {
           {/* QUICK ACTIONS */}
           <View style={styles.quickActions}>
             {pdfs.length === 0 ? (
-              <Text>Tidak ada PDF hari ini</Text>
+              <View style={styles.emptyContainer}>
+                <Icon name="document-outline" size={40} color="#A0A0A0" />
+                <Text style={styles.emptyTitle}>Tidak ada PDF hari ini</Text>
+                <Text style={styles.emptySubtitle}>
+                  Materi Safety Talk akan muncul di sini jika sudah tersedia.
+                </Text>
+              </View>
             ) : (
               pdfs.map(pdf => (
                 <TouchableOpacity

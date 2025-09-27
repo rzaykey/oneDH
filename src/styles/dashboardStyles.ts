@@ -294,26 +294,26 @@ export const dashboardStyles = StyleSheet.create({
     borderRadius: 8,
   },
   label: {marginLeft: 8, fontSize: 16},
-  // quickActions: {
-  //   flexDirection: 'row',
-  //   flexWrap: 'wrap',
-  //   justifyContent: 'flex-start',
-  //   padding: 16,
-  // },
-  // quickAction: {
-  //   width: 100,
-  //   height: 100,
-  //   backgroundColor: '#f5f5f5',
-  //   margin: 8,
-  //   borderRadius: 12,
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  //   elevation: 2, // shadow Android
-  // },
-  // quickActionLabel: {
-  //   marginTop: 8,
-  //   fontSize: 14,
-  //   textAlign: 'center',
-  //   color: '#333',
-  // },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#6B7280',
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 20,
+  },
 });
