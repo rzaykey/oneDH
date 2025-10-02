@@ -189,7 +189,7 @@ const AESMyHistoryScreen: React.FC = () => {
           name: 'close_agenda.jpg',
         });
       }
-
+      console.log(formData);
       const res = await fetch(`${API_BASE_URL.onedh}/CloseAgenda`, {
         method: 'POST',
         headers: {

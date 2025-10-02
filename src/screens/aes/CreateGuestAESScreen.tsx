@@ -265,7 +265,7 @@ const CreateGuestScreen = ({navigation}) => {
       end={{x: 1, y: 0}}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
-          <Text style={styles.title}>Form Attendance Guest</Text>
+          <Text style={styles.title}>Form Attendance</Text>
 
           {/* <TouchableOpacity
             onPress={() => setShowModal(true)}
@@ -394,7 +394,7 @@ const CreateGuestScreen = ({navigation}) => {
 
           {/* Form Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Code Event</Text>
+            <Text style={styles.cardTitle}>Kode Event</Text>
             <TextInput
               style={[styles.input, {height: 60}]}
               placeholder="Masukkan Kode Event atau Scan QR"

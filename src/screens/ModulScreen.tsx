@@ -14,7 +14,7 @@ const MODULE_TO_SCREEN: Record<string, string> = {
   P2H: 'P2HScreen',
   JCM: 'JCMScreen',
   // MOP: 'MOPScreen',
-  AES: 'AESScreen',
+  EAS: 'AESScreen',
   EWC: 'EWCScreen',
 };
 
@@ -44,7 +44,7 @@ const iconForModule = (mod: string) => {
           resizeMode="contain"
         />
       );
-    case 'AES':
+    case 'EAS':
       return (
         <Image
           source={require('../assets/images/aes.png')}

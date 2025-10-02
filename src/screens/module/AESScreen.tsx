@@ -12,21 +12,21 @@ const fullMenu = [
     id: 'input',
     label: 'Isi Event',
     icon: 'checkbox-outline',
-    desc: 'Isi agenda event presenter/guest',
+    desc: 'Isi Event Presenter/Peserta',
     screen: 'CreatePresentAESScreen',
   },
   {
     id: 'history',
     label: 'Riwayat Event',
     icon: 'document-text-outline',
-    desc: 'Lihat hasil riwayat semua karyawan',
+    desc: 'Lihat Hasil Riwayat Semua Karyawan',
     screen: 'P2HHistory',
   },
   {
     id: 'myhistory',
     label: 'Riwayat Event Saya',
     icon: 'alert-circle-outline',
-    desc: 'Riwayat anda sebagai presenter/guest',
+    desc: 'Riwayat Presenter/Peserta',
     screen: 'AESMyHistory',
   },
 ];
@@ -109,7 +109,7 @@ const AESScreen = ({navigation}: any) => {
       start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>AES - Attendant Event System</Text>
+        <Text style={styles.title}>EAS - Event Attendance System</Text>
         <FlatList
           data={menus}
           keyExtractor={item => item.id}
@@ -148,7 +148,7 @@ const AESScreen = ({navigation}: any) => {
           <TouchableOpacity
             style={styles.modalButtonBlue}
             onPress={() => navigateWithRole('guest')}>
-            <Text style={styles.modalButtonText}>Guest</Text>
+            <Text style={styles.modalButtonText}>Peserta</Text>
           </TouchableOpacity>
         </View>
       </Modal>

@@ -417,11 +417,16 @@ const DashboardScreen: React.FC = () => {
 
       const json = await response.json();
 
-      if (!json || (!json.absen && !json.absen_ls)) {
+      if (!json || !json.absen) {
         throw new Error('Response tidak sesuai format');
       }
 
-      const firstData = json.absen?.[0] ?? json.absen_ls?.[0] ?? null;
+      const firstData = Array.isArray(json.absen)
+        ? json.absen[0]
+        : json.absen ??
+          (Array.isArray(json.absen_ls) ? json.absen_ls[0] : null);
+
+      console.log(firstData);
       setAbsensiToday(prev =>
         JSON.stringify(prev) === JSON.stringify(firstData) ? prev : firstData,
       );
