@@ -118,14 +118,7 @@ const DashboardScreen: React.FC = () => {
             undefined,
             API_BASE_URL.onedh,
           ),
-          pushOfflineQueue(
-            OFFLINE_SUBMIT_KEY,
-            '/StoreJCM',
-            (current: number, total: number) => {
-              console.log(`Sync JCM progress: ${current} / ${total}`);
-            },
-            API_BASE_URL.onedh,
-          ),
+          pushOfflineQueue(OFFLINE_SUBMIT_KEY, '/StoreJCM', API_BASE_URL.onedh),
         ])
           .then(refreshQueueCount)
           .finally(() => setSyncing(false));
@@ -144,14 +137,7 @@ const DashboardScreen: React.FC = () => {
             undefined,
             API_BASE_URL.onedh,
           ),
-          pushOfflineQueue(
-            OFFLINE_SUBMIT_KEY,
-            '/StoreJCM',
-            (current: number, total: number) => {
-              console.log(`Initial Sync JCM: ${current}/${total}`);
-            },
-            API_BASE_URL.onedh,
-          ),
+          pushOfflineQueue(OFFLINE_SUBMIT_KEY, '/StoreJCM', API_BASE_URL.onedh),
         ])
           .then(refreshQueueCount)
           .finally(() => setSyncing(false));
@@ -305,10 +291,10 @@ const DashboardScreen: React.FC = () => {
         });
 
         setTimeout(() => {
-          handleLogout(); // ⬅️ Fungsi logout
+          handleLogout();
         }, 1500);
 
-        return; // Hentikan proses
+        return;
       }
 
       if (!response.ok) {
@@ -332,9 +318,6 @@ const DashboardScreen: React.FC = () => {
         throw new Error(msg);
       }
 
-      console.log('Current Version:', currentVersion);
-      console.log('Latest Version from API:', latestVersion);
-
       if (isOutdated(latestVersion, currentVersion)) {
         Toast.show({
           type: 'error',
@@ -354,8 +337,6 @@ const DashboardScreen: React.FC = () => {
     } catch (err) {
       const errorMessage =
         err?.message?.toString?.() || 'Terjadi kesalahan tidak diketahui.';
-
-      console.warn('❗ Gagal cek versi:', errorMessage);
 
       Toast.show({
         type: 'error',
@@ -389,7 +370,7 @@ const DashboardScreen: React.FC = () => {
         return;
       }
 
-      const url = `${API_BASE_URL.onedh}/getAbsensiToday?username=${username}`;
+      const url = `${API_BASE_URL.onedh}/getAbsensiToday`;
       const response = await fetch(url, {
         headers: {Authorization: `Bearer ${token}`},
         signal: controller.signal,
@@ -404,10 +385,10 @@ const DashboardScreen: React.FC = () => {
         });
 
         setTimeout(() => {
-          handleLogout(); // ⬅️ Fungsi logout
+          handleLogout();
         }, 1500);
 
-        return; // Hentikan proses
+        return;
       }
       clearTimeout(timeout);
 
@@ -416,17 +397,12 @@ const DashboardScreen: React.FC = () => {
       }
 
       const json = await response.json();
-
       if (!json || !json.absen) {
-        throw new Error('Response tidak sesuai format');
+        // throw new Error('Response tidak sesuai format');
       }
 
-      const firstData = Array.isArray(json.absen)
-        ? json.absen[0]
-        : json.absen ??
-          (Array.isArray(json.absen_ls) ? json.absen_ls[0] : null);
+      const firstData = Array.isArray(json.absen) ? json.absen[0] : json.absen;
 
-      console.log(firstData);
       setAbsensiToday(prev =>
         JSON.stringify(prev) === JSON.stringify(firstData) ? prev : firstData,
       );
@@ -492,7 +468,6 @@ const DashboardScreen: React.FC = () => {
         setPdfs([]);
       }
     } catch (err: any) {
-      console.error('DEBUG: Error fetch PDF:', err);
       Toast.show({
         type: 'error',
         text1: 'Gagal memuat PDF',
