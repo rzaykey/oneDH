@@ -16,7 +16,6 @@ import RNPickerSelect from 'react-native-picker-select';
 import {createP2HStyles as styles} from '../../styles/createP2HStyles';
 import {useSiteContext} from '../../context/SiteContext';
 import API_BASE_URL from '../../config';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
 import LinearGradient from 'react-native-linear-gradient';
 import DeviceInfo from 'react-native-device-info';
@@ -35,7 +34,6 @@ const CreateP2HScreen = ({navigation}) => {
   const insets = useSafeAreaInsets();
   const {user, activeSite} = useSiteContext();
 
-  // === State untuk isian form ===
   const [nounit, setNoUnit] = useState('');
   const [model, setModel] = useState('');
   const [KM, setKM] = useState('');
@@ -49,15 +47,11 @@ const CreateP2HScreen = ({navigation}) => {
   const [stickerCommissioning, setStickerCommissioning] = useState('Berlaku');
   const [stickerFuelPermit, setStickerFuelPermit] = useState('Berlaku');
 
-  // === Master data ===
   const [modelList, setModelList] = useState([]);
   const [questionList, setQuestionList] = useState([]);
   const [deptList, setDeptList] = useState([]);
   const [loadingMaster, setLoadingMaster] = useState(true);
-  const [showDate, setShowDate] = useState(false);
-  const [showTime, setShowTime] = useState(false);
 
-  // === Lainnya ===
   const [isConnected, setIsConnected] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
@@ -73,7 +67,6 @@ const CreateP2HScreen = ({navigation}) => {
       'Content-Type': 'application/json',
     };
   };
-  // ==== 1. Restore draft ATAU ambil dari loginCache ====
   useEffect(() => {
     const restoreDraftOrLogin = async () => {
       const draftStr = await AsyncStorage.getItem(DRAFT_KEY);
@@ -96,16 +89,13 @@ const CreateP2HScreen = ({navigation}) => {
           return;
         } catch {}
       }
-      // Kalau tidak ada draft, ambil dari loginCache
       const loginCache = await AsyncStorage.getItem('loginCache');
       if (loginCache) {
         const cache = JSON.parse(loginCache);
         setSite(cache.dataEmp?.site || activeSite || '');
         setModel(cache.dataEmp?.model || '');
-        // Note: dept di cache bisa nama, nanti user pilih di dropdown
         setDept('');
       }
-      // Restore section dan dept terakhir jika belum ada
       const lastSection = await AsyncStorage.getItem('last_section');
       const lastDept = await AsyncStorage.getItem('last_dept');
       const lastNoUnit = await AsyncStorage.getItem('last_nounit');
@@ -127,7 +117,6 @@ const CreateP2HScreen = ({navigation}) => {
       deptData = [];
 
     try {
-      // Ambil cache dulu
       const modelCache = await AsyncStorage.getItem('master_model');
       const questionCache = await AsyncStorage.getItem('master_questions');
       const deptCache = await AsyncStorage.getItem('master_dept');
@@ -141,7 +130,6 @@ const CreateP2HScreen = ({navigation}) => {
         JSON.parse(deptCache).length > 0;
 
       if (hasCache && !forceRefresh) {
-        // ✅ Gunakan data cache
         modelData = JSON.parse(modelCache);
         questionData = JSON.parse(questionCache);
         deptData = JSON.parse(deptCache);
@@ -161,7 +149,6 @@ const CreateP2HScreen = ({navigation}) => {
         return;
       }
 
-      // ❗ Cache tidak lengkap atau user paksa refresh
       const netState = await NetInfo.fetch();
       const isOnline = netState.isConnected;
 
@@ -186,7 +173,6 @@ const CreateP2HScreen = ({navigation}) => {
 
       const headers = await getAuthHeader();
 
-      // === Fetch Model ===
       const modelRes = await fetch(`${API_BASE_URL.onedh}/GetModel`, {headers});
       const modelJson = await modelRes.json();
       modelData = Array.isArray(modelJson.data) ? modelJson.data : [];
@@ -194,7 +180,6 @@ const CreateP2HScreen = ({navigation}) => {
         await AsyncStorage.setItem('master_model', JSON.stringify(modelData));
       }
 
-      // === Fetch Questions ===
       const qRes = await fetch(`${API_BASE_URL.onedh}/MasterQuestion`, {
         headers,
       });
@@ -207,7 +192,6 @@ const CreateP2HScreen = ({navigation}) => {
         );
       }
 
-      // === Fetch Dept ===
       const dRes = await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers});
       const dJson = await dRes.json();
       deptData = Array.isArray(dJson.data) ? dJson.data : [];
@@ -215,7 +199,6 @@ const CreateP2HScreen = ({navigation}) => {
         await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
       }
 
-      // ✅ Update state
       setModelList(modelData);
       setQuestionList(questionData);
       setDeptList(deptData);
@@ -226,8 +209,7 @@ const CreateP2HScreen = ({navigation}) => {
         text2: 'Berhasil mengambil data dari server.',
         position: 'top',
       });
-    } catch (err) {
-      console.error('❌ fetchMasters error:', err);
+    } catch {
       setModelList([]);
       setQuestionList([]);
       setDeptList([]);
@@ -243,12 +225,10 @@ const CreateP2HScreen = ({navigation}) => {
     setLoadingMaster(false);
   };
 
-  // ==== 2. Fetch master data ====
   useEffect(() => {
     fetchMasters();
   }, [activeSite]);
 
-  // ==== 3. Load offline queue count, push offline queue dsb ====
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
@@ -278,7 +258,6 @@ const CreateP2HScreen = ({navigation}) => {
     return () => unsubscribe();
   }, [refreshQueueCount]);
 
-  // ==== 4. Save draft setiap perubahan ====
   useEffect(() => {
     const saveDraft = async () => {
       const type = DeviceInfo.getSystemName();
@@ -317,7 +296,6 @@ const CreateP2HScreen = ({navigation}) => {
     stickerFuelPermit,
   ]);
 
-  // ==== 5. Reset form ====
   const resetForm = async (keepUnitInfo = true, resetTanggalDibuat = false) => {
     if (!keepUnitInfo) {
       setNoUnit('');
@@ -362,12 +340,10 @@ const CreateP2HScreen = ({navigation}) => {
     await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   };
 
-  // ==== 6. Hapus draft ====
   const removeDraft = async () => {
     await AsyncStorage.removeItem(DRAFT_KEY);
   };
 
-  // ==== 7. Validasi form ====
   function isFormValid() {
     if (!nounit) {
       Toast.show({
@@ -451,12 +427,10 @@ const CreateP2HScreen = ({navigation}) => {
     return true;
   }
 
-  // ==== 8. Checklist handler ====
   const handleChangeChecklist = useCallback((id, value) => {
     setInlineRadioOptions(prev => ({...prev, [id]: value}));
   }, []);
 
-  // ==== 9. Submit ====
   const handleSubmit = async () => {
     if (!isFormValid()) {
       return;
@@ -514,7 +488,6 @@ const CreateP2HScreen = ({navigation}) => {
       return;
     }
 
-    // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
@@ -534,9 +507,7 @@ const CreateP2HScreen = ({navigation}) => {
       try {
         data = await response.json();
         isSuccess = response.ok && data.status === true;
-      } catch (jsonErr) {
-        console.log('[JSON PARSE ERROR]', jsonErr);
-      }
+      } catch {}
 
       setLoading(false);
 
@@ -566,13 +537,12 @@ const CreateP2HScreen = ({navigation}) => {
         Toast.show({
           type: 'success',
           text1: 'Sukses',
-          text2: data.message || 'P2H berhasil disimpan!',
+          text2: 'P2H berhasil disimpan!',
           position: 'top',
         });
 
         navigation.replace('P2HMyHistory');
       } else {
-        // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
         await refreshQueueCount();
         await removeDraft();
@@ -588,8 +558,7 @@ const CreateP2HScreen = ({navigation}) => {
 
         navigation.replace('P2HMyHistory');
       }
-    } catch (err) {
-      console.log('[FETCH ERROR]', err);
+    } catch {
       setLoading(false);
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
       await refreshQueueCount();
@@ -624,7 +593,6 @@ const CreateP2HScreen = ({navigation}) => {
     }
   }, []);
 
-  // ==== 10. Render ====
   const stickerCommissioningQ = questionList.find(q => String(q.id) === '27');
   const stickerFuelPermitQ = questionList.find(q => String(q.id) === '28');
   const checklistQuestions = questionList.filter(
@@ -661,7 +629,6 @@ const CreateP2HScreen = ({navigation}) => {
             onPress={() => showOfflineQueue('offline_submit_p2h')}
           />
 
-          {/* BADGE QUEUE */}
           {queueCount > 0 && (
             <View
               style={{
@@ -713,7 +680,6 @@ const CreateP2HScreen = ({navigation}) => {
           )}
 
           <View style={styles.rowContainer}>
-            {/* Tombol Refresh */}
             <TouchableOpacity
               style={[styles.refreshButton, loadingMaster && {opacity: 0.6}]}
               onPress={fetchMasters}
@@ -752,7 +718,6 @@ const CreateP2HScreen = ({navigation}) => {
             </View>
           </View>
 
-          {/* CARD: Informasi Unit */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informasi Unit</Text>
             <View
@@ -805,7 +770,6 @@ const CreateP2HScreen = ({navigation}) => {
             />
           </View>
 
-          {/* CARD: Lokasi dan Departemen */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Lokasi & Departemen</Text>
             <Text style={styles.label}>Site</Text>
@@ -846,7 +810,6 @@ const CreateP2HScreen = ({navigation}) => {
             )}
           </View>
 
-          {/* CARD: Checklist Pemeriksaan */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Checklist Pemeriksaan</Text>
             {checklistQuestions.length === 0 && (
@@ -891,7 +854,6 @@ const CreateP2HScreen = ({navigation}) => {
             ))}
           </View>
 
-          {/* CARD: Stiker Khusus */}
           {(stickerCommissioningQ || stickerFuelPermitQ) && (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Stiker Khusus</Text>
@@ -954,7 +916,6 @@ const CreateP2HScreen = ({navigation}) => {
             </View>
           )}
 
-          {/* CARD: Lainnya */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Lainnya</Text>
 
@@ -968,7 +929,6 @@ const CreateP2HScreen = ({navigation}) => {
             />
           </View>
 
-          {/* SUBMIT */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}

@@ -1,5 +1,3 @@
-// src/cache/cacheOnedhMasters.ts
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API_BASE_URL from '../config';
@@ -10,17 +8,14 @@ export const cacheJCMMasters = async (headers: Record<string, string>) => {
       {
         key: 'cache_wo_gen',
         url: `${API_BASE_URL.onedh}/GetMasterWoGeneral/`,
-        label: 'MASTER WOGEN',
       },
       {
         key: 'cache_supervisor',
         url: `${API_BASE_URL.onedh}/GetSupervisor/`,
-        label: 'MASTER SUPERVISOR',
       },
       {
         key: 'cache_units',
         url: `${API_BASE_URL.onedh}/MasterUnit/`,
-        label: 'MASTER UNIT',
       },
     ];
 
@@ -31,11 +26,7 @@ export const cacheJCMMasters = async (headers: Record<string, string>) => {
           req.key,
           JSON.stringify(resp.data?.data || []),
         );
-      } catch (e) {
-        console.log(`❌ Gagal cache ${req.label}:`, e?.message || e);
-      }
+      } catch {}
     }
-  } catch (err) {
-    console.log('❌ Error di cacheOnedhMasters:', err?.message || err);
-  }
+  } catch {}
 };

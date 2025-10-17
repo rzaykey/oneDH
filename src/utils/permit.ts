@@ -7,7 +7,6 @@ export const canEdit = (permit: PermitType) =>
 export const canDelete = (permit: PermitType) => permit === 'full';
 export const canRead = (permit: PermitType) => !!permit;
 
-// Ambil permit untuk module tertentu, dari roles context
 export const getModulePermit = (
   roles: any[],
   activeSite: string,

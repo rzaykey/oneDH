@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   Button,
-  Platform,
   Switch,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -148,8 +147,7 @@ const CreatePresentAESScreen = ({navigation}) => {
         text2: 'Berhasil ambil data dari server.',
         position: 'top',
       });
-    } catch (err) {
-      console.error('❌ fetchMasters error:', err);
+    } catch {
       setDeptList([]);
       setSiteList([]);
       setCategoryList([]);
@@ -163,12 +161,11 @@ const CreatePresentAESScreen = ({navigation}) => {
 
     setLoadingMaster(false);
   };
-  // ==== 2. Fetch master data ====
+
   useEffect(() => {
     fetchMasters();
-  }, []); // <== tambahkan ini
+  }, []);
 
-  // ==== 3. Load offline queue count, push offline queue dsb ====
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
@@ -198,12 +195,10 @@ const CreatePresentAESScreen = ({navigation}) => {
     return () => unsubscribe();
   }, [refreshQueueCount]);
 
-  // ==== 7. Validasi form ====
   const isFormValid = () => {
     let start = dateStart || new Date();
     let finish = dateFinish || new Date();
 
-    // Validasi tanggal selesai tidak boleh sebelum tanggal mulai
     if (dayjs(finish).isBefore(dayjs(start))) {
       Alert.alert(
         'Validasi Gagal',
@@ -211,8 +206,6 @@ const CreatePresentAESScreen = ({navigation}) => {
       );
       return false;
     }
-
-    // Validasi field wajib
     if (!user?.name) {
       Alert.alert('Validasi Gagal', 'Nama presenter tidak boleh kosong.');
       return false;
@@ -256,7 +249,6 @@ const CreatePresentAESScreen = ({navigation}) => {
     return true;
   };
 
-  // ==== 9. Submit ====
   const handleSubmit = async () => {
     if (!isFormValid()) {
       return;
@@ -285,7 +277,6 @@ const CreatePresentAESScreen = ({navigation}) => {
       device_info: fullInfo,
       dept: dept,
     };
-    console.log(payload);
 
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
@@ -305,7 +296,6 @@ const CreatePresentAESScreen = ({navigation}) => {
       return;
     }
 
-    // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
@@ -325,8 +315,7 @@ const CreatePresentAESScreen = ({navigation}) => {
       try {
         data = await response.json();
         isSuccess = response.ok && data.status === true;
-      } catch (jsonErr) {
-        console.log('[JSON PARSE ERROR]', jsonErr);
+      } catch {
       }
 
       setLoading(false);
@@ -334,7 +323,6 @@ const CreatePresentAESScreen = ({navigation}) => {
       if (data?.status === true) {
         const code = data.code || '-';
 
-        // Lakukan sync jika online
         if (netState.isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
@@ -347,7 +335,6 @@ const CreatePresentAESScreen = ({navigation}) => {
           setSyncing(false);
         }
 
-        // Tampilkan Toast
         Toast.show({
           type: 'success',
           text1: 'Sukses',
@@ -361,7 +348,6 @@ const CreatePresentAESScreen = ({navigation}) => {
 
         navigation.replace('AESMyHistory');
       } else {
-        // server balas error atau parsing JSON gagal
         await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
         await refreshQueueCount();
         Toast.show({
@@ -374,8 +360,7 @@ const CreatePresentAESScreen = ({navigation}) => {
         });
         navigation.replace('AESMyHistory');
       }
-    } catch (err) {
-      console.log('[FETCH ERROR]', err);
+    } catch {
       setLoading(false);
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
       await refreshQueueCount();
@@ -441,7 +426,6 @@ const CreatePresentAESScreen = ({navigation}) => {
         <ScrollView contentContainerStyle={{paddingBottom: 30}}>
           <Text style={styles.title}>Form Pengisian Agenda</Text>
 
-          {/* Tombol Cek Queue */}
           {queueCount > 0 && (
             <View style={{marginVertical: 10}}>
               {/* <Button
@@ -457,7 +441,6 @@ const CreatePresentAESScreen = ({navigation}) => {
             </View>
           )}
 
-          {/* BADGE QUEUE */}
           {queueCount > 0 && (
             <View
               style={{
@@ -508,7 +491,6 @@ const CreatePresentAESScreen = ({navigation}) => {
             </View>
           )}
 
-          {/* HEADER STATUS */}
           <View style={styles.rowContainer}>
             <TouchableOpacity
               style={[styles.refreshButton, loadingMaster && {opacity: 0.6}]}
@@ -561,7 +543,6 @@ const CreatePresentAESScreen = ({navigation}) => {
               value={user?.name || ''}
               editable={false}
             />
-            {/* Switch untuk memilih mode input */}
             <View style={styles.switchRow}>
               <Text style={styles.labelSwitch}>
                 Input manual data pemateri ?{' '}
@@ -569,7 +550,6 @@ const CreatePresentAESScreen = ({navigation}) => {
               <Switch value={useManualInput} onValueChange={handleToggle} />
             </View>
 
-            {/* Nama Pemateri */}
             <Text style={styles.label}>Nama Pemateri</Text>
             <TextInput
               style={[styles.input, {color: '#000'}]}
@@ -595,11 +575,9 @@ const CreatePresentAESScreen = ({navigation}) => {
             />
           </View>
 
-          {/* CARD: Lokasi & Departemen */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Data Agenda / Kegiatan</Text>
 
-            {/* Title */}
             <Text style={styles.label}>Judul / Title</Text>
             <TextInput
               style={styles.input}
@@ -608,7 +586,6 @@ const CreatePresentAESScreen = ({navigation}) => {
               onChangeText={setTitle}
             />
 
-            {/* Kategori */}
             <Text style={styles.label}>Jenis Kegiatan</Text>
             <RNPickerSelect
               placeholder={{label: 'Pilih Kategori', value: ''}}
@@ -631,7 +608,6 @@ const CreatePresentAESScreen = ({navigation}) => {
             />
           </View>
 
-          {/* CARD: Info Lainnya */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informasi Tambahan</Text>
             <Text style={styles.label}>Departemen</Text>
@@ -659,7 +635,6 @@ const CreatePresentAESScreen = ({navigation}) => {
                 Belum ada departemen. Silakan refresh data.
               </Text>
             )}
-            {/* Site */}
             <Text style={styles.label}>Site</Text>
             <RNPickerSelect
               placeholder={{label: 'Pilih Site', value: ''}}
@@ -680,10 +655,8 @@ const CreatePresentAESScreen = ({navigation}) => {
                 placeholder: {...styles.input, color: '#aaa'},
               }}
             />
-            {/* === Tanggal Mulai === */}
             <Text style={styles.label}>Tanggal Mulai</Text>
             <View style={styles.row}>
-              {/* Tanggal Mulai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -700,7 +673,7 @@ const CreatePresentAESScreen = ({navigation}) => {
                       if (event?.type === 'set' && selectedDate) {
                         const time = dateStart
                           ? dayjs(dateStart).format('HH:mm:ss')
-                          : dayjs().format('HH:mm:ss'); // default jam sekarang
+                          : dayjs().format('HH:mm:ss');
                         setDateStart(
                           dayjs(selectedDate).format(`YYYY-MM-DD ${time}`),
                         );
@@ -710,7 +683,6 @@ const CreatePresentAESScreen = ({navigation}) => {
                 )}
               </View>
 
-              {/* Jam Mulai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
@@ -727,7 +699,7 @@ const CreatePresentAESScreen = ({navigation}) => {
                       if (event?.type === 'set' && selectedTime) {
                         const date = dateStart
                           ? dayjs(dateStart).format('YYYY-MM-DD')
-                          : dayjs().format('YYYY-MM-DD'); // default hari ini
+                          : dayjs().format('YYYY-MM-DD');
                         setDateStart(
                           dayjs(
                             `${date} ${dayjs(selectedTime).format('HH:mm:ss')}`,
@@ -740,10 +712,8 @@ const CreatePresentAESScreen = ({navigation}) => {
               </View>
             </View>
 
-            {/* === Tanggal Selesai === */}
             <Text style={styles.label}>Tanggal Selesai</Text>
             <View style={styles.row}>
-              {/* Tanggal Selesai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -760,7 +730,7 @@ const CreatePresentAESScreen = ({navigation}) => {
                       if (event?.type === 'set' && selectedDate) {
                         const time = dateFinish
                           ? dayjs(dateFinish).format('HH:mm:ss')
-                          : dayjs().format('HH:mm:ss'); // default jam sekarang
+                          : dayjs().format('HH:mm:ss');
                         setDateFinish(
                           dayjs(selectedDate).format(`YYYY-MM-DD ${time}`),
                         );
@@ -770,7 +740,6 @@ const CreatePresentAESScreen = ({navigation}) => {
                 )}
               </View>
 
-              {/* Jam Selesai */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
@@ -787,7 +756,7 @@ const CreatePresentAESScreen = ({navigation}) => {
                       if (event?.type === 'set' && selectedTime) {
                         const date = dateFinish
                           ? dayjs(dateFinish).format('YYYY-MM-DD')
-                          : dayjs().format('YYYY-MM-DD'); // default hari ini
+                          : dayjs().format('YYYY-MM-DD');
                         setDateFinish(
                           dayjs(
                             `${date} ${dayjs(selectedTime).format('HH:mm:ss')}`,
@@ -800,7 +769,6 @@ const CreatePresentAESScreen = ({navigation}) => {
               </View>
             </View>
 
-            {/* Keterangan */}
             <Text style={styles.label}>Keterangan</Text>
             <TextInput
               style={[styles.input, {height: 60}]}
@@ -811,7 +779,6 @@ const CreatePresentAESScreen = ({navigation}) => {
             />
           </View>
 
-          {/* Submit Button */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}

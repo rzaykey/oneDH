@@ -1,9 +1,15 @@
-// src/navigation/types.ts
 export interface P2HDetail {
   fid_p2h: string;
   unit: string;
   driver: string;
   tanggal: string;
+}
+
+export interface DetailItem {
+  id: string;
+  pertanyaan: string;
+  jawaban: string;
+  create: string;
 }
 
 export interface P2HItem {
@@ -30,10 +36,10 @@ export interface JCMItem {
   task_desc: string;
   jde_mekanik: string;
   nama_mekanik: string;
-  tanggal_mulai: string; // format: 'dd-mm-yyyy'
-  waktu_mulai: string; // format: 'HH:MM:SS'
-  tanggal_selesai: string; // sebenarnya waktu (dari `date_finish` -> format waktu)
-  waktu_selesai: string; // dari `time_finish`
+  tanggal_mulai: string;
+  waktu_mulai: string;
+  tanggal_selesai: string;
+  waktu_selesai: string;
   durasi: string;
   remark: string;
   status: string;
@@ -43,6 +49,8 @@ export interface JCMItem {
   unit_grp_id: string;
   parrend_wo_task: string;
   fid_hdr: string;
+  hm_bd: string;
+  hm_rfu: string;
 }
 
 export interface MentoringData {
@@ -66,7 +74,7 @@ export interface DailyActivity {
   jde_no: string;
   employee_name: string;
   site: string;
-  date_activity: string; // format: "YYYY-MM-DD HH:mm:ss"
+  date_activity: string;
   kpi_type: string;
   kpi_name: string;
   activity_name: string;
@@ -84,7 +92,7 @@ export interface TrainHours {
   jde_no: number;
   employee_name: string;
   position: string;
-  training_type: string; // format: "YYYY-MM-DD HH:mm:ss"
+  training_type: string;
   unit_class: number;
   unit_type: string;
   code: number;

@@ -150,7 +150,6 @@ const EditDataMentoring = ({route}) => {
 
         setArea(header.area || '');
       } catch (error) {
-        console.error('Fetch data error:', error);
         Toast.show({
           type: 'error',
           text1: 'Gagal Mengambil Data ❌',
@@ -199,9 +198,7 @@ const EditDataMentoring = ({route}) => {
         setSearchResults(res.data);
       } catch (error) {
         if (axios.isCancel(error) || error.name === 'CanceledError') {
-          console.log('Request dibatalkan');
         } else {
-          console.error('❌ Gagal mencari operator:', error.message);
         }
       }
     }, 300); // delay 300ms setelah user berhenti ngetik
@@ -506,7 +503,6 @@ const EditDataMentoring = ({route}) => {
         throw new Error(response.data.message || 'Gagal memperbarui data');
       }
     } catch (error) {
-      console.error('Submission error:', error);
       Toast.show({
         type: 'error',
         text1: 'Gagal',

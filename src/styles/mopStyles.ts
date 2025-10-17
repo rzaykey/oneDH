@@ -9,9 +9,6 @@ export const mopStyles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    // paddingHorizontal: 18,
-    // paddingBottom: 18,
-    // paddingTop: 18, // ✅ agar title tidak terlalu atas
   },
   title: {
     fontSize: 22,
@@ -19,7 +16,7 @@ export const mopStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginVertical: 18,
     marginLeft: 3,
-    letterSpacing: 0.3, // ✅ agar tidak dempet section
+    letterSpacing: 0.3, 
   },
   section: {
     fontWeight: '600',
@@ -94,7 +91,7 @@ export const mopStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // ✅
+    backgroundColor: 'transparent',
   },
   modalContainer: {
     backgroundColor: '#fff',

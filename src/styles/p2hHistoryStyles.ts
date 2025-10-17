@@ -10,19 +10,19 @@ export const p2hHistoryStyles = StyleSheet.create({
   headerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // <-- ini yang bikin center horizontal
+    justifyContent: 'center',
     paddingHorizontal: 18,
     paddingBottom: 14,
     borderBottomColor: '#cbd6ee',
     marginBottom: 5,
-    marginTop: 18, // atau paddingTop: 18,
+    marginTop: 18,
   },
   title: {
     fontWeight: 'bold',
     fontSize: 18,
     color: '#2463EB',
-    marginVertical: 0, // <-- hilangkan, sudah cukup di headerWrap
-    textAlign: 'center', // supaya teksnya juga rata tengah
+    marginVertical: 0,
+    textAlign: 'center',
   },
 
   list: {
@@ -136,7 +136,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     marginLeft: 2,
     flexShrink: 1,
     flexWrap: 'wrap',
-    maxWidth: '100%', // pastikan tidak melebihi container
+    maxWidth: '100%',
   },
   emptyWrap: {
     alignItems: 'center',
@@ -146,7 +146,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     paddingHorizontal: 26,
   },
   emptyText: {
-    color: '#2463EB', // Lebih readable di white/gradient
+    color: '#2463EB',
     fontWeight: 'bold',
     fontSize: 17,
     textAlign: 'center',
@@ -236,11 +236,11 @@ export const p2hHistoryStyles = StyleSheet.create({
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
-    flex: 1, // biar sama lebar
-    marginRight: 5, // jarak antar tombol
+    flex: 1,
+    marginRight: 5,
   },
   viewGuestButton: {
-    backgroundColor: '#2196F3', // biru
+    backgroundColor: '#2196F3',
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
@@ -260,7 +260,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: '90%',
-    maxHeight: '80%', // penting untuk kasih ruang FlatList
+    maxHeight: '80%',
   },
 
   modalOverlay: {
@@ -306,7 +306,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     padding: 8,
     minHeight: 60,
     marginBottom: 10,
-    textAlignVertical: 'top', // penting untuk multiline
+    textAlignVertical: 'top',
   },
   modalDateText: {
     padding: 10,
@@ -344,7 +344,7 @@ export const p2hHistoryStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10, // jika React Native versi >= 0.71
+    gap: 10,
     marginBottom: 12,
   },
   dateTimeBox: {
@@ -403,5 +403,41 @@ export const p2hHistoryStyles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     color: '#000',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  rowHM: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 10,
+  },
+  hmInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  modalLabelHM: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    width: 80,
+    fontSize: 16,
+    color: '#000',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#ccc',
+    marginHorizontal: 8,
   },
 });

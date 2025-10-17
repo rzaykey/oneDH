@@ -57,7 +57,6 @@ const AESMyHistoryScreen: React.FC = () => {
   const [photo, setPhoto] = useState(null);
   const [guestList, setGuestList] = useState<any[]>([]);
 
-  // Ambil token dari AsyncStorage untuk header auth
   const getAuthHeader = async () => {
     const cache = await AsyncStorage.getItem('loginCache');
     const token = cache ? JSON.parse(cache)?.token : null;
@@ -87,9 +86,7 @@ const AESMyHistoryScreen: React.FC = () => {
 
     launchImageLibrary(options, response => {
       if (response.didCancel) {
-        console.log('User cancelled image picker');
       } else if (response.errorCode) {
-        console.log('ImagePicker Error: ', response.errorMessage);
       } else {
         setPhoto(response.assets[0]);
       }
@@ -164,8 +161,7 @@ const AESMyHistoryScreen: React.FC = () => {
         setTotalPages(totalPagesFromApi);
         setHasMore(currentPage < totalPagesFromApi);
       }
-    } catch (err) {
-      console.error('Fetch error:', err);
+    } catch {
       setError('Tidak dapat terhubung ke server.');
       if (!isLoadMore) setHistory([]);
     }
@@ -189,7 +185,6 @@ const AESMyHistoryScreen: React.FC = () => {
           name: 'close_agenda.jpg',
         });
       }
-      console.log(formData);
       const res = await fetch(`${API_BASE_URL.onedh}/CloseAgenda`, {
         method: 'POST',
         headers: {
@@ -213,11 +208,9 @@ const AESMyHistoryScreen: React.FC = () => {
           topOffset: 40,
         });
 
-        // Tutup modal dan reset photo
         setShowCloseModal(false);
         setPhoto(null);
 
-        // Delay sedikit biar toast muncul
         setTimeout(() => {
           navigation.replace('AESMyHistory');
         }, 500);
@@ -231,8 +224,7 @@ const AESMyHistoryScreen: React.FC = () => {
           topOffset: 40,
         });
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -257,18 +249,13 @@ const AESMyHistoryScreen: React.FC = () => {
       let json;
       try {
         json = JSON.parse(text);
-      } catch (e) {
-        throw new Error('Response bukan JSON. Cek API backend.');
-      }
+      } catch {}
 
       if (!response.ok) {
-        console.error('Fetch Guest Gagal:', json);
         return;
       }
       setGuestList(json.data || []);
-    } catch (err) {
-      console.error('Fetch Guest Error:', err);
-    }
+    } catch {}
   };
 
   const onRefresh = () => {
@@ -328,7 +315,7 @@ const AESMyHistoryScreen: React.FC = () => {
             style={styles.viewGuestButton}
             onPress={() => {
               setSelectedItem(item);
-              fetchGuest(item.code); // ambil data berdasarkan code agenda
+              fetchGuest(item.code);
               setShowViewGuestModal(true);
             }}>
             <Text style={styles.buttonText}>View Guest</Text>
@@ -341,7 +328,7 @@ const AESMyHistoryScreen: React.FC = () => {
             style={styles.viewGuestButton}
             onPress={() => {
               setSelectedItem(item);
-              fetchGuest(item.code); // ambil data berdasarkan code agenda
+              fetchGuest(item.code);
               setShowViewGuestModal(true);
             }}>
             <Text style={styles.buttonText}>View Guest</Text>
@@ -433,7 +420,7 @@ const AESMyHistoryScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => {
                 setSearch('');
-                fetchHistory(false, true); // param kedua tanda reset search
+                fetchHistory(false, true);
               }}>
               <Icon name="close-circle" size={20} color="#888" />
             </TouchableOpacity>
@@ -529,7 +516,6 @@ const AESMyHistoryScreen: React.FC = () => {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Daftar Peserta</Text>
 
-            {/* Header Tabel */}
             <View
               style={{
                 flexDirection: 'row',
@@ -542,9 +528,8 @@ const AESMyHistoryScreen: React.FC = () => {
               <Text style={{flex: 2, fontWeight: 'bold'}}>Posisi</Text>
             </View>
 
-            {/* Isi Tabel */}
             <FlatList
-              style={{maxHeight: 300}} // supaya bisa scroll
+              style={{maxHeight: 300}}
               data={guestList}
               keyExtractor={(item, index) => item.id ?? index.toString()}
               renderItem={({item}) => (

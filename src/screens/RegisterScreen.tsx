@@ -25,7 +25,6 @@ export default function RegisterScreen() {
   const navigation = useNavigation();
   const {refreshContext} = useSiteContext();
 
-  // Fetch data site dari API
   useEffect(() => {
     const fetchSites = async () => {
       try {

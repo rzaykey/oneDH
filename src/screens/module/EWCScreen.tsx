@@ -38,8 +38,7 @@ const EWCScreen = ({navigation}: any) => {
         });
 
         setMenus(filtered);
-      } catch (error) {
-        console.log('Gagal memuat role:', error);
+      } catch {
       }
     };
 

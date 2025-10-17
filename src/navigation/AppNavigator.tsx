@@ -2,14 +2,10 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {RootStackParamList} from './types';
 
-// Import semua screens yang kamu gunakan
 import AuthLoadingScreen from '../screens/AuthLoadingScreen';
 import UpdatePassword from '../screens/UpdatePasswordScreen';
 import LoginScreen from '../screens/LoginScreen';
 import Register from '../screens/RegisterScreen';
-// import FullDashboard from '../screens/FullDashboard';
-// import AdminDashboard from '../screens/AdminDashboard';
-// import TrainerDashboard from '../screens/TrainerDashboard';
 import Data from '../screens/otpd/mentoring/Data';
 import TrainHours from '../screens/otpd/trainhours/TrainHours';
 import EditDataMentoring from '../screens/otpd/mentoring/EditDataMentoring';
@@ -46,7 +42,6 @@ import EditPresentAESScreen from '../screens/aes/EditPresentAESScreen';
 import CreateGuestAESScreen from '../screens/aes/CreateGuestAESScreen';
 import MasterCacheScreen from '../screens/MasterCacheScreen';
 
-// Stack inisialisasi dengan tipe RootStackParamList
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => (

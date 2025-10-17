@@ -5,12 +5,12 @@ export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 10, // Atur sesuai kebutuhan
+    paddingTop: 10,
   },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 180, // Sedikit dikurangi dari 200 agar lebih proporsional
+    height: 180,
     marginBottom: 10,
     marginTop: 100,
   },
@@ -38,9 +38,9 @@ export const loginStyles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     marginBottom: 8,
-    width: '90%', // Atur lebar relatif, atau ganti ke maxWidth
-    maxWidth: 340, // Biar tidak lebih dari 340px
-    alignSelf: 'center', // Agar input center di parent
+    width: '90%',
+    maxWidth: 340,
+    alignSelf: 'center',
   },
   input: {
     flex: 1,

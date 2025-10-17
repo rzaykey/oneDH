@@ -143,7 +143,7 @@ export const createP2HStyles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#6b7280', // abu-abu soft
+    color: '#6b7280', 
     fontWeight: '500',
   },
   content: {
@@ -152,7 +152,7 @@ export const createP2HStyles = StyleSheet.create({
   subtitle: {
     marginTop: 4,
     fontSize: 12,
-    color: '#6b7280', // lighter gray
+    color: '#6b7280',
   },
   containerLoading: {
     flex: 1,
@@ -164,7 +164,7 @@ export const createP2HStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    gap: 16, // Jika React Native >= 0.71
+    gap: 16, 
   },
   inputContainer: {
     flex: 1,

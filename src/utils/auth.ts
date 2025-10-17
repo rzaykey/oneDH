@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Simpan seluruh response login
 export const saveSession = async (loginResponse: any) => {
   await AsyncStorage.setItem('loginCache', JSON.stringify(loginResponse));
 };
@@ -15,7 +14,7 @@ export const getSession = async () => {
 };
 export const getAuthHeader = async () => {
   const session = await getSession();
-  const token = session?.token; // atau sesuaikan dengan key token kamu
+  const token = session?.token;
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,

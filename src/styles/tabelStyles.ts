@@ -39,7 +39,6 @@ export const tabelStyles = {
     color: '#2463EB',
     fontSize: 15,
     paddingVertical: 5,
-    // textAlign: 'center',
   },
   cardExpanded: {
     backgroundColor: '#f1f8ff',
@@ -167,7 +166,7 @@ export const tabelStyles = {
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#6b7280', // abu-abu soft
+    color: '#6b7280', 
     fontWeight: '500',
   },
   content: {
@@ -176,7 +175,7 @@ export const tabelStyles = {
   subtitle: {
     marginTop: 4,
     fontSize: 12,
-    color: '#6b7280', // lighter gray
+    color: '#6b7280',
   },
   containerLoading: {
     flex: 1,

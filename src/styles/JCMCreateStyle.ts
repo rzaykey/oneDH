@@ -162,7 +162,7 @@ export const JCMCreateStyle = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
     marginTop: 12,
-    marginHorizontal: 12, // biar sejajar dengan card/form lainnya
+    marginHorizontal: 12, 
   },
 
   flatButtonWide: {
@@ -199,7 +199,7 @@ export const JCMCreateStyle = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    gap: 16, // Jika React Native >= 0.71
+    gap: 16,
   },
   inputContainer: {
     flex: 1,
@@ -208,7 +208,7 @@ export const JCMCreateStyle = StyleSheet.create({
     padding: 10,
     backgroundColor: '#2563eb',
     borderRadius: 6,
-    marginHorizontal: 24, // biar konsisten dengan tombol lain
+    marginHorizontal: 24, 
     margin: 5,
   },
   refreshButtonText: {

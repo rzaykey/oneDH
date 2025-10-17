@@ -83,7 +83,6 @@ export const jcmStyles = StyleSheet.create({
     fontWeight: '400',
   },
 
-  // Tambahan untuk modal
   modal: {
     justifyContent: 'center',
     alignItems: 'center',

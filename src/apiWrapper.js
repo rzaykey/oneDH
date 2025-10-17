@@ -17,7 +17,7 @@ export async function initBaseUrls() {
       }
     }
     if (!SELECTED_BASE_URL[key]) {
-      SELECTED_BASE_URL[key] = urls[0]; // fallback to first anyway
+      SELECTED_BASE_URL[key] = urls[0];
     }
   }
 }

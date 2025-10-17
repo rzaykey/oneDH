@@ -84,8 +84,7 @@ const JCMScreen = ({navigation}: any) => {
 
         const userPermit = getModulePermit(roles, site, 'JCM');
         setPermit(userPermit);
-      } catch (error) {
-        console.log('Gagal memuat data izin:', error);
+      } catch  {
       }
     };
 
@@ -165,7 +164,6 @@ const JCMScreen = ({navigation}: any) => {
           })}
         </ScrollView>
 
-        {/* Modal Tunggal */}
         <Modal
           isVisible={modalVisible}
           onBackdropPress={() => setModalVisible(false)}

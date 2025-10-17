@@ -89,7 +89,7 @@ export const agendaFormStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    gap: 16, // Jika React Native >= 0.71
+    gap: 16,
   },
   inputContainer: {
     flex: 1,

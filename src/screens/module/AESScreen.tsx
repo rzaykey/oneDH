@@ -31,7 +31,6 @@ const fullMenu = [
   },
 ];
 
-// Fungsi pengecekan apakah user adalah Admin HSE
 const isAdminHSE = (role: any[], user: any, activeSite: string): boolean => {
   return !!role.find(
     r =>
@@ -65,8 +64,7 @@ const AESScreen = ({navigation}: any) => {
         });
 
         setMenus(filtered);
-      } catch (error) {
-        console.log('Gagal memuat role:', error);
+      } catch {
       }
     };
 
@@ -86,7 +84,6 @@ const AESScreen = ({navigation}: any) => {
     if (!selectedMenu) return;
     setModalVisible(false);
 
-    // Tentukan screen tujuan berdasarkan menu dan peran
     let targetScreen = selectedMenu.screen;
 
     if (selectedMenu.id === 'input') {

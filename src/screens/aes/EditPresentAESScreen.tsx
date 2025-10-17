@@ -51,7 +51,6 @@ export default function EditPresentAESScreen({route, navigation}) {
 
   const isDisabled = agenda?.status === 'Close';
 
-  // Field dari JSON
   const [title, setTitle] = useState('');
   const [fidSite, setFidSite] = useState('');
   const [fidCategory, setFidCategory] = useState('');
@@ -65,7 +64,6 @@ export default function EditPresentAESScreen({route, navigation}) {
   const [datestart, setDatestart] = useState(new Date());
   const [datefinish, setDatefinish] = useState(new Date());
 
-  // UI state
   const [saving, setSaving] = useState(false);
   const [collapsedDetail, setCollapsedDetail] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -97,31 +95,28 @@ export default function EditPresentAESScreen({route, navigation}) {
     try {
       const headers = await getAuthHeader();
 
-      // Ambil cache dari AsyncStorage
       const [deptCache, siteCache, categoryCache] = await Promise.all([
         AsyncStorage.getItem('master_dept'),
         AsyncStorage.getItem('master_site'),
         AsyncStorage.getItem('master_category'),
       ]);
 
-      // Parse cache jika ada
       let deptData = deptCache ? JSON.parse(deptCache) : null;
       let siteData = siteCache ? JSON.parse(siteCache) : null;
       let categoryData = categoryCache ? JSON.parse(categoryCache) : null;
 
-      // Ambil data dari API jika cache kosong atau tidak valid
       if (!Array.isArray(deptData)) {
         const res = await fetch(`${API_BASE_URL.onedh}/GetDept`, {headers});
         const json = await res.json();
         deptData = Array.isArray(json) ? json : json?.data || [];
-        await AsyncStorage.setItem('master_dept', JSON.stringify(deptData)); // update cache
+        await AsyncStorage.setItem('master_dept', JSON.stringify(deptData));
       }
 
       if (!Array.isArray(siteData)) {
         const res = await fetch(`${API_BASE_URL.onedh}/GetSite`, {headers});
         const json = await res.json();
         siteData = Array.isArray(json) ? json : json?.data || [];
-        await AsyncStorage.setItem('master_site', JSON.stringify(siteData)); // update cache
+        await AsyncStorage.setItem('master_site', JSON.stringify(siteData));
       }
 
       if (!Array.isArray(categoryData)) {
@@ -131,10 +126,9 @@ export default function EditPresentAESScreen({route, navigation}) {
         await AsyncStorage.setItem(
           'master_category',
           JSON.stringify(categoryData),
-        ); // update cache
+        );
       }
 
-      // Set state dengan aman
       setDepartments(
         deptData.map(d => ({
           label: d?.department_name ?? '',
@@ -155,9 +149,7 @@ export default function EditPresentAESScreen({route, navigation}) {
           value: c?.id != null ? String(c.id) : '',
         })),
       );
-    } catch (e) {
-      console.log('❌ Gagal ambil master data:', e);
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -199,7 +191,15 @@ export default function EditPresentAESScreen({route, navigation}) {
         setAgenda(agenda);
       }
     } catch (err) {
-      console.log('❌ Gagal ambil detail agenda:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Memuat Data',
+        text2:
+          'Terjadi kesalahan saat memuat detail agenda. Silakan coba lagi.',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: 50,
+      });
     }
     setLoading(false);
   };
@@ -222,7 +222,6 @@ export default function EditPresentAESScreen({route, navigation}) {
         jdeno: fid_presenter,
         company,
       };
-      console.log(payload);
 
       const res = await fetch(`${API_BASE_URL.onedh}/EditAgenda`, {
         method: 'POST',
@@ -253,7 +252,6 @@ export default function EditPresentAESScreen({route, navigation}) {
         });
       }
     } catch (error) {
-      console.error('❌ Error updateAgenda:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -303,9 +301,9 @@ export default function EditPresentAESScreen({route, navigation}) {
                 <>
                   <QRCode
                     value={code_agenda}
-                    size={180} // ukuran QR
-                    color="#000" // warna QR
-                    backgroundColor="#fff" // warna background
+                    size={180}
+                    color="#000"
+                    backgroundColor="#fff"
                   />
                   <Text
                     style={{marginTop: 10, fontSize: 16, fontWeight: '600'}}>
@@ -318,7 +316,6 @@ export default function EditPresentAESScreen({route, navigation}) {
             </View>
           </CollapsibleCard>
 
-          {/* Detail Agenda */}
           <CollapsibleCard
             title="Info Umum"
             collapsed={collapsedGeneral}
@@ -443,7 +440,6 @@ export default function EditPresentAESScreen({route, navigation}) {
             ) : (
               <Text style={{color: '#999'}}>Tidak ada foto penutupan</Text>
             )}
-            {/* Modal Fullscreen */}
             <Modal
               animationType="fade"
               transparent={true}
@@ -465,10 +461,8 @@ export default function EditPresentAESScreen({route, navigation}) {
             title="Tanggal & Waktu"
             collapsed={collapsedTime}
             onToggle={() => toggleCollapse(setCollapsedTime)}>
-            {/* Tanggal Mulai */}
             <Text style={styles.label}>Tanggal Mulai</Text>
             <View style={styles.row}>
-              {/* Tanggal */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -497,7 +491,6 @@ export default function EditPresentAESScreen({route, navigation}) {
                 )}
               </View>
 
-              {/* Jam */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
@@ -525,10 +518,8 @@ export default function EditPresentAESScreen({route, navigation}) {
               </View>
             </View>
 
-            {/* Tanggal Selesai */}
             <Text style={styles.label}>Tanggal Selesai</Text>
             <View style={styles.row}>
-              {/* Tanggal */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -557,7 +548,6 @@ export default function EditPresentAESScreen({route, navigation}) {
                 )}
               </View>
 
-              {/* Jam */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button

@@ -15,7 +15,6 @@ export const getAndCacheMaster = async (key, url, token, dataPath = 'data') => {
       await AsyncStorage.setItem(key, JSON.stringify(master));
       return master;
     } catch (err) {
-      // fallback ke cache
       const cache = await AsyncStorage.getItem(key);
       if (cache) master = JSON.parse(cache);
     }

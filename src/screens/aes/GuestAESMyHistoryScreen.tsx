@@ -44,9 +44,8 @@ const GuestItem: React.FC<GuestItemProps> = ({item, navigation}) => {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.83}
-      onPress={() => setExpanded(!expanded)} // toggle expand/collapse
+      onPress={() => setExpanded(!expanded)}
     >
-      {/* Kode agenda & nama tamu */}
       <View style={styles.headerRow}>
         <Text style={styles.unitTextCode}>{item.code_agenda}</Text>
         <Text style={styles.unitText}>{item.judul}</Text>
@@ -62,7 +61,6 @@ const GuestItem: React.FC<GuestItemProps> = ({item, navigation}) => {
           {dayjs(item.end).format('DD MMM YYYY HH:mm')}
         </Text>
       </View>
-      {/* Detail muncul kalau expanded */}
       {expanded && (
         <>
           <View style={styles.headerRow}>
@@ -196,7 +194,6 @@ const GuestAESMyHistoryScreen: React.FC = () => {
     fetchHistory();
   };
 
-  // **RENDER ITEM PAKAI GuestItem**
   const renderItem = ({item}: {item: EASGuestItem}) => (
     <GuestItem item={item} navigation={navigation} />
   );

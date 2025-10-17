@@ -6,7 +6,7 @@ import ModulScreen from '../screens/ModulScreen';
 import AccountScreen from '../screens/AccountScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {View, Text} from 'react-native';
-import {tabBarStyles as styles} from '../styles/tabBarStyles'; // GUNAKAN styles
+import {tabBarStyles as styles} from '../styles/tabBarStyles';
 
 const Tab = createBottomTabNavigator();
 

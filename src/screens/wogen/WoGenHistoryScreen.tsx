@@ -21,8 +21,8 @@ import {JCMItem} from '../../navigation/types';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
-import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan paket ini sudah diinstall
-import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
+import DateTimePicker from '@react-native-community/datetimepicker';
+import {getAuthHeader} from '../../utils/auth';
 import Toast from 'react-native-toast-message';
 import dayjs from 'dayjs';
 
@@ -53,8 +53,6 @@ const WoGenHistoryScreen: React.FC = () => {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
   const {user, activeSite} = useSiteContext();
   const [ddlStatus, setDdlStatus] = useState('RFU');
   const [remark, setRemark] = useState('');
@@ -63,11 +61,11 @@ const WoGenHistoryScreen: React.FC = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
-    fetchHistory(false, 1); // awal muat
+    fetchHistory(false, 1);
   }, [activeSite, user?.jdeno]);
 
   useEffect(() => {
-    fetchHistory(false, 1); // saat limit berubah
+    fetchHistory(false, 1);
   }, [limit]);
 
   const fetchHistory = async (isLoadMore = false, forcedPage = 1) => {
@@ -85,15 +83,15 @@ const WoGenHistoryScreen: React.FC = () => {
     const params = new URLSearchParams({
       page: String(currentPage),
       limit: String(limit),
-      search,
+      search: search || '',
     });
 
     try {
       const cache = await AsyncStorage.getItem('loginCache');
-      const token = cache && JSON.parse(cache)?.token;
+      const token = cache ? JSON.parse(cache)?.token : null;
 
       if (!token) {
-        setError('Session habis. Silakan login ulang.');
+        setError('Sesi berakhir. Silakan login ulang.');
         setHistory([]);
         return;
       }
@@ -103,33 +101,27 @@ const WoGenHistoryScreen: React.FC = () => {
       });
 
       const json = await response.json();
+      const success = response.ok && json?.data;
 
-      if (!response.ok) {
-        setError(json?.message || 'Gagal mengambil data.');
-        setHistory([]);
-      } else {
-        const data: JCMItem[] = json.data || [];
-        const totalPagesFromApi = json?.last_page || 1;
-
-        if (isLoadMore) {
-          setHistory(prev => [...prev, ...data]);
-          setPage(currentPage);
-        } else {
-          setHistory(data);
-          setPage(currentPage);
-        }
-
-        setTotalPages(totalPagesFromApi);
-        setHasMore(currentPage < totalPagesFromApi);
-        if (!isLoadMore) {
-          Toast.show({
-            type: 'success',
-            text1: 'Data Diperbarui',
-            text2: `Menampilkan halaman ${totalPagesFromApi}`,
-          });
-        }
+      if (!success) {
+        setError(json?.message || 'Gagal mengambil data dari server.');
+        if (!isLoadMore) setHistory([]);
+        return;
       }
-    } catch (err) {
+
+      const data: JCMItem[] = json.data || [];
+      const totalPagesFromApi = Number(json?.last_page || 1);
+
+      if (isLoadMore) {
+        setHistory(prev => [...prev, ...data]);
+      } else {
+        setHistory(data);
+      }
+
+      setPage(currentPage);
+      setTotalPages(totalPagesFromApi);
+      setHasMore(currentPage < totalPagesFromApi);
+    } catch {
       setError('Tidak dapat terhubung ke server.');
       if (!isLoadMore) setHistory([]);
     } finally {
@@ -149,13 +141,12 @@ const WoGenHistoryScreen: React.FC = () => {
 
   useEffect(() => {
     if (showCloseModal && selectedItem) {
-      // Set nilai default jika belum ada
       setDdlStatus(selectedItem?.status || 'Open');
       setSelectedDate(new Date(selectedItem?.tanggal || Date.now()));
       setRemark(selectedItem?.remark || '');
 
-      const tanggal = selectedItem.tanggal_selesai; // e.g. "2025-07-03"
-      const jam = selectedItem.waktu_selesai; // e.g. "14:30:00"
+      const tanggal = selectedItem.tanggal_selesai;
+      const jam = selectedItem.waktu_selesai;
 
       if (tanggal && jam) {
         const combined = new Date(`${tanggal}T${jam}`);
@@ -163,7 +154,7 @@ const WoGenHistoryScreen: React.FC = () => {
           setSelectedDate(combined);
         }
       } else {
-        setSelectedDate(new Date()); // fallback ke waktu sekarang
+        setSelectedDate(new Date());
       }
     }
   }, [showCloseModal, selectedItem]);
@@ -191,20 +182,20 @@ const WoGenHistoryScreen: React.FC = () => {
         jam: dayjs(selectedDate).format('HH:mm:ss'),
         remark,
       };
+
       const response = await fetch(`${API_URL_CT}`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
       });
 
-      const text = await response.text(); // ✅ Baca hanya sekali
+      const text = await response.text();
       let resJson: any = {};
       let rawMessage = '';
 
       try {
         resJson = JSON.parse(text);
-      } catch (e) {
-        console.error('❌ Response bukan JSON, ini HTML/text:', text);
+      } catch {
         Toast.show({
           type: 'error',
           text1: 'Server Error',
@@ -224,7 +215,7 @@ const WoGenHistoryScreen: React.FC = () => {
         });
 
         setShowCloseModal(false);
-        fetchHistory(false, 1); // Refresh
+        fetchHistory(false, 1);
       } else {
         Toast.show({
           type: 'error',
@@ -235,8 +226,7 @@ const WoGenHistoryScreen: React.FC = () => {
       }
 
       setLoading(false);
-    } catch (err) {
-      console.error('❌ Submit Close Pekerjaan error:', err);
+    } catch {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -254,7 +244,6 @@ const WoGenHistoryScreen: React.FC = () => {
         style={styles.card}
         activeOpacity={0.83}
         onPress={() => setExpandedId(isExpanded ? null : Number(item.id))}>
-        {/* Header Section */}
         <View style={styles.headerRow}>
           <Text style={styles.unitText}>{item.unitno}</Text>
           <Text style={styles.siteLabel}>
@@ -262,10 +251,8 @@ const WoGenHistoryScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Task Description */}
         <Text style={styles.modelText}>{item.task_desc}</Text>
 
-        {/* Mekanik Info */}
         <View style={styles.row}>
           <Icon name="person-circle-outline" size={17} color="#4886E3" />
           <Text style={styles.driverName}>
@@ -273,7 +260,6 @@ const WoGenHistoryScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Tanggal & Waktu */}
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
             Mulai: {item.tanggal_mulai} {item.waktu_mulai}
@@ -285,7 +271,6 @@ const WoGenHistoryScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Badges */}
         <View style={styles.badgeRow}>
           <Badge label={`Durasi: ${item.durasi}`} color="#2196F3" />
           <Badge label={`Status: ${item.status}`} color="#4CAF50" />
@@ -296,14 +281,11 @@ const WoGenHistoryScreen: React.FC = () => {
             color="#af9d4cff"
           />
         </View>
-        {/* Extra Info */}
         <Text style={styles.ketValue}>
           Pengawas: {item.nama_pengawas}- {item.jde_pengawas}
         </Text>
-        {/* Expanded Details */}
         {isExpanded && (
           <>
-            {/* Remark Section */}
             <View style={styles.keteranganRow}>
               <Text style={styles.ketLabel}>Remark:</Text>
               <Text style={styles.ketValue} numberOfLines={0}>
@@ -331,7 +313,7 @@ const WoGenHistoryScreen: React.FC = () => {
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,
@@ -464,7 +446,6 @@ const WoGenHistoryScreen: React.FC = () => {
               <Text style={styles.modalTitle}>
                 Konfirmasi Close {selectedItem?.wono}?
               </Text>
-              {/* Informasi Unit dan Task */}
               <Text style={styles.modalLabel}>
                 Unit: {selectedItem?.unitno}
               </Text>
@@ -474,10 +455,8 @@ const WoGenHistoryScreen: React.FC = () => {
               <Text style={styles.modalLabel}>
                 WO Task Desc: {selectedItem?.task_desc}
               </Text>
-              {/* Tanggal & Jam dalam Satu Row */}
               <Text style={styles.modalLabel}>Tanggal & Jam:</Text>
               <View style={styles.dateTimeRow}>
-                {/* Tanggal */}
                 <TouchableOpacity
                   style={styles.dateTimeBox}
                   onPress={() => setShowDatePicker(true)}>
@@ -490,7 +469,6 @@ const WoGenHistoryScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Jam */}
                 <TouchableOpacity
                   style={styles.dateTimeBox}
                   onPress={() => setShowTimePicker(true)}>
@@ -502,7 +480,6 @@ const WoGenHistoryScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
-              {/* Pickers */}
               {showDatePicker && (
                 <DateTimePicker
                   value={selectedDate}
@@ -547,7 +524,6 @@ const WoGenHistoryScreen: React.FC = () => {
                   }}
                 />
               )}
-              {/* Remark */}
               <Text style={styles.modalLabel}>Remark:</Text>
               <TextInput
                 style={styles.textInput}
@@ -556,7 +532,6 @@ const WoGenHistoryScreen: React.FC = () => {
                 value={remark}
                 onChangeText={setRemark}
               />
-              {/* Tombol Aksi */}
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
                   style={styles.modalButton}

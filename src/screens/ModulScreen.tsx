@@ -13,7 +13,7 @@ const CARD_SIZE = (Dimensions.get('window').width - 54) / 2;
 const MODULE_TO_SCREEN: Record<string, string> = {
   P2H: 'P2HScreen',
   JCM: 'JCMScreen',
-  // MOP: 'MOPScreen',
+  MOP: 'MOPScreen',
   EAS: 'AESScreen',
   EWC: 'EWCScreen',
 };
@@ -89,11 +89,7 @@ const ModuleScreen: React.FC = () => {
       style={{flex: 1}}
       start={{x: 3, y: 3}}
       end={{x: 1, y: 0}}>
-      <SafeAreaView
-        style={[
-          styles.safeContainer,
-          // {paddingTop: insets.top + 8, paddingBottom: insets.bottom}, // biar kiri-kanan lebih lega
-        ]}>
+      <SafeAreaView style={[styles.safeContainer]}>
         <Text style={styles.sectionTitle}>
           Aplikasi Untuk Site:{' '}
           <Text style={{color: '#29436e'}}>{activeSite}</Text>

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 import {dashboardStyles as styles} from '../styles/dashboardStyles';
 import {useSiteContext} from '../context/SiteContext';
 import LinearGradient from 'react-native-linear-gradient';
-import {cacheAllMasterData} from '../utils/cacheAllMasterData'; // path ke fungsi kamu
+import {cacheAllMasterData} from '../utils/cacheAllMasterData';
 import {
   pushOfflineQueue,
   getOfflineQueueCount,
@@ -32,6 +32,7 @@ import moment from 'moment';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import {Buffer} from 'buffer';
+import {unsubscribeFromTopics} from '../utils/firebase';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_p2h';
 const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.onedh';
@@ -55,20 +56,9 @@ const getAuthHeader = async () => {
   };
 };
 
-const carouselData = [
-  {id: '1', text: 'Sed viverra nibh eget tincidunt convallis...'},
-  {
-    id: '2',
-    text: 'Pengumuman: Maintenance server 25 Juni 2025 pukul 02:00 - 04:00 WIB.',
-  },
-  {id: '3', text: 'Promo! Update aplikasi untuk fitur terbaru OTPD.'},
-];
-
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const carouselRef = useRef<FlatList<any>>(null);
   const insets = useSafeAreaInsets();
   const [refreshingMaster, setRefreshingMaster] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -80,7 +70,7 @@ const DashboardScreen: React.FC = () => {
   const [pdfs, setPdfs] = useState<PdfItem[]>([]);
 
   useEffect(() => {
-    cacheAllMasterData(); // tidak perlu await
+    cacheAllMasterData();
   }, []);
 
   const isOutdated = (latest, current) => {
@@ -93,7 +83,6 @@ const DashboardScreen: React.FC = () => {
     return false;
   };
 
-  // Ambil semua dari context!
   const {activeSite, setActiveSite, sites, user, setSites, setRoles, setUser} =
     useSiteContext();
 
@@ -125,7 +114,6 @@ const DashboardScreen: React.FC = () => {
       }
     });
 
-    // Jalankan juga sekali saat mount
     NetInfo.fetch().then(state => {
       if (state.isConnected) {
         setSyncing(true);
@@ -147,19 +135,6 @@ const DashboardScreen: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Carousel auto scroll
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex(prev => {
-        const next = prev + 1 >= carouselData.length ? 0 : prev + 1;
-        carouselRef.current?.scrollToIndex({index: next, animated: true});
-        return next;
-      });
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Ganti site, ambil site list dari AsyncStorage (fresh)
   const handleGantiSite = async () => {
     try {
       const data = await AsyncStorage.getItem('loginCache');
@@ -206,7 +181,6 @@ const DashboardScreen: React.FC = () => {
     try {
       await cacheAllMasterData();
 
-      // ✅ Toast sukses
       Toast.show({
         type: 'success',
         text1: 'Berhasil',
@@ -216,7 +190,6 @@ const DashboardScreen: React.FC = () => {
         topOffset: 50,
       });
     } catch (err) {
-      // ❌ Toast gagal
       Toast.show({
         type: 'error',
         text1: 'Gagal',
@@ -230,36 +203,42 @@ const DashboardScreen: React.FC = () => {
     }
   };
 
-  // Logout, reset semua context state juga
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('loginCache');
-    await AsyncStorage.removeItem('activeSite');
-    await AsyncStorage.multiRemove([
-      'loginCache',
-      'activeSite',
-      'token',
-      'userData',
-    ]);
-    setActiveSite(null);
-    setRoles([]);
-    setSites([]);
-    setUser(null);
+    try {
+      const cache = await AsyncStorage.getItem('loginCache');
+      const userData = cache ? JSON.parse(cache) : null;
 
-    // ✅ Tampilkan notifikasi logout
-    Toast.show({
-      type: 'success',
-      text1: 'Berhasil Logout',
-      text2: 'Sampai jumpa lagi!',
-      position: 'top',
-      visibilityTime: 2000,
-      topOffset: 50,
-    });
+      if (userData?.dataEmp) {
+        const {dept, site} = userData.dataEmp;
+        await unsubscribeFromTopics(dept, site);
+      }
 
-    navigation.replace('Login');
+      await AsyncStorage.multiRemove([
+        'loginCache',
+        'activeSite',
+        'token',
+        'userData',
+      ]);
+
+      setActiveSite(null);
+      setRoles([]);
+      setSites([]);
+      setUser(null);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil Logout',
+        text2: 'Sampai jumpa lagi!',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
+
+      navigation.replace('Login');
+    } catch (error) {
+    }
   };
-  4100;
 
-  // Site chip (highlight active, bisa tap)
   const handleSiteSelect = (site: string) => {
     setActiveSite(site);
     Toast.show({
@@ -269,7 +248,6 @@ const DashboardScreen: React.FC = () => {
     });
   };
 
-  //Version
   const checkVersion = async () => {
     try {
       const currentVersion = DeviceInfo.getVersion().trim();
@@ -352,7 +330,7 @@ const DashboardScreen: React.FC = () => {
     setLoadingAbsensi(true);
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     try {
       const cache = await AsyncStorage.getItem('loginCache');
@@ -363,7 +341,7 @@ const DashboardScreen: React.FC = () => {
       if (!token || !username) {
         Toast.show({
           type: 'info',
-          text1: 'Session tidak lengkap',
+          text1: 'Data tidak lengkap',
           text2: 'Silakan login ulang.',
         });
         setAbsensiToday(null);
@@ -398,7 +376,6 @@ const DashboardScreen: React.FC = () => {
 
       const json = await response.json();
       if (!json || !json.absen) {
-        // throw new Error('Response tidak sesuai format');
       }
 
       const firstData = Array.isArray(json.absen) ? json.absen[0] : json.absen;
@@ -407,20 +384,12 @@ const DashboardScreen: React.FC = () => {
         JSON.stringify(prev) === JSON.stringify(firstData) ? prev : firstData,
       );
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        Toast.show({
-          type: 'error',
-          text1: 'Gagal Memuat Absensi',
-          text2: err?.message ?? 'Terjadi kesalahan.',
-        });
-      }
       setAbsensiToday(null);
     } finally {
       setLoadingAbsensi(false);
     }
   }, []);
 
-  // Fetch PDF list for today
   const fetchPdfList = useCallback(async () => {
     try {
       setLoading(true);
@@ -467,12 +436,6 @@ const DashboardScreen: React.FC = () => {
       } else {
         setPdfs([]);
       }
-    } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Gagal memuat PDF',
-        text2: err.message,
-      });
     } finally {
       setLoading(false);
     }
@@ -493,7 +456,6 @@ const DashboardScreen: React.FC = () => {
       if (!token) {
         Toast.show({
           type: 'info',
-          text1: 'Session tidak lengkap',
           text2: 'Silakan login ulang.',
         });
         return;
@@ -512,7 +474,6 @@ const DashboardScreen: React.FC = () => {
         : `${safeFileName}.${extension}`;
       const localPath = `${folderPath}/${finalFileName}`;
 
-      // Jika sudah ada → langsung buka
       if (await RNFS.exists(localPath)) {
         return openWithFallback(localPath, String(fileItem.id));
       }
@@ -537,7 +498,6 @@ const DashboardScreen: React.FC = () => {
 
       await RNFS.writeFile(localPath, base64Data, 'base64');
 
-      // Simpan info untuk auto-hapus besok
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 1);
       await AsyncStorage.setItem('fileExpiry', expiry.toISOString());
@@ -545,11 +505,6 @@ const DashboardScreen: React.FC = () => {
 
       return openWithFallback(localPath, String(fileItem.id));
     } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Tidak dapat membuka file',
-        text2: 'Membuka di browser sebagai alternatif...',
-      });
       setTimeout(() => {
         Linking.openURL(`${API_BASE_URL.onedh}/P5M/GetPdf?id=${fileItem.id}`);
       }, 1500);
@@ -562,8 +517,7 @@ const DashboardScreen: React.FC = () => {
     } catch (err) {
       Toast.show({
         type: 'error',
-        text1: 'Tidak ada aplikasi pembaca',
-        text2: 'Membuka file via browser...',
+        text2: 'Mendownload file via browser...',
       });
       setTimeout(() => {
         Linking.openURL(`${API_BASE_URL.onedh}/P5M/GetPdf?id=${id}`);
@@ -585,32 +539,6 @@ const DashboardScreen: React.FC = () => {
     checkVersion();
   }, []);
 
-  const SiteChip: React.FC<{
-    site: string;
-    activeSite: string;
-    onPress: (site: string) => void;
-  }> = ({site, activeSite, onPress}) => (
-    <TouchableOpacity
-      onPress={() => onPress(site)}
-      style={[styles.siteChip, activeSite === site && styles.siteChipActive]}>
-      <Text
-        style={[
-          styles.siteChipText,
-          activeSite === site && styles.siteChipTextActive,
-        ]}>
-        {site}
-      </Text>
-      {activeSite === site && (
-        <Icon
-          name="checkmark-circle"
-          size={15}
-          color="#3498db"
-          style={{marginLeft: 3}}
-        />
-      )}
-    </TouchableOpacity>
-  );
-
   return (
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
@@ -619,7 +547,6 @@ const DashboardScreen: React.FC = () => {
       end={{x: 1, y: 0}}>
       <SafeAreaView style={{flex: 1}}>
         <View style={styles.container}>
-          {/* HEADER */}
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.greeting}>
@@ -636,14 +563,11 @@ const DashboardScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* PROFILE CARD */}
           <View style={styles.profileCard}>
             <Icon name="person-circle" size={64} color="#2463EB" />
             <View style={{marginLeft: 12, flex: 1}}>
-              {/* Nama + Posisi di atas */}
               <Text style={styles.profileName}>{user?.name ?? 'User'}</Text>
 
-              {/* Baris Info */}
               <View style={styles.profileInfoRow}>
                 <Text style={styles.profileInfo}>
                   JDE: {user?.jdeno ?? '-'}
@@ -665,7 +589,6 @@ const DashboardScreen: React.FC = () => {
                   Company: {user?.company ?? '-'}
                 </Text>
               </View>
-              {/* Site List */}
               <View style={styles.siteRow}>
                 <Text style={styles.siteLabel}>Site:</Text>
                 {sites.length > 0 ? (
@@ -698,7 +621,6 @@ const DashboardScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* ABSENSI WIDGET */}
           <View style={styles.absenCard}>
             {absensiToday ? (
               <>
@@ -735,7 +657,6 @@ const DashboardScreen: React.FC = () => {
             )}
           </View>
 
-          {/* QUICK ACTIONS */}
           <View style={styles.quickActions}>
             {pdfs.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -761,7 +682,6 @@ const DashboardScreen: React.FC = () => {
             )}
           </View>
 
-          {/* DROPDOWN MENU */}
           <Modal
             visible={dropdownVisible}
             transparent

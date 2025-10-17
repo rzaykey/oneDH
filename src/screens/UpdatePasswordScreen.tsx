@@ -73,11 +73,11 @@ const UpdatePassword = ({navigation}) => {
         });
 
         setTimeout(async () => {
-          await AsyncStorage.removeItem('loginCache'); // Hapus token/session
+          await AsyncStorage.removeItem('loginCache');
           await AsyncStorage.removeItem('activeSite');
           navigation.reset({
             index: 0,
-            routes: [{name: 'Login'}], // Ganti dengan nama screen login kamu
+            routes: [{name: 'Login'}],
           });
         }, 1500);
       } else {
@@ -88,7 +88,6 @@ const UpdatePassword = ({navigation}) => {
         });
       }
     } catch (error) {
-      console.error('UpdatePassword error:', error);
       Toast.show({
         type: 'error',
         text1: 'Terjadi Kesalahan',
@@ -109,7 +108,6 @@ const UpdatePassword = ({navigation}) => {
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.title}>🔒 Update Password</Text>
 
-          {/* Password Baru */}
           <Text style={styles.label}>Password Baru</Text>
           <View style={styles.inputWrapper}>
             <TextInput
@@ -129,7 +127,6 @@ const UpdatePassword = ({navigation}) => {
             </TouchableOpacity>
           </View>
 
-          {/* Konfirmasi */}
           <Text style={styles.label}>Konfirmasi Password Baru</Text>
           <View style={styles.inputWrapper}>
             <TextInput
@@ -149,7 +146,6 @@ const UpdatePassword = ({navigation}) => {
             </TouchableOpacity>
           </View>
 
-          {/* Tombol Simpan */}
           <TouchableOpacity
             style={[styles.button, loading && {opacity: 0.7}]}
             onPress={handleUpdatePassword}

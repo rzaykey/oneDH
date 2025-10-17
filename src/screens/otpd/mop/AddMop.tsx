@@ -160,7 +160,6 @@ const AddDailyActivity = () => {
           );
         }
       } catch (error) {
-        console.error('Error fetch initial data:', error);
         Alert.alert('Error', 'Terjadi kesalahan saat mengambil data awal');
       }
     };

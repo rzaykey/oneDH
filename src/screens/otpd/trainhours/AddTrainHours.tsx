@@ -345,11 +345,8 @@ const AddTrainHours = () => {
         );
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.warn('API Error:', error.response?.data || error.message);
         } else {
-          console.warn('Unexpected Error:', error);
         }
-
         Alert.alert('Gagal', 'Terjadi kesalahan saat mengirim data.');
       }
 

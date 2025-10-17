@@ -30,7 +30,6 @@ const fullMenu = [
   },
 ];
 
-// Fungsi pengecekan apakah user adalah Admin HSE
 const isAdminHSE = (role: any[], user: any, activeSite: string): boolean => {
   return !!role.find(
     r =>
@@ -63,7 +62,6 @@ const P2HScreen = ({navigation}: any) => {
 
         setMenus(filtered);
       } catch (error) {
-        console.log('Gagal memuat role:', error);
       }
     };
 

@@ -194,7 +194,7 @@ const P2HHistoryScreen: React.FC = () => {
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,

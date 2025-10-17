@@ -14,16 +14,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import {SiteProvider} from './src/context/SiteContext';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from './src/components/toastConfig'; // ⬅️ import config toast custom
+import {toastConfig} from './src/components/toastConfig';
 
-// Context providers
 import {OfflineQueueProvider} from './src/utils/OfflineQueueContext';
 import {
   MasterCacheProvider,
   MasterCacheContext,
 } from './src/utils/MasterCacheContext';
 
-// 1. Setup React Query Client & Persistence
+import {
+  requestUserPermission,
+  listenForNotifications,
+  createNotificationChannel,
+} from './src/utils/firebase';
+import notifee, {EventType} from '@notifee/react-native';
+
 const queryClient = new QueryClient();
 const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
@@ -34,19 +39,31 @@ persistQueryClient({
   persister: asyncStoragePersister,
 });
 
-// 2. Setup React Query Online/Offline Manager
 onlineManager.setEventListener(setOnline => {
   return NetInfo.addEventListener(state => {
     setOnline(Boolean(state.isConnected));
   });
 });
 
-// 3. Wrapper agar forceUpdateMaster jalan otomatis saat app start
 const AppInitWrapper = () => {
   const {forceUpdateMaster} = useContext(MasterCacheContext);
 
   useEffect(() => {
-    forceUpdateMaster();
+    const initApp = async () => {
+      forceUpdateMaster();
+      await requestUserPermission();
+      await createNotificationChannel();
+      listenForNotifications();
+
+      const unsubscribe = notifee.onForegroundEvent(({type, detail}) => {
+        if (type === EventType.PRESS) {
+        }
+      });
+
+      return unsubscribe;
+    };
+
+    initApp();
   }, []);
 
   return (
@@ -61,7 +78,6 @@ const AppInitWrapper = () => {
   );
 };
 
-// 4. Main App
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>

@@ -41,7 +41,6 @@ export const SiteProvider: React.FC<{children: React.ReactNode}> = ({
   const [roles, setRoles] = useState<any[]>([]);
   const [user, setUser] = useState<any | null>(null);
 
-  // Fungsi untuk load ulang context dari AsyncStorage
   const refreshContext = useCallback(async () => {
     const data = await AsyncStorage.getItem('loginCache');
     if (data) {
@@ -64,7 +63,6 @@ export const SiteProvider: React.FC<{children: React.ReactNode}> = ({
     }
   }, []);
 
-  // Panggil sekali saja saat app pertama kali dibuka
   useEffect(() => {
     refreshContext();
   }, [refreshContext]);

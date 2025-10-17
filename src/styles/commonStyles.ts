@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {Colors} from './colors'; // sesuaikan path
+import {Colors} from './colors'; 
 
 export const commonStyles = StyleSheet.create({
   pointsGrid: {

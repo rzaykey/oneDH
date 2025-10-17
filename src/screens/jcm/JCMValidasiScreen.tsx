@@ -50,11 +50,11 @@ const JCMOpenScreen: React.FC = () => {
   const {user, activeSite} = useSiteContext();
 
   useEffect(() => {
-    fetchHistory(false, 1); // awal muat
+    fetchHistory(false, 1);
   }, [activeSite, user?.jdeno]);
 
   useEffect(() => {
-    fetchHistory(false, 1); // saat limit berubah
+    fetchHistory(false, 1);
   }, [limit]);
 
   const fetchHistory = async (isLoadMore = false, forcedPage?: number) => {
@@ -120,7 +120,6 @@ const JCMOpenScreen: React.FC = () => {
         setTotalPages(totalPagesFromApi);
         setHasMore(currentPage < totalPagesFromApi);
 
-        // Optional: Show success toast if needed
         if (!isLoadMore) {
           Toast.show({
             type: 'success',
@@ -158,7 +157,6 @@ const JCMOpenScreen: React.FC = () => {
         style={styles.card}
         activeOpacity={0.83}
         onPress={() => setExpandedId(isExpanded ? null : Number(item.id))}>
-        {/* Header Section */}
         <View style={styles.headerRow}>
           <Text style={styles.unitText}>{item.unitno}</Text>
           <Text style={styles.siteLabel}>
@@ -166,10 +164,8 @@ const JCMOpenScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Task Description */}
         <Text style={styles.modelText}>{item.task_desc}</Text>
 
-        {/* Mekanik Info */}
         <View style={styles.row}>
           <Icon name="person-circle-outline" size={17} color="#4886E3" />
           <Text style={styles.driverName}>
@@ -177,31 +173,30 @@ const JCMOpenScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Tanggal & Waktu */}
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Mulai: {item.tanggal_mulai} {item.waktu_mulai}
+            Mulai: {item.tanggal_mulai} - {item.waktu_mulai}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Selesai: {item.tanggal_selesai} {item.waktu_selesai}
+            Selesai: {item.tanggal_selesai} - {item.waktu_selesai}
           </Text>
         </View>
 
-        {/* Badges */}
+        <View style={styles.badgeRow}>
+          <Badge label={`HM BD : ${item.hm_bd}`} color="#ff0a0aff" />
+          <Badge label={`HM RFU  : ${item.hm_rfu}`} color="#4CAF50" />
+        </View>
         <View style={styles.badgeRow}>
           <Badge label={`Durasi: ${item.durasi}`} color="#2196F3" />
           <Badge label={`Status: ${item.status}`} color="#4CAF50" />
         </View>
-        {/* Extra Info */}
         <Text style={styles.ketValue}>
           Pengawas: {item.nama_pengawas}- {item.jde_pengawas}
         </Text>
-        {/* Expanded Details */}
         {isExpanded && (
           <>
-            {/* Remark Section */}
             <View style={styles.keteranganRow}>
               <Text style={styles.ketLabel}>Remark:</Text>
               <Text style={styles.ketValue} numberOfLines={0}>
@@ -219,7 +214,7 @@ const JCMOpenScreen: React.FC = () => {
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,

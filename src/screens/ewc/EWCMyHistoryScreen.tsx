@@ -110,7 +110,6 @@ const EWCMyHistoryScreen: React.FC = () => {
               justifyContent: 'space-between',
               marginTop: 6,
             }}>
-            {/* Kolom kiri - Time In */}
             <View style={{flex: 1, alignItems: 'center'}}>
               <Icon name="log-in-outline" size={18} color="#4CAF50" />
               <Text style={[styles.labelInfo, {marginTop: 4}]}>Time In</Text>
@@ -120,7 +119,6 @@ const EWCMyHistoryScreen: React.FC = () => {
               </Text>
             </View>
 
-            {/* Kolom kanan - Time Out */}
             <View style={{flex: 1, alignItems: 'center'}}>
               <Icon name="log-out-outline" size={18} color="#F44336" />
               <Text style={[styles.labelInfo, {marginTop: 4}]}>Time Out</Text>
@@ -169,7 +167,6 @@ const EWCMyHistoryScreen: React.FC = () => {
           <Text style={styles.title}>Riwayat Absensi Bulaanan</Text>
         </View>
 
-        {/* Picker Bulan & Tahun */}
         <View
           style={[styles.limitPickerWrap, {justifyContent: 'space-between'}]}>
           <View style={{flex: 1, marginRight: 8}}>

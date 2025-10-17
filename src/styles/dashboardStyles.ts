@@ -3,7 +3,6 @@ import {StyleSheet, Platform, Dimensions} from 'react-native';
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
 export const dashboardStyles = StyleSheet.create({
-  // ================= Container & Header =================
   container: {
     flex: 1,
     paddingTop: Platform.OS === 'android' ? 8 : 0,
@@ -38,7 +37,6 @@ export const dashboardStyles = StyleSheet.create({
     zIndex: 10,
   },
 
-  // ================= Carousel =================
   carouselContainer: {
     marginTop: 18,
     marginBottom: 12,
@@ -91,7 +89,6 @@ export const dashboardStyles = StyleSheet.create({
     backgroundColor: '#222',
   },
 
-  // ================= Profile Card =================
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,7 +135,6 @@ export const dashboardStyles = StyleSheet.create({
     marginBottom: 1,
   },
 
-  // ================= Site Selector =================
   siteListRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,7 +173,6 @@ export const dashboardStyles = StyleSheet.create({
   siteChipTextActive: {color: '#fff', fontWeight: '600'},
   siteWarning: {color: 'red', fontSize: 13, fontWeight: 'bold'},
 
-  // ================= Notifications / Absensi =================
   notifCard: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -218,7 +213,6 @@ export const dashboardStyles = StyleSheet.create({
   absenLabel: {fontSize: 12, color: '#555', marginTop: 4},
   absenValue: {fontSize: 16, fontWeight: 'bold', marginTop: 2},
 
-  // ================= Quick Actions =================
   quickActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -240,7 +234,6 @@ export const dashboardStyles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // ================= Stats =================
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -257,7 +250,6 @@ export const dashboardStyles = StyleSheet.create({
   statValue: {fontSize: 16, fontWeight: 'bold', color: '#2463EB'},
   statLabel: {fontSize: 12, color: '#555', marginTop: 4},
 
-  // ================= Modal & Dropdown =================
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',

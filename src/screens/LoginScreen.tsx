@@ -3,7 +3,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Image,
   View,
@@ -22,6 +21,7 @@ import {useSiteContext} from '../context/SiteContext';
 import DeviceInfo from 'react-native-device-info';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
+import {subscribeToTopics} from '../utils/firebase';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -37,7 +37,6 @@ const LoginScreen = ({navigation}: Props) => {
   const {refreshContext} = useSiteContext();
   const [appVersion, setAppVersion] = useState('');
 
-  // Login handler
   const handleLogin = async () => {
     let errUser = !username ? 'Username wajib diisi' : '';
     let errPass = !password ? 'Password wajib diisi' : '';
@@ -45,6 +44,7 @@ const LoginScreen = ({navigation}: Props) => {
     if (errUser || errPass) return;
 
     setLoading(true);
+
     const payload = {
       jdeno: username.trim(),
       password: password.trim(),
@@ -59,7 +59,6 @@ const LoginScreen = ({navigation}: Props) => {
 
       const data = await response.json();
 
-      // ---- PENYESUAIAN DENGAN JSON BARU ----
       if (response.ok && data.status === 'success' && data.token) {
         await AsyncStorage.setItem(
           'loginCache',
@@ -71,7 +70,14 @@ const LoginScreen = ({navigation}: Props) => {
             roles: data.role,
           }),
         );
+
+        if (data.dataEmp) {
+          const {dept, site} = data.dataEmp;
+          await subscribeToTopics(dept, site);
+        }
+
         await refreshContext();
+
         Toast.show({
           type: 'success',
           text1: 'Login Berhasil',
@@ -80,36 +86,28 @@ const LoginScreen = ({navigation}: Props) => {
           visibilityTime: 2000,
           topOffset: 50,
         });
+
         navigation.replace('AuthLoading');
       } else {
-        let errorTitle = 'Login Gagal';
-        let errorMessage = 'Terjadi kesalahan yang tidak diketahui.';
-
-        if (data?.pesan) {
-          // ✅ pesan dari API (seperti: "Password / Username Salah")
-          errorMessage = data.pesan;
-        } else if (data?.message) {
-          // fallback jika key-nya `message`
-          errorMessage = data.message;
-        } else if (!data.token) {
-          errorMessage = 'Token login tidak ditemukan. Hubungi tim support.';
-        } else if (!response.ok) {
-          // terakhir: jika memang response tidak oke dan tidak ada pesan dari server
-          errorMessage =
-            'Koneksi ke server gagal. Periksa koneksi internet Anda.';
-        }
-
         Toast.show({
           type: 'error',
-          text1: errorTitle,
-          text2: errorMessage,
+          text1: 'Login Gagal',
+          text2: 'Username atau password salah. Silakan coba lagi.',
           position: 'top',
           visibilityTime: 3000,
           topOffset: 50,
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'Tidak dapat terhubung ke server');
+      Toast.show({
+        type: 'error',
+        text1: 'Koneksi Gagal',
+        text2:
+          'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: 50,
+      });
     } finally {
       setLoading(false);
     }

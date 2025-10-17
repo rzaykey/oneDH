@@ -17,7 +17,6 @@ export const p2hStyles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   menuList: {
-    // paddingBottom: 22,
   },
   menuCard: {
     flexDirection: 'row',
@@ -34,8 +33,6 @@ export const p2hStyles = StyleSheet.create({
     minHeight: 66,
     borderWidth: 1,
     borderColor: '#e9eef6',
-    // Optional anim effect:
-    // transform: [{scale: 0.98}]
   },
   iconCircle: {
     width: 44,
@@ -66,7 +63,6 @@ export const p2hStyles = StyleSheet.create({
     fontWeight: '400',
   },
 
-  //Modal
   modal: {
     justifyContent: 'center',
     alignItems: 'center',

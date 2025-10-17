@@ -25,7 +25,6 @@ import {
   getOfflineQueueCount,
 } from '../../utils/offlineQueueHelper';
 import ShowOfflineQueueModalScreen from '../aes/ShowOfflineQueueModalScreen';
-// import QRCodeScanner from 'react-native-qrcode-scanner';
 import {Camera} from 'react-native-camera-kit';
 
 const OFFLINE_SUBMIT_KEY = 'offline_submit_aes_guest';
@@ -35,7 +34,6 @@ const CreateGuestScreen = ({navigation}) => {
   const {user, activeSite} = useSiteContext();
   const [showModal, setShowModal] = useState(false);
 
-  // === State untuk isian form ===
   const [keterangan, setKeterangan] = useState('');
   const [code_agenda, setCodeAgenda] = useState('');
   const [company, setCompany] = useState(user?.company || '');
@@ -43,14 +41,10 @@ const CreateGuestScreen = ({navigation}) => {
   const [dept, setDept] = useState(user?.dept || '');
   const [site, setSite] = useState(user?.site || '');
 
-  // === Lainnya ===
   const [isConnected, setIsConnected] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [qrValue, setQrValue] = useState('');
-  const [scannerVisible, setScannerVisible] = useState(false);
-  // ====  Load offline queue count, push offline queue dsb ====
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
@@ -80,7 +74,6 @@ const CreateGuestScreen = ({navigation}) => {
     return () => unsubscribe();
   }, [refreshQueueCount]);
 
-  // ==== 7. Validasi form ====
   function isFormValid() {
     if (!code_agenda) {
       Toast.show({
@@ -92,8 +85,6 @@ const CreateGuestScreen = ({navigation}) => {
     }
     return true;
   }
-
-  // ==== 9. Submit ====
   const handleSubmit = async () => {
     if (!isFormValid()) {
       return;
@@ -133,7 +124,6 @@ const CreateGuestScreen = ({navigation}) => {
       return;
     }
 
-    // Online submit
     try {
       const loginCache = await AsyncStorage.getItem('loginCache');
       const token = loginCache ? JSON.parse(loginCache).token : null;
@@ -153,14 +143,12 @@ const CreateGuestScreen = ({navigation}) => {
       try {
         data = await response.json();
         isSuccess = response.ok && data.status === true;
-      } catch (jsonErr) {
-        console.log('[JSON PARSE ERROR]', jsonErr);
+      } catch {
       }
 
       setLoading(false);
 
       if (data?.status === true) {
-        // === SUCCESS ===
         if (netState.isConnected) {
           setSyncing(true);
           await pushOfflineQueue(
@@ -186,10 +174,8 @@ const CreateGuestScreen = ({navigation}) => {
 
         navigation.replace('GuestAESMyHistory');
       } else {
-        // === GAGAL ===
         const notif = data?.notif || data?.message || '';
 
-        // daftar notif dari backend yang tidak perlu disimpan offline
         const skipQueueNotifs = [
           'Agenda Tidak Ditemukan',
           'Agenda Sudah Selesai',
@@ -198,7 +184,6 @@ const CreateGuestScreen = ({navigation}) => {
         ];
 
         if (!skipQueueNotifs.includes(notif)) {
-          // simpan offline hanya jika bukan error validasi
           await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
           await refreshQueueCount();
         }
@@ -214,7 +199,7 @@ const CreateGuestScreen = ({navigation}) => {
 
         navigation.replace('GuestAESMyHistory');
       }
-    } catch (err) {
+    } catch {
       setLoading(false);
       await addQueueOffline(OFFLINE_SUBMIT_KEY, payload);
       await refreshQueueCount();
@@ -299,7 +284,6 @@ const CreateGuestScreen = ({navigation}) => {
             queueKey={OFFLINE_SUBMIT_KEY}
           />
 
-          {/* Badge Queue */}
           {queueCount > 0 && (
             <View
               style={{
@@ -362,7 +346,6 @@ const CreateGuestScreen = ({navigation}) => {
             />
           )}
 
-          {/* Status Koneksi */}
           <View style={styles.rowContainer}>
             <View
               style={[
@@ -392,7 +375,6 @@ const CreateGuestScreen = ({navigation}) => {
             </View>
           </View>
 
-          {/* Form Card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Kode Event</Text>
             <TextInput
@@ -428,7 +410,6 @@ const CreateGuestScreen = ({navigation}) => {
             </Modal>
           </View>
 
-          {/* Card Informasi Pribadi */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informasi Pribadi</Text>
             <Text style={styles.label}>Nama</Text>
@@ -441,7 +422,6 @@ const CreateGuestScreen = ({navigation}) => {
             </View>
           </View>
 
-          {/* Lokasi & Departemen */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Lokasi & Departemen</Text>
             <Text style={styles.label}>Company</Text>
@@ -462,7 +442,6 @@ const CreateGuestScreen = ({navigation}) => {
             </View>
           </View>
 
-          {/* Keterangan */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Lainnya</Text>
             <Text style={styles.label}>Keterangan</Text>
@@ -475,7 +454,6 @@ const CreateGuestScreen = ({navigation}) => {
             />
           </View>
 
-          {/* Submit */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}

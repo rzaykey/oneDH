@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API_BASE_URL from '../config';
-import {ToastAndroid, Platform, Alert} from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const isPushingQueue = {};
@@ -20,16 +19,6 @@ export const addQueueOffline = async (queueKey, payload) => {
   await AsyncStorage.setItem(queueKey, JSON.stringify(arr));
   return arr.length;
 };
-
-function showSyncToast(message) {
-  if (Platform.OS === 'android') {
-    ToastAndroid.show(message, ToastAndroid.SHORT);
-  } else {
-    Alert.alert('Info', message);
-  }
-}
-
-// offlineQueueHelper.js
 
 export const pushOfflineQueue = async (
   queueKey,
@@ -80,7 +69,7 @@ export const pushOfflineQueue = async (
       } else {
         Toast.show({
           type: 'error',
-          text1: 'Gagal Kirim dari Antrian',
+          text1: 'Gagal Kirim dari Offline',
           text2:
             responseData?.notif ||
             responseData?.message ||
@@ -92,7 +81,6 @@ export const pushOfflineQueue = async (
         failedData.push(queue[i]);
       }
     } catch (err) {
-      // ❗ Tangkap error network/server di sini
       failedData.push(queue[i]);
 
       const message =

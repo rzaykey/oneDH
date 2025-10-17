@@ -1,12 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const cacheKeys = [
-  // Mentoring
   'mentoring_indicators_3',
   'mentoring_indicators_2',
   'mentoring_indicators_5',
   'mentoring_indicators_4',
-  // Dropdown, Master
   'dropdown_kpi',
   'cached_model_list',
   'dropdown_unit',
@@ -14,14 +12,11 @@ export const cacheKeys = [
   'cached_opt_list',
   'mentoring_master_site',
   'cached_unit_list',
-  // P2H
   'master_questions',
   'master_sites',
   'master_dept',
   'master_model',
-  // User login cache
   'loginCache',
-  //Ees
   'master_category',
 ];
 

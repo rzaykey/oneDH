@@ -22,7 +22,7 @@ import {
 } from '../../utils/permit';
 import {useSiteContext} from '../../context/SiteContext';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {cacheMopMasters} from '../../utils/cacheMopMasters'; // path disesuaikan
+import {cacheMopMasters} from '../../utils/cacheMopMasters';
 import {getSession} from '../../utils/auth';
 import Toast from 'react-native-toast-message';
 
@@ -175,7 +175,6 @@ const MOPScreen: React.FC = () => {
           text2: 'Data master berhasil di-refresh ✅',
         });
       } else {
-        console.warn('⚠️ Token tidak ditemukan untuk refresh manual');
         Toast.show({
           type: 'error',
           text1: 'Token tidak ditemukan',
@@ -183,7 +182,6 @@ const MOPScreen: React.FC = () => {
         });
       }
     } catch (err) {
-      console.error('❌ Gagal refresh data master:', err?.message || err);
       Toast.show({
         type: 'error',
         text1: 'Gagal',

@@ -3,7 +3,6 @@ import {
   Text,
   TextInput,
   Button,
-  Alert,
   View,
   TouchableOpacity,
   LayoutAnimation,
@@ -22,15 +21,11 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import LinearGradient from 'react-native-linear-gradient';
 
-// Aktifkan animasi layout di Android
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental &&
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-/**
- * Komponen kartu collapsible, untuk grouping section form
- */
 const CollapsibleCard = ({title, children}) => {
   const [expanded, setExpanded] = useState(true);
   const toggleExpand = () => {
@@ -47,23 +42,18 @@ const CollapsibleCard = ({title, children}) => {
   );
 };
 
-/**
- * Halaman EditTrainHours
- */
 const EditTrainHours = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {id} = route.params;
 
-  // Untuk safe area bawah
   const insets = useSafeAreaInsets();
 
-  // STATE: data form utama
   const [formData, setFormData] = useState({
     jde_no: '',
     employee_name: '',
     position: '',
-    training_type: '', // gunakan ID
+    training_type: '',
     unit_class: '',
     unit_type: '',
     code: '',
@@ -76,8 +66,6 @@ const EditTrainHours = () => {
     site: '',
     date_activity: '',
   });
-
-  // STATE: Dropdown & opsinya
   const [trainingTypeOptions, setTrainingTypeOptions] = useState([]);
   const [trainingTypeOpen, setTrainingTypeOpen] = useState(false);
   const [trainingTypeValue, setTrainingTypeValue] = useState(null);
@@ -109,13 +97,9 @@ const EditTrainHours = () => {
   ]);
   const [batchOpen, setBatchOpen] = useState(false);
 
-  // STATE: Date picker
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  /**
-   * Helper untuk ambil session/token dari async storage
-   */
   const getSession = async () => {
     let token = null;
     let user = null;
@@ -129,16 +113,11 @@ const EditTrainHours = () => {
         user = loginCache || null;
         site = loginCache?.dataEmp?.site || '';
       }
-    } catch (e) {
-      console.warn('Gagal parsing loginCache:', e);
-    }
+    } catch (e) {}
 
     return {token, user, site};
   };
 
-  /**
-   * Ambil data master (dropdown) & detail edit (by id)
-   */
   useEffect(() => {
     let cancel = false;
     const fetchData = async () => {
@@ -153,7 +132,6 @@ const EditTrainHours = () => {
           return;
         }
 
-        // Start loading
         setLoading(true);
 
         const master = await axios.get(
@@ -169,7 +147,6 @@ const EditTrainHours = () => {
 
         if (cancel) return;
 
-        // Mapping dropdown
         const typeUnitArr = (master.data.data.typeUnit || []).map(item => ({
           label: item.class,
           value: String(item.id),
@@ -197,7 +174,6 @@ const EditTrainHours = () => {
         }));
         setTrainingTypeOptions(kpiArr);
 
-        // Set data form edit
         if (detail.data.status) {
           const d = detail.data.data;
 
@@ -262,7 +238,6 @@ const EditTrainHours = () => {
     };
   }, [id]);
 
-  // Sync cascading dropdown: classUnit sesuai unit_type
   useEffect(() => {
     if (formData.unit_type && classUnitArr.length > 0) {
       setFilteredClassUnitOptions(
@@ -273,7 +248,6 @@ const EditTrainHours = () => {
     }
   }, [formData.unit_type, classUnitArr]);
 
-  // Sync cascading dropdown: code sesuai unit_class
   useEffect(() => {
     if (formData.unit_class && allCodeUnitArr.length > 0) {
       setCodeOptions(
@@ -284,12 +258,10 @@ const EditTrainHours = () => {
     }
   }, [formData.unit_class, allCodeUnitArr]);
 
-  // Handle perubahan field
   const handleChange = (name, value) => {
     setFormData(prev => ({...prev, [name]: value}));
   };
 
-  // Handle tanggal DateTimePicker
   const handleDateChange = (_event, selected) => {
     const currentDate = selected || selectedDate;
     setShowDatePicker(Platform.OS === 'ios');
@@ -298,7 +270,6 @@ const EditTrainHours = () => {
     handleChange('date_activity', formatted);
   };
 
-  // Hitung otomatis total_hm & progres saat hm_start/hm_end berubah
   useEffect(() => {
     const start = Number(formData.hm_start) || 0;
     const end = Number(formData.hm_end) || 0;
@@ -310,7 +281,6 @@ const EditTrainHours = () => {
     }));
   }, [formData.hm_start, formData.hm_end, formData.plan_total_hm]);
 
-  // Handler cascading dropdown
   const onChangeUnitType = val => {
     handleChange('unit_type', val);
     handleChange('unit_class', '');
@@ -321,13 +291,10 @@ const EditTrainHours = () => {
     handleChange('code', '');
   };
 
-  // Handler dropdown KPI/training_type
   const onChangeTrainingType = val => {
     setTrainingTypeValue(val);
     handleChange('training_type', val);
   };
-
-  // Validasi dan submit update ke backend
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -429,7 +396,6 @@ const EditTrainHours = () => {
     }
   };
 
-  // --- UI ---
   return (
     <LinearGradient
       colors={['#FFBE00', '#B9DCEB']}
@@ -443,7 +409,6 @@ const EditTrainHours = () => {
           extraScrollHeight={120}>
           <Text style={addDailyAct.header}>EDIT TRAIN HOURS</Text>
 
-          {/* Section: Employee */}
           <CollapsibleCard title="Employee Info">
             <Text style={addDailyAct.label}>JDE No</Text>
             <TextInput
@@ -471,7 +436,6 @@ const EditTrainHours = () => {
             />
           </CollapsibleCard>
 
-          {/* Section: Training */}
           <CollapsibleCard title="Training Info">
             <Text style={addDailyAct.label}>Training Type</Text>
             <DropDownPicker
@@ -509,7 +473,6 @@ const EditTrainHours = () => {
             />
           </CollapsibleCard>
 
-          {/* Section: Unit */}
           <CollapsibleCard title="Unit Info">
             <Text style={addDailyAct.label}>Unit Type</Text>
             <DropDownPicker
@@ -572,7 +535,6 @@ const EditTrainHours = () => {
             />
           </CollapsibleCard>
 
-          {/* Section: Hours */}
           <CollapsibleCard title="Hour Info">
             <Text style={addDailyAct.label}>Plan Total HM</Text>
             <TextInput
@@ -613,7 +575,6 @@ const EditTrainHours = () => {
             />
           </CollapsibleCard>
 
-          {/* Section: Tanggal */}
           <CollapsibleCard title="Tanggal">
             <Text style={addDailyAct.label}>Date Activity</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)}>
@@ -635,7 +596,6 @@ const EditTrainHours = () => {
             )}
           </CollapsibleCard>
 
-          {/* Tombol submit update */}
           <View style={{marginTop: 24}}>
             <Button
               title={isSubmitting ? 'Memproses...' : 'Update'}

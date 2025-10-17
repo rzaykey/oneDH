@@ -20,8 +20,8 @@ import {JCMItem} from '../../navigation/types';
 import API_BASE_URL from '../../config';
 import {p2hHistoryStyles as styles} from '../../styles/p2hHistoryStyles';
 import {useSiteContext} from '../../context/SiteContext';
-import DateTimePicker from '@react-native-community/datetimepicker'; // pastikan paket ini sudah diinstall
-import {getAuthHeader} from '../../utils/auth'; // sesuaikan path-nya
+import DateTimePicker from '@react-native-community/datetimepicker';
+import {getAuthHeader} from '../../utils/auth';
 import Toast from 'react-native-toast-message';
 import Modal from 'react-native-modal';
 import dayjs from 'dayjs';
@@ -58,16 +58,17 @@ const JCMHistoryScreen: React.FC = () => {
   const {user, activeSite} = useSiteContext();
   const [ddlStatus, setDdlStatus] = useState('');
   const [remark, setRemark] = useState('');
+  const [hM, setHM] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
-    fetchHistory(false, 1); // awal muat
+    fetchHistory(false, 1);
   }, [activeSite, user?.jdeno]);
 
   useEffect(() => {
-    fetchHistory(false, 1); // saat limit berubah
+    fetchHistory(false, 1);
   }, [limit]);
 
   const fetchHistory = async (isLoadMore = false, forcedPage = 1) => {
@@ -110,7 +111,6 @@ const JCMHistoryScreen: React.FC = () => {
       } else {
         const data: JCMItem[] = json.data || [];
         const totalPagesFromApi = json?.last_page || 1;
-
         if (isLoadMore) {
           setHistory(prev => [...prev, ...data]);
           setPage(currentPage);
@@ -149,13 +149,12 @@ const JCMHistoryScreen: React.FC = () => {
 
   useEffect(() => {
     if (showCloseModal && selectedItem) {
-      // Set nilai default jika belum ada
       setDdlStatus(selectedItem?.status || 'Open');
       setSelectedDate(new Date(selectedItem?.tanggal || Date.now()));
       setRemark(selectedItem?.remark || '');
 
-      const tanggal = selectedItem.tanggal_selesai; // e.g. "2025-07-03"
-      const jam = selectedItem.waktu_selesai; // e.g. "14:30:00"
+      const tanggal = selectedItem.tanggal_selesai;
+      const jam = selectedItem.waktu_selesai;
 
       if (tanggal && jam) {
         const combined = new Date(`${tanggal}T${jam}`);
@@ -163,7 +162,7 @@ const JCMHistoryScreen: React.FC = () => {
           setSelectedDate(combined);
         }
       } else {
-        setSelectedDate(new Date()); // fallback ke waktu sekarang
+        setSelectedDate(new Date());
       }
     }
   }, [showCloseModal, selectedItem]);
@@ -177,6 +176,7 @@ const JCMHistoryScreen: React.FC = () => {
     tanggal,
     jam,
     remark,
+    hM,
   }: {
     id: string;
     jde: string;
@@ -186,6 +186,7 @@ const JCMHistoryScreen: React.FC = () => {
     tanggal: string;
     jam: string;
     remark: string;
+    hM: string;
   }) => {
     try {
       const headers = await getAuthHeader();
@@ -206,8 +207,8 @@ const JCMHistoryScreen: React.FC = () => {
         tanggal: dayjs(selectedDate).format('YYYY-MM-DD'),
         jam: dayjs(selectedDate).format('HH:mm:ss'),
         remark,
+        hm_rfu: hM,
       };
-      console.log(body);
       const response = await fetch(`${API_URL_CT}`, {
         method: 'POST',
         headers,
@@ -220,7 +221,6 @@ const JCMHistoryScreen: React.FC = () => {
       try {
         res = JSON.parse(text);
       } catch (e) {
-        console.error('Bukan JSON, ini HTML:', text);
         Toast.show({
           type: 'error',
           text1: 'Server Error',
@@ -239,7 +239,7 @@ const JCMHistoryScreen: React.FC = () => {
         });
 
         setShowCloseModal(false);
-        fetchHistory(false, 1); // Refresh
+        fetchHistory(false, 1);
       } else {
         if (res?.message === 'JDE Tidak Sama Dengan Job Card') {
           Toast.show({
@@ -253,13 +253,12 @@ const JCMHistoryScreen: React.FC = () => {
             type: 'error',
             position: 'top',
             text1: 'Gagal Menutup JCM',
-            text2: res?.message || 'Terjadi kesalahan.',
+            text2: 'Terjadi kesalahan.',
             text2NumberOfLines: 10,
           });
         }
       }
     } catch (err) {
-      console.error('Submit Close JCM error:', err);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -276,41 +275,36 @@ const JCMHistoryScreen: React.FC = () => {
         style={styles.card}
         activeOpacity={0.83}
         onPress={() => setExpandedId(isExpanded ? null : Number(item.id))}>
-        {/* Header Section */}
         <View style={styles.headerRow}>
           <Text style={styles.unitText}>{item.unitno}</Text>
           <Text style={styles.siteLabel}>
             {item.wono} - {item.wo_task_no}
           </Text>
         </View>
-
-        {/* Task Description */}
         <Text style={styles.modelText}>{item.task_desc}</Text>
-
-        {/* Mekanik Info */}
         <View style={styles.row}>
           <Icon name="person-circle-outline" size={17} color="#4886E3" />
           <Text style={styles.driverName}>
             {item.nama_mekanik} - {item.jde_mekanik}
           </Text>
         </View>
-
-        {/* Tanggal & Waktu */}
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Mulai: {item.tanggal_mulai} {item.waktu_mulai}
+            Mulai: {item.tanggal_mulai} - {item.waktu_mulai}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Selesai: {item.tanggal_selesai} {item.waktu_selesai}
+            Selesai: {item.tanggal_selesai} - {item.waktu_selesai}
           </Text>
         </View>
-
-        {/* Badges */}
         <View style={styles.badgeRow}>
-          <Badge label={`Durasi: ${item.durasi}`} color="#2196F3" />
-          <Badge label={`Status: ${item.status}`} color="#4CAF50" />
+          <Badge label={`HM BD : ${item.hm_bd}`} color="#ff0a0aff" />
+          <Badge label={`HM RFU  : ${item.hm_rfu}`} color="#4CAF50" />
+        </View>
+        <View style={styles.badgeRow}>
+          <Badge label={`Durasi : ${item.durasi}`} color="#2196F3" />
+          <Badge label={`Status : ${item.status}`} color="#4CAF50" />
         </View>
         <View style={styles.badgeRow}>
           <Badge
@@ -318,14 +312,11 @@ const JCMHistoryScreen: React.FC = () => {
             color="#af9d4cff"
           />
         </View>
-        {/* Extra Info */}
         <Text style={styles.ketValue}>
           Pengawas: {item.nama_pengawas}- {item.jde_pengawas}
         </Text>
-        {/* Expanded Details */}
         {isExpanded && (
           <>
-            {/* Remark Section */}
             <View style={styles.keteranganRow}>
               <Text style={styles.ketLabel}>Remark:</Text>
               <Text style={styles.ketValue} numberOfLines={0}>
@@ -353,7 +344,7 @@ const JCMHistoryScreen: React.FC = () => {
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,
@@ -478,7 +469,7 @@ const JCMHistoryScreen: React.FC = () => {
         )}
         <Modal
           isVisible={showCloseModal}
-          backdropOpacity={0} // 🔥 ini menghilangkan block hitam
+          backdropOpacity={0}
           onBackdropPress={() => setShowCloseModal(false)}
           animationIn="slideInUp"
           animationOut="slideOutDown"
@@ -488,8 +479,6 @@ const JCMHistoryScreen: React.FC = () => {
               <Text style={styles.modalTitle}>
                 Konfirmasi Close JCM {selectedItem?.wono}?
               </Text>
-
-              {/* Informasi Unit dan Task */}
               <Text style={styles.modalLabel}>
                 Unit: {selectedItem?.unitno}
               </Text>
@@ -499,8 +488,24 @@ const JCMHistoryScreen: React.FC = () => {
               <Text style={styles.modalLabel}>
                 WO Task Desc: {selectedItem?.task_desc}
               </Text>
+              <View style={styles.rowHM}>
+                <Text style={styles.modalLabelHM}>
+                  HM BD: {selectedItem?.hm_bd}
+                </Text>
 
-              {/* Dropdown Status */}
+                <View style={styles.verticalDivider} />
+                <View style={styles.hmInputContainer}>
+                  <Text style={styles.modalLabelHM}>HM RFU:</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Masukkan HM"
+                    value={hM}
+                    keyboardType="numeric"
+                    onChangeText={setHM}
+                  />
+                </View>
+              </View>
+
               <Text style={styles.modalLabel}>Status:</Text>
               <View style={styles.statusOptions}>
                 {['Pilih Status', 'RFU', 'Pending Job', 'Pending Unit'].map(
@@ -527,10 +532,8 @@ const JCMHistoryScreen: React.FC = () => {
                 )}
               </View>
 
-              {/* Tanggal & Jam dalam Satu Row */}
               <Text style={styles.modalLabel}>Tanggal & Jam:</Text>
               <View style={styles.dateTimeRow}>
-                {/* Tanggal */}
                 <TouchableOpacity
                   style={styles.dateTimeBox}
                   onPress={() => setShowDatePicker(true)}>
@@ -543,7 +546,6 @@ const JCMHistoryScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Jam */}
                 <TouchableOpacity
                   style={styles.dateTimeBox}
                   onPress={() => setShowTimePicker(true)}>
@@ -556,7 +558,6 @@ const JCMHistoryScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* Pickers */}
               {showDatePicker && (
                 <DateTimePicker
                   value={selectedDate}
@@ -602,7 +603,6 @@ const JCMHistoryScreen: React.FC = () => {
                 />
               )}
 
-              {/* Remark */}
               <Text style={styles.modalLabel}>Remark:</Text>
               <TextInput
                 style={styles.textInput}
@@ -612,12 +612,10 @@ const JCMHistoryScreen: React.FC = () => {
                 onChangeText={setRemark}
               />
 
-              {/* Tombol Aksi */}
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
                   style={styles.modalButton}
                   onPress={() => {
-                    // Validasi status wajib dipilih dan bukan 'Open'
                     if (
                       !ddlStatus ||
                       ddlStatus === 'Pilih Status' ||
@@ -638,7 +636,6 @@ const JCMHistoryScreen: React.FC = () => {
                       );
                       return;
                     }
-                    // Submit jika semua valid
                     handleSubmitCloseJCM({
                       id: selectedItem?.id,
                       jde: selectedItem?.jde_mekanik,
@@ -648,6 +645,7 @@ const JCMHistoryScreen: React.FC = () => {
                       tanggal: selectedDate.toISOString().split('T')[0],
                       jam: selectedDate.toTimeString().split(' ')[0],
                       remark,
+                      hM,
                     });
                   }}>
                   <Text style={styles.modalButtonText}>Submit</Text>

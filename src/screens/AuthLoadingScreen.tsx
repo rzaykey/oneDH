@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {ActivityIndicator, View, StyleSheet} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,11 +20,8 @@ const AuthLoadingScreen = ({navigation}) => {
       const sites = [...new Set(roles.map(r => r.code_site))];
 
       if (sites.length === 0) {
-        // Tidak ada site, redirect ke login/atau tampilkan pesan error
         navigation.replace('Login');
       } else if (sites.length === 1) {
-        // Auto set activeSite dan langsung ke MainApp
-        // Kamu bisa pakai event, atau update context lewat MainApp
         navigation.replace('MainApp', {autoSite: sites[0]});
       } else {
         navigation.replace('SitePicker', {sites});

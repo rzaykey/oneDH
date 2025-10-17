@@ -22,7 +22,7 @@ import {
   getOfflineQueueCount,
 } from '../../utils/offlineQueueHelper';
 import {JCMCreateStyle as styles} from '../../styles/JCMCreateStyle';
-import {fetchWithCachePerKey} from '../../utils/fetchWithCachePerKey'; // path sesuai
+import {fetchWithCachePerKey} from '../../utils/fetchWithCachePerKey';
 import {fetchWithCache} from '../../utils/fetchWithCache';
 import {v4 as uuidv4} from 'uuid';
 import 'react-native-get-random-values';
@@ -59,7 +59,7 @@ const CreateWoGenScreen = ({navigation}) => {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
-        refreshAll(); // panggil refresh manual
+        refreshAll();
       }
     });
 
@@ -80,7 +80,6 @@ const CreateWoGenScreen = ({navigation}) => {
     try {
       const headers = await getAuthHeader();
 
-      // 🔹 Work Order (on-demand cache by unit)
       const woRes = await fetchWithCache('cache_wo_gen', API_URL_GWG, headers);
       const formattedWO = woRes.data.map(wo => ({
         label: `${wo.work_order} - ${wo.wo_task_desc}`,
@@ -89,7 +88,6 @@ const CreateWoGenScreen = ({navigation}) => {
       setWoList(formattedWO);
       setSelectedWO(null);
 
-      // 🔹 Supervisor (by unit)
       const supRes = await fetchWithCache(
         'cache_supervisor',
         API_URL_GS,
@@ -108,8 +106,7 @@ const CreateWoGenScreen = ({navigation}) => {
         type: 'success',
         text1: 'Data berhasil diperbarui',
       });
-    } catch (error) {
-      console.error('Error saat refreshAll:', error);
+    } catch {
       Toast.show({
         type: 'error',
         text1: 'Gagal memuat data',
@@ -141,7 +138,6 @@ const CreateWoGenScreen = ({navigation}) => {
     try {
       const headers = await getAuthHeader();
 
-      // 3. Supervisor (jika ada unit)
       const supRes = await fetchWithCache(
         'cache_supervisor',
         API_URL_GS,
@@ -154,7 +150,6 @@ const CreateWoGenScreen = ({navigation}) => {
       setSupervisorList(formattedSup);
       setSelectedSupervisor(null);
 
-      // 4. WO (jika ada unit)
       const woRes = await fetchWithCache(
         'cache_wo_gen',
         `${API_URL_GWG}`,
@@ -171,8 +166,7 @@ const CreateWoGenScreen = ({navigation}) => {
         type: 'success',
         text1: 'Data berhasil diperbarui',
       });
-    } catch (err) {
-      console.error('refreshAllMasterData error:', err);
+    } catch {
       Toast.show({
         type: 'error',
         text1: 'Gagal refresh data',
@@ -183,7 +177,6 @@ const CreateWoGenScreen = ({navigation}) => {
     }
   }, []);
 
-  // 🔄 Saat koneksi kembali online
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
@@ -208,7 +201,6 @@ const CreateWoGenScreen = ({navigation}) => {
     try {
       const headers = await getAuthHeader();
 
-      // ✅ Validate WO
       const woCache = await fetchWithCachePerKey(
         'cache_wo_gen',
         `${API_URL_GWG}`,
@@ -225,17 +217,14 @@ const CreateWoGenScreen = ({navigation}) => {
         });
         setSelectedWO(null);
       }
-    } catch (error) {
-      console.warn('Offline validation failed:', error);
-    }
+    } catch {}
   };
 
-  // 🔄 Saat screen difokuskan
   useFocusEffect(
     useCallback(() => {
       const run = async () => {
         await refreshAllMasterData();
-        await validateOfflineSelections(); // ⬅️ Tambahkan ini
+        await validateOfflineSelections();
       };
       run();
     }, [refreshAllMasterData]),
@@ -252,9 +241,7 @@ const CreateWoGenScreen = ({navigation}) => {
         text2: 'Data offline berhasil dihapus dari penyimpanan.',
         position: 'top',
       });
-    } catch (error) {
-      console.error('Gagal menghapus cache offline:', error);
-
+    } catch {
       Toast.show({
         type: 'error',
         text1: 'Gagal Hapus Cache',
@@ -265,8 +252,8 @@ const CreateWoGenScreen = ({navigation}) => {
   };
 
   const handleSubmit = async () => {
-    if (loading) return; // mencegah double submit
-    setLoading(true); // mulai loading
+    if (loading) return;
+    setLoading(true);
 
     const missingFields = [];
 
@@ -279,7 +266,7 @@ const CreateWoGenScreen = ({navigation}) => {
         text1: 'Field belum lengkap',
         text2: `Harap isi: ${missingFields.join(', ')}`,
       });
-      setLoading(false); // hentikan loading
+      setLoading(false);
       return;
     }
 
@@ -344,12 +331,8 @@ const CreateWoGenScreen = ({navigation}) => {
           const text = await response.text();
           try {
             resJson = JSON.parse(text);
-          } catch (jsonErr) {
-            console.warn('❗ Gagal parsing JSON:', jsonErr);
-          }
-        } catch (err) {
-          console.warn('❗ Gagal membaca response:', err);
-        }
+          } catch {}
+        } catch {}
 
         rawMessage =
           resJson?.message ||
@@ -375,8 +358,7 @@ const CreateWoGenScreen = ({navigation}) => {
           text2: 'Data disimpan dan akan dikirim saat online.',
         });
       }
-    } catch (error) {
-      console.warn('❗ Error saat submit:', error);
+    } catch {
       try {
         await addQueueOffline(OFFLINE_SUBMIT_KEY, dataSubmit);
         await refreshQueueCount();
@@ -385,8 +367,7 @@ const CreateWoGenScreen = ({navigation}) => {
           text1: 'Offline',
           text2: 'Tidak bisa mengirim data. Disimpan ke antrian.',
         });
-      } catch (queueErr) {
-        console.error('❌ Gagal menyimpan ke queue:', queueErr);
+      } catch {
         Toast.show({
           type: 'error',
           text1: 'Gagal',
@@ -395,7 +376,7 @@ const CreateWoGenScreen = ({navigation}) => {
       }
     }
 
-    setLoading(false); // pastikan ini dipanggil di akhir
+    setLoading(false);
   };
 
   const confirmClearOfflineCache = () => {
@@ -429,7 +410,6 @@ const CreateWoGenScreen = ({navigation}) => {
             <Text style={styles.refreshButtonText}>🔄 Refresh Data</Text>
           </TouchableOpacity>
 
-          {/* === Offline Queue Action Buttons === */}
           {queueCount > 0 && (
             <View style={styles.offlineButtonContainer}>
               <TouchableOpacity
@@ -478,7 +458,6 @@ const CreateWoGenScreen = ({navigation}) => {
             </View>
           )}
 
-          {/* === FORM CARD === */}
           <View style={styles.card}>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Nomor WO</Text>
@@ -508,11 +487,10 @@ const CreateWoGenScreen = ({navigation}) => {
                 placeholder={{label: 'Pilih Supervisor', value: null}}
                 style={styles.picker}
                 value={selectedSupervisor}
-                disabled={!selectedWO} // 🔒 disabled jika WO belum dipilih
+                disabled={!selectedWO}
               />
             </View>
             <View style={styles.row}>
-              {/* Tanggal */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -534,7 +512,6 @@ const CreateWoGenScreen = ({navigation}) => {
                 )}
               </View>
 
-              {/* Jam */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
@@ -558,7 +535,6 @@ const CreateWoGenScreen = ({navigation}) => {
             </View>
           </View>
 
-          {/* === SUBMIT BUTTON === */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}

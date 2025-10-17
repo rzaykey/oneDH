@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Alert,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -14,7 +14,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import {accountProfileStyles as styles} from '../styles/accountProfileStyles';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import {Platform} from 'react-native'; // tambahkan kalau belum
 import DeviceInfo from 'react-native-device-info';
 
 const AccountProfileScreen = ({navigation}) => {
@@ -40,12 +39,6 @@ const AccountProfileScreen = ({navigation}) => {
     loadProfile();
   }, []);
 
-  // Helper masking token
-  const maskToken = token => {
-    if (!token) return '-';
-    return token.substring(0, 6) + '...' + token.slice(-6);
-  };
-
   useEffect(() => {
     const getVersion = async () => {
       const version = await DeviceInfo.getVersion();
@@ -54,7 +47,6 @@ const AccountProfileScreen = ({navigation}) => {
     getVersion();
   }, []);
 
-  // Pastikan role pasti array
   let parsedRole = [];
   if (profile) {
     if (Array.isArray(profile.roles)) parsedRole = profile.roles;
@@ -115,7 +107,6 @@ const AccountProfileScreen = ({navigation}) => {
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={{flex: 1}}
               keyboardVerticalOffset={20}>
-              {/* --- Konten Profil --- */}
               <View style={styles.headerCard}>
                 <Icon
                   name="person-circle"
@@ -146,7 +137,6 @@ const AccountProfileScreen = ({navigation}) => {
                   <Text style={styles.infoLabel}>Position:</Text>{' '}
                   {profile?.dataEmp?.position}
                 </Text>
-                {/* ✅ Tambahkan tombol Update Password */}
                 <TouchableOpacity
                   onPress={() => navigation.navigate('UpdatePassword')}
                   style={styles.updatePasswordButton}>
@@ -175,13 +165,6 @@ const AccountProfileScreen = ({navigation}) => {
                         <Text style={styles.roleName}>{r.name}</Text>
                         <Text style={styles.roleSite}> ({r.code_site})</Text>
                       </View>
-                      <Text style={styles.rolePerm}>
-                        {r.module}
-                        {/* -{' '} */}
-                        {/* <Text style={{fontWeight: 'bold'}}>
-                          {(r.permit || '').toUpperCase()}
-                        </Text> */}
-                      </Text>
                     </View>
                   ))
                 ) : (
@@ -193,7 +176,6 @@ const AccountProfileScreen = ({navigation}) => {
               </Text>
             </KeyboardAvoidingView>
           </ScrollView>
-          {/* ✅ Tombol Logout Tetap di Bawah */}
         </View>
       </SafeAreaView>
     </LinearGradient>

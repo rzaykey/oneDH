@@ -47,7 +47,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   picker: {
-    color: '#000', // warna teks item yang dipilih
+    color: '#000',
     backgroundColor: '#fff',
     paddingHorizontal: 12,
   },

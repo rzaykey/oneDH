@@ -80,7 +80,7 @@ export const accountProfileStyles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%', // ✅ penting
+    width: '100%',
     shadowColor: '#e74c3c',
     shadowOpacity: 0.14,
     shadowRadius: 2,

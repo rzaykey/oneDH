@@ -5,16 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {p2hDetailStyles as styles} from '../../styles/p2hDetailStyles';
 import LinearGradient from 'react-native-linear-gradient';
+import {DetailItem} from '../../navigation/types';
 import API_BASE_URL from '../../config';
 
 const API_DETAIL_URL = `${API_BASE_URL.onedh}/GetDataP2HDetails`;
-
-type DetailItem = {
-  id: string;
-  pertanyaan: string;
-  jawaban: string;
-  create: string;
-};
 
 const P2HDetailScreen = ({route}) => {
   const {fid_p2h, unit, driver, tanggal, create} = route.params;
@@ -42,7 +36,7 @@ const P2HDetailScreen = ({route}) => {
 
         const url = `${API_DETAIL_URL}?fid_p2h=${fid_p2h}`;
         const response = await fetch(url, {
-          method: 'POST', // Ganti sesuai API (POST recommended utk detail P2H)
+          method: 'POST',
           headers: {Authorization: `Bearer ${token}`},
         });
         const json = await response.json();
@@ -61,7 +55,6 @@ const P2HDetailScreen = ({route}) => {
     fetchDetail();
   }, [fid_p2h]);
 
-  // Warna badge berdasarkan jawaban
   const getJawabanBadge = (jawaban: string) => {
     if (jawaban === 'Baik')
       return {label: 'Baik', color: '#22c55e', icon: 'checkmark-circle'};
@@ -70,7 +63,6 @@ const P2HDetailScreen = ({route}) => {
     return {label: jawaban, color: '#ef4444', icon: 'alert-circle'};
   };
 
-  // HEADER CARD
   const renderHeader = () => (
     <View style={styles.headerCard}>
       <Icon
@@ -95,7 +87,6 @@ const P2HDetailScreen = ({route}) => {
     </View>
   );
 
-  // RENDER ITEM (CHECKLIST)
   const renderItem = ({item, index}: {item: DetailItem; index: number}) => {
     const badge = getJawabanBadge(item.jawaban);
     return (

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Button,
+  TextInput,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,7 +22,7 @@ import {
   getOfflineQueueCount,
 } from '../../utils/offlineQueueHelper';
 import {JCMCreateStyle as styles} from '../../styles/JCMCreateStyle';
-import {fetchWithCachePerKey} from '../../utils/fetchWithCachePerKey'; // path sesuai
+import {fetchWithCachePerKey} from '../../utils/fetchWithCachePerKey';
 import {fetchWithCache} from '../../utils/fetchWithCache';
 import {v4 as uuidv4} from 'uuid';
 import 'react-native-get-random-values';
@@ -68,10 +69,9 @@ const CreateJCMscreen = ({navigation}) => {
   const [jam, setJam] = useState(new Date());
   const [showTanggalPicker, setShowTanggalPicker] = useState(false);
   const [showJamPicker, setShowJamPicker] = useState(false);
-
+  const [hM, setHM] = useState('');
   const [openUnit, setOpenUnit] = useState(false);
 
-  // ===== Helpers =====
   const getAuthHeader = async () => {
     const cache = await AsyncStorage.getItem('loginCache');
     const token = cache && JSON.parse(cache)?.token;
@@ -83,7 +83,6 @@ const CreateJCMscreen = ({navigation}) => {
     };
   };
 
-  // ===== Initial master load (units + groups) =====
   const refreshMaster = useCallback(async () => {
     try {
       const headers = await getAuthHeader();
@@ -106,14 +105,12 @@ const CreateJCMscreen = ({navigation}) => {
         })),
       );
     } catch (e) {
-      console.error('refreshMaster error:', e);
       Toast.show({type: 'error', text1: 'Gagal mengambil master data'});
     } finally {
       setLoadingMaster(false);
     }
   }, []);
 
-  // === Focus: load master + validate ===
   useFocusEffect(
     useCallback(() => {
       refreshMaster();
@@ -121,7 +118,6 @@ const CreateJCMscreen = ({navigation}) => {
     }, [refreshMaster]),
   );
 
-  // === NetInfo listener ===
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
@@ -134,7 +130,6 @@ const CreateJCMscreen = ({navigation}) => {
     return () => unsubscribe();
   }, [refreshMaster]);
 
-  // === Refresh offline queue count ===
   const refreshQueueCount = useCallback(async () => {
     const count = await getOfflineQueueCount(OFFLINE_SUBMIT_KEY);
     setQueueCount(count);
@@ -144,13 +139,12 @@ const CreateJCMscreen = ({navigation}) => {
     refreshQueueCount();
   }, [refreshQueueCount]);
 
-  // === 1) Unit Dipilih ➝ Load WO ===
   useEffect(() => {
     const run = async () => {
       if (!selectedUnit) {
         setWoList([]);
         setSelectedWO(null);
-        setGroupTaskList(prev => prev); // tetap, sudah di-load di master
+        setGroupTaskList(prev => prev);
         setSelectedGroupTask(null);
         setAssignmentList([]);
         setSelectedAssignment(null);
@@ -172,20 +166,17 @@ const CreateJCMscreen = ({navigation}) => {
         }));
         setWoList(formatted);
         setSelectedWO(null);
-        // Reset chain below
         setSelectedGroupTask(null);
         setAssignmentList([]);
         setSelectedAssignment(null);
         setSupervisorList([]);
         setSelectedSupervisor(null);
       } catch (e) {
-        console.error('Load WO gagal:', e);
       }
     };
     run();
   }, [selectedUnit]);
 
-  // === 2) WO Dipilih ➝ Load Group Task ===
   useEffect(() => {
     const run = async () => {
       if (!selectedWO) {
@@ -214,13 +205,11 @@ const CreateJCMscreen = ({navigation}) => {
         setSupervisorList([]);
         setSelectedSupervisor(null);
       } catch (e) {
-        console.error('Load Group Task gagal:', e);
       }
     };
     run();
   }, [selectedWO]);
 
-  // === 3) Group Task Dipilih ➝ Load Task Assignment ===
   useEffect(() => {
     const run = async () => {
       if (!selectedGroupTask) {
@@ -247,13 +236,11 @@ const CreateJCMscreen = ({navigation}) => {
         setSupervisorList([]);
         setSelectedSupervisor(null);
       } catch (e) {
-        console.error('Load Assignment gagal:', e);
       }
     };
     run();
   }, [selectedGroupTask]);
 
-  // === 4) Supervisor aktif jika semua sudah dipilih ===
   useEffect(() => {
     const run = async () => {
       const ready =
@@ -277,18 +264,15 @@ const CreateJCMscreen = ({navigation}) => {
         setSupervisorList(formatted);
         setSelectedSupervisor(null);
       } catch (e) {
-        console.error('Load Supervisor gagal:', e);
       }
     };
     run();
   }, [selectedUnit, selectedWO, selectedGroupTask, selectedAssignment]);
 
-  // === Validate offline selections ===
   const validateOfflineSelections = async () => {
     try {
       const headers = await getAuthHeader();
 
-      // Unit
       const unitCache = await fetchWithCache(
         'cache_units',
         API_URL_MU,
@@ -301,7 +285,6 @@ const CreateJCMscreen = ({navigation}) => {
         setSelectedUnit(null);
       }
 
-      // WO
       if (selectedUnit) {
         const woCache = await fetchWithCachePerKey(
           'cache_wo',
@@ -317,7 +300,6 @@ const CreateJCMscreen = ({navigation}) => {
         }
       }
 
-      // Group Task
       const groupCache = await fetchWithCache(
         'cache_group_task',
         API_URL_GGT,
@@ -333,7 +315,6 @@ const CreateJCMscreen = ({navigation}) => {
         setSelectedGroupTask(null);
       }
 
-      // Assignment
       if (selectedGroupTask) {
         const asgCache = await fetchWithCachePerKey(
           'cache_assignment',
@@ -355,11 +336,9 @@ const CreateJCMscreen = ({navigation}) => {
         }
       }
     } catch (e) {
-      console.warn('validateOfflineSelections error:', e);
     }
   };
 
-  // 🔁 Satu fungsi gabungan
   const refreshAndValidate = useCallback(async () => {
     await refreshMaster();
     await validateOfflineSelections();
@@ -367,14 +346,14 @@ const CreateJCMscreen = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      refreshAndValidate(); // 👁️ Saat screen difokuskan
+      refreshAndValidate();
     }, [refreshAndValidate]),
   );
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
-        refreshAndValidate(); // 🌐 Saat online kembali
+        refreshAndValidate();
       }
     });
 
@@ -396,8 +375,6 @@ const CreateJCMscreen = ({navigation}) => {
         text2NumberOfLines: 10,
       });
     } catch (error) {
-      console.error('Gagal menghapus cache offline:', error);
-
       Toast.show({
         type: 'error',
         text1: 'Gagal Hapus Cache',
@@ -409,8 +386,8 @@ const CreateJCMscreen = ({navigation}) => {
   };
 
   const handleSubmit = async () => {
-    if (loading) return; // mencegah double submit
-    setLoading(true); // mulai loading
+    if (loading) return;
+    setLoading(true);
 
     const missingFields = [];
 
@@ -426,7 +403,7 @@ const CreateJCMscreen = ({navigation}) => {
         text1: 'Field belum lengkap',
         text2: `Harap isi: ${missingFields.join(', ')}`,
       });
-      setLoading(false); // hentikan loading
+      setLoading(false);
       return;
     }
 
@@ -473,6 +450,7 @@ const CreateJCMscreen = ({navigation}) => {
         fid_wo_Task: selectedAssignment,
         fid_pengawas: selectedSupervisor,
         parrent_wo_task: selectedGroupTask,
+        hm_bd: hM,
       };
       const headers = await getAuthHeader();
       const response = await fetch(
@@ -501,10 +479,8 @@ const CreateJCMscreen = ({navigation}) => {
           try {
             resJson = JSON.parse(text);
           } catch (jsonErr) {
-            console.warn('❗ Gagal parsing JSON:', jsonErr);
           }
         } catch (err) {
-          console.warn('❗ Gagal membaca response:', err);
         }
 
         rawMessage =
@@ -532,7 +508,6 @@ const CreateJCMscreen = ({navigation}) => {
         });
       }
     } catch (error) {
-      console.warn('❗ Error saat submit:', error);
       try {
         await addQueueOffline(OFFLINE_SUBMIT_KEY, dataSubmit);
         await refreshQueueCount();
@@ -542,7 +517,6 @@ const CreateJCMscreen = ({navigation}) => {
           text2: 'Tidak bisa mengirim data. Disimpan ke antrian.',
         });
       } catch (queueErr) {
-        console.error('❌ Gagal menyimpan ke queue:', queueErr);
         Toast.show({
           type: 'error',
           text1: 'Gagal',
@@ -551,7 +525,7 @@ const CreateJCMscreen = ({navigation}) => {
       }
     }
 
-    setLoading(false); // pastikan ini dipanggil di akhir
+    setLoading(false);
   };
 
   const confirmClearOfflineCache = () => {
@@ -641,7 +615,6 @@ const CreateJCMscreen = ({navigation}) => {
             </View>
           )}
 
-          {/* === FORM CARD === */}
           <View style={styles.card}>
             <View style={[styles.formGroup, {zIndex: 3000}]}>
               <Text style={styles.label}>Pilih Unit</Text>
@@ -658,8 +631,8 @@ const CreateJCMscreen = ({navigation}) => {
                 zIndex={3000}
                 zIndexInverse={1000}
                 listMode="MODAL"
-                style={styles.dropdown} // opsional
-                dropDownContainerStyle={styles.dropdownContainer} // opsional
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
               />
             </View>
 
@@ -706,8 +679,17 @@ const CreateJCMscreen = ({navigation}) => {
                 value={selectedSupervisor}
               />
             </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>HM</Text>
+              <TextInput
+                style={styles.label}
+                placeholder="HM"
+                value={hM}
+                keyboardType="numeric"
+                onChangeText={setHM}
+              />
+            </View>
             <View style={styles.row}>
-              {/* Tanggal */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Tanggal:</Text>
                 <Button
@@ -729,7 +711,6 @@ const CreateJCMscreen = ({navigation}) => {
                 )}
               </View>
 
-              {/* Jam */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Jam:</Text>
                 <Button
@@ -752,8 +733,6 @@ const CreateJCMscreen = ({navigation}) => {
               </View>
             </View>
           </View>
-
-          {/* === SUBMIT BUTTON === */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}

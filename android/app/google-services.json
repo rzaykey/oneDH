@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378045921341",
+    "project_id": "onedh-96579",
+    "storage_bucket": "onedh-96579.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378045921341:android:2f0ac736e5e66ccd675254",
+        "android_client_info": {
+          "package_name": "com.onedh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrN1B2WKmBbQn3ic5PfXYNhKHQhU8EMMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

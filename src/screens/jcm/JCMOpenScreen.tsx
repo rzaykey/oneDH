@@ -51,11 +51,11 @@ const JCMOpenScreen: React.FC = () => {
   const {user, activeSite} = useSiteContext();
 
   useEffect(() => {
-    fetchHistory(false, 1); // awal muat
+    fetchHistory(false, 1);
   }, [activeSite, user?.jdeno]);
 
   useEffect(() => {
-    fetchHistory(false, 1); // saat limit berubah
+    fetchHistory(false, 1);
   }, [limit]);
 
   const fetchHistory = async (isLoadMore = false, forcedPage?: number) => {
@@ -124,7 +124,6 @@ const JCMOpenScreen: React.FC = () => {
         setTotalPages(totalPagesFromApi);
         setHasMore(currentPage < totalPagesFromApi);
 
-        // Optional: Show success toast if needed
         if (!isLoadMore) {
           Toast.show({
             type: 'success',
@@ -175,8 +174,8 @@ const JCMOpenScreen: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          id, // ID dari pekerjaan
-          validated, // true untuk validasi, false untuk unvalidasi
+          id,
+          validated,
         }),
       });
 
@@ -196,13 +195,13 @@ const JCMOpenScreen: React.FC = () => {
             ? 'Data berhasil divalidasi.'
             : 'Validasi dibatalkan.',
         });
-        fetchHistory(false, page); // Refresh list
+        fetchHistory(false, page);
       }
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Server Error',
-        text2: 'Terjadi kesalahan saat menghubungi server.',
+        text2: 'Terjadi kesalahan jaringan.',
       });
     }
   };
@@ -211,14 +210,13 @@ const JCMOpenScreen: React.FC = () => {
     const isExpanded = expandedId === Number(item.id);
     const isValidated = item.validate_status?.toLowerCase() === 'valid';
     const isInvalid = item.validate_status?.toLowerCase() === 'invalid';
-    const isDisabledUnvalidButton = isInvalid || isValidated; // hanya disable jika VALID
+    const isDisabledUnvalidButton = isInvalid || isValidated;
 
     return (
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.83}
         onPress={() => setExpandedId(isExpanded ? null : Number(item.id))}>
-        {/* Header Section */}
         <View style={styles.headerRow}>
           <Text style={styles.unitText}>{item.unitno}</Text>
           <Text style={styles.siteLabel}>
@@ -226,10 +224,8 @@ const JCMOpenScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Task Description */}
         <Text style={styles.modelText}>{item.task_desc}</Text>
 
-        {/* Mekanik Info */}
         <View style={styles.row}>
           <Icon name="person-circle-outline" size={17} color="#4886E3" />
           <Text style={styles.driverName}>
@@ -237,35 +233,33 @@ const JCMOpenScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Tanggal & Waktu */}
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Mulai: {item.tanggal_mulai} {item.waktu_mulai}
+            Mulai: {item.tanggal_mulai} - {item.waktu_mulai}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.labelInfo}>
-            Selesai: {item.tanggal_selesai} {item.waktu_selesai}
+            Selesai: {item.tanggal_selesai} - {item.waktu_selesai}
           </Text>
         </View>
-
-        {/* Badges */}
+        <View style={styles.badgeRow}>
+          <Badge label={`HM BD : ${item.hm_bd}`} color="#ff0a0aff" />
+          <Badge label={`HM RFU  : ${item.hm_rfu}`} color="#4CAF50" />
+        </View>
         <View style={styles.badgeRow}>
           <Badge label={`Durasi: ${item.durasi}`} color="#2196F3" />
           <Badge label={`Status: ${item.status}`} color="#4CAF50" />
         </View>
 
-        {/* Extra Info */}
         <View style={styles.rowSpace}>
           <Text style={styles.labelInfo}>
             Pengawas: {item.nama_pengawas} - {item.jde_pengawas}
           </Text>
           <Text style={styles.labelInfo}>Validasi: {item.validate_status}</Text>
         </View>
-        {/* Expanded Details */}
         {isExpanded && (
           <>
-            {/* Remark Section */}
             <View style={styles.keteranganRow}>
               <Text style={styles.ketLabel}>Remark:</Text>
               <Text style={styles.ketValue} numberOfLines={0}>
@@ -273,12 +267,10 @@ const JCMOpenScreen: React.FC = () => {
               </Text>
             </View>
 
-            {/* Action Buttons */}
             <View style={styles.buttonRow}>
-              {/* Tombol Validasi */}
               <TouchableOpacity
                 onPress={() => handleKirimValidasi(Number(item.id), true)}
-                disabled={isValidated} // ❌ Tidak bisa validasi lagi kalau sudah valid
+                disabled={isValidated}
                 style={[
                   styles.actionButton,
                   {backgroundColor: isValidated ? '#ccc' : '#4CAF50'},
@@ -288,10 +280,9 @@ const JCMOpenScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Tombol Unvalidasi */}
               <TouchableOpacity
                 onPress={() => handleKirimValidasi(Number(item.id), false)}
-                disabled={isDisabledUnvalidButton} // ✅ tombol tetap aktif jika status = invalid atau kosong
+                disabled={isDisabledUnvalidButton}
                 style={[
                   styles.actionButton,
                   {
@@ -320,7 +311,7 @@ const JCMOpenScreen: React.FC = () => {
   }) => (
     <View style={styles.emptyWrap}>
       <Image
-        source={require('../../assets/images/empty.png')} // sesuaikan path jika beda
+        source={require('../../assets/images/empty.png')}
         style={{
           width: 240,
           height: 240,

@@ -27,7 +27,7 @@ const SitePickerScreen = () => {
       topOffset: 50,
     });
 
-    navigation.replace('MainApp'); // atau Dashboard
+    navigation.replace('MainApp');
   };
 
   return (
